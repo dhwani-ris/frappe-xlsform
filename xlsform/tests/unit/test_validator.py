@@ -1034,6 +1034,20 @@ class TestHostileInput(unittest.TestCase):
 	def test_unpacked_size_is_checked_before_parsing(self):
 		self.assertEqual(self.codes(padded_workbook(60 * 1024 * 1024)), {"E-FILE-UNPACKED"})
 
+	def test_question_limit_runs_before_formulas(self):
+		rows = [["integer", "q0", "Q", None]]
+		rows += [["integer", f"q{i}", "Q", f"${{q{i - 1}}} > 0"] for i in range(1, 3000)]
+		content = simple(*rows, header=[*H, "relevant"])
+		start = time.monotonic()
+		result = validate(content, "f.xlsx")
+		self.assertLess(time.monotonic() - start, 1.5)
+		self.assertEqual({i.code for i in result.issues}, {"E-LIMIT-QUESTIONS"})
+		self.assertIsNone(result.analysis)
+		start = time.monotonic()
+		result = validate(content, "f.xlsx", ValidateOptions(max_questions=5000, row_budget_bytes=10**7))
+		self.assertLess(time.monotonic() - start, 3)
+		self.assertTrue(result.ok)
+
 	def test_deep_groups(self):
 		self.assertIn("E-GROUP-TOO-DEEP", self.codes(nested_groups(40)))
 		self.assertIn(

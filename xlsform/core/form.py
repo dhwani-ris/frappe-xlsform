@@ -333,6 +333,8 @@ class Form:
 	default_language: str
 	languages: list[str]
 	choice_columns: set[str] = field(default_factory=set)
+	_by_path: dict[str, Node] | None = field(default=None, repr=False, compare=False)
+	_by_name: dict[str, Node] | None = field(default=None, repr=False, compare=False)
 
 	@property
 	def form_id(self) -> str:
@@ -354,10 +356,16 @@ class Form:
 		return [n for n in self.nodes() if n.kind == QUESTION]
 
 	def by_name(self) -> dict[str, Node]:
-		return {n.name: n for n in self.nodes()}
+		"""Nodes by name, built once: the tree is fixed after stage 2."""
+		if self._by_name is None:
+			self._by_name = {n.name: n for n in self.nodes()}
+		return self._by_name
 
 	def by_path(self) -> dict[str, Node]:
-		return {n.path: n for n in self.nodes()}
+		"""Nodes by path, built once: the tree is fixed after stage 2."""
+		if self._by_path is None:
+			self._by_path = {n.path: n for n in self.nodes()}
+		return self._by_path
 
 	def as_dict(self) -> dict:
 		return {

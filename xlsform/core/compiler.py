@@ -750,7 +750,7 @@ class _Compiler:
 					self._translate(language, field["options"], _note_html(text), context=doctype)
 
 	def _check_limits(self, doctypes: list[dict]) -> None:
-		count = sum(1 for n in self.form.nodes() if n.kind == QUESTION and n.base_type in SUPPORTED_TYPES)
+		count = question_count(self.form)
 		if count > self.s.max_questions:
 			self.issues.append(issue("E-LIMIT-QUESTIONS", count=count, limit=self.s.max_questions))
 		for dt in doctypes:
@@ -798,6 +798,11 @@ class _Compiler:
 			"fields": fields,
 			"custom_css": css,
 		}
+
+
+def question_count(form: Form) -> int:
+	"""Questions that become fields, as counted for E-LIMIT-QUESTIONS."""
+	return sum(1 for n in form.nodes() if n.kind == QUESTION and n.base_type in SUPPORTED_TYPES)
 
 
 def fieldtype_for(node: Node, ranges: dict) -> str:

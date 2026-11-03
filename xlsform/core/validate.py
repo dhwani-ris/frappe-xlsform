@@ -81,6 +81,10 @@ def _validate(
 	if form is None or any(i.severity == ERROR for i in issues):
 		return _finish(result, from_stage=3)
 	result.form = form
+	count = compiler.question_count(form)
+	if count > opts.max_questions:
+		result.issues.append(issue("E-LIMIT-QUESTIONS", count=count, limit=opts.max_questions))
+		return _finish(result, from_stage=3)
 
 	stage[0] = 3
 	analysis, issues = meaning.check(

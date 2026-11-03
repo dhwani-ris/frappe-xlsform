@@ -368,7 +368,7 @@ Rules for every issue: located (sheet, Excel row, column, cell), plain language,
 | 1. File | `.xlsx` only, size, readable, not password-protected, required sheets | Yes |
 | 2. Structure | Columns, names, duplicates, `begin_`/`end_` matching | Yes |
 | 3. Meaning | Types, choice lists, expressions, references, cycles, Live-ability, settings | No |
-| 4. Frappe limits | Question count, row budget, name length | No |
+| 4. Frappe limits | Question count, row budget, name length. The question count is also checked right after stage 2: a form over `max_questions` stops there, before any formula is parsed. | No |
 | 5. Version diff | Renames, removals, type changes vs the published version | No (warnings) |
 
 **Limits against hostile workbooks.** A workbook is untrusted input, so every stage has a fixed bound. Going over a bound gives a located issue, never an exception or a timeout.
@@ -383,7 +383,7 @@ Rules for every issue: located (sheet, Excel row, column, cell), plain language,
 | `instance_name` length | `max_expression_length` | `core/meaning.py` | `E-EXPR-TOO-LONG` |
 | Anything else too deep for the checks (last line of defence: a `RecursionError` in `validate()`) | — | `core/validate.py` | `E-FORM-TOO-COMPLEX` |
 
-Calculation cycles are found with an iterative search, so a long chain of calculations can't exhaust the stack.
+Lookups of questions by path and name are built once per form, so the checks stay linear in the number of questions. Calculation cycles are found with an iterative search, so a long chain of calculations can't exhaust the stack.
 
 pyxform is **not** run on sites: every pyxform release pins `xlrd==2.0.1`, which conflicts with Frappe v16's `xlrd~=2.0.2`, so it can't be an app dependency (`E-PYXFORM` is dropped). Instead CI runs `scripts/pyxform_crosscheck.py`: every workbook in `xlsform/tests/fixtures/corpus` is checked by our validator and by pyxform (own virtualenv); a disagreement that isn't a documented v1 limitation, or reviewed in `corpus/expected.json` with a reason, fails the build.
 
