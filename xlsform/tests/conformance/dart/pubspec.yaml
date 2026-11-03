@@ -1,0 +1,5 @@
+name: xlsform_sdk_conformance
+description: Runs emitted XLSForm expressions through the mForm SDK's JavaScript interpreter.
+publish_to: none
+environment:
+  sdk: ">=3.4.0 <4.0.0"

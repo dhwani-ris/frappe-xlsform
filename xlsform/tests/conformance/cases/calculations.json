@@ -1,0 +1,56 @@
+{
+ "group": "Calculations used live",
+ "cases": [
+  {
+   "id": "calc-total",
+   "expr": "${c_total} > 10",
+   "doc": {
+    "n": 6,
+    "n2": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "calc-total-blank",
+   "expr": "${c_total} > 10",
+   "doc": {
+    "n": 6,
+    "n2": null
+   },
+   "expected": false
+  },
+  {
+   "id": "calc-total-eq",
+   "expr": "${c_total} = 10",
+   "doc": {
+    "n": 4,
+    "n2": 6
+   },
+   "expected": true
+  },
+  {
+   "id": "calc-label",
+   "expr": "${c_label} = 'a!'",
+   "doc": {
+    "t": "a"
+   },
+   "expected": true
+  },
+  {
+   "id": "calc-label-blank",
+   "expr": "${c_label} = '!'",
+   "doc": {
+    "t": null
+   },
+   "expected": true
+  },
+  {
+   "id": "calc-not-live",
+   "expr": "${c_age} >= 18",
+   "doc": {
+    "dt": "2000-01-01"
+   },
+   "not_live": true
+  }
+ ]
+}

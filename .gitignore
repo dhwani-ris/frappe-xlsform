@@ -1,0 +1,6 @@
+
+.sdk-conformance-results.json
+.sdk-cases.json
+.pytest_cache/
+.coverage
+htmlcov/
