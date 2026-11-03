@@ -371,11 +371,23 @@ Rules for every issue: located (sheet, Excel row, column, cell), plain language,
 | 4. Frappe limits | Question count, row budget, name length | No |
 | 5. Version diff | Renames, removals, type changes vs the published version | No (warnings) |
 
+**Limits against hostile workbooks.** A workbook is untrusted input, so every stage has a fixed bound. Going over a bound gives a located issue, never an exception or a timeout.
+
+| Limit | Value | Where | Issue |
+| --- | --- | --- | --- |
+| Nesting inside one formula (brackets, functions, operators) | 100 levels | `core/expr/parser.py` `MAX_DEPTH` | `E-EXPR-SYNTAX` |
+| Groups and repeats inside each other | 30 levels | `core/structure.py` `MAX_GROUP_DEPTH` | `E-GROUP-TOO-DEEP` |
+| Emitted JavaScript for one Live formula, with its calculations written out | 4,000 characters, 200 levels, 20 inlined calculations in a chain | `core/expr/emit_js.py` `MAX_JS_LENGTH`, `MAX_EMIT_DEPTH`, `MAX_INLINE_DEPTH` | `E-EXPR-TOO-COMPLEX` |
+| `instance_name` length | `max_expression_length` | `core/meaning.py` | `E-EXPR-TOO-LONG` |
+| Anything else too deep for the checks (last line of defence: a `RecursionError` in `validate()`) | — | `core/validate.py` | `E-FORM-TOO-COMPLEX` |
+
+Calculation cycles are found with an iterative search, so a long chain of calculations can't exhaust the stack.
+
 pyxform is **not** run on sites: every pyxform release pins `xlrd==2.0.1`, which conflicts with Frappe v16's `xlrd~=2.0.2`, so it can't be an app dependency (`E-PYXFORM` is dropped). Instead CI runs `scripts/pyxform_crosscheck.py`: every workbook in `xlsform/tests/fixtures/corpus` is checked by our validator and by pyxform (own virtualenv); a disagreement that isn't a documented v1 limitation, or reviewed in `corpus/expected.json` with a reason, fails the build.
 
 Designers see issues on the XLSForm Version form (summary bar + table grouped by sheet), as a downloadable **annotated copy of their workbook** (cells filled red/amber with the message as a comment), and in the API.
 
-**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (62 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
+**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (65 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
 
 | Code | Sev | Example message |
 | --- | --- | --- |
@@ -403,6 +415,8 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | E-GROUP-UNCLOSED | E | The group started in row 12 is never closed. |
 | E-GROUP-MISMATCH | E | Row 40 closes a repeat, but the open block is a group. |
 | E-GROUP-EXTRA-END | E | Row 40 closes a group that was never opened. |
+| E-GROUP-TOO-DEEP | E | Row 32 opens a group inside 30 other groups or repeats; the limit is 30. |
+| E-FORM-TOO-COMPLEX | E | The form couldn't be checked completely: it is nested too deeply for the structure checks. |
 | E-REPEAT-NESTED | E | Repeat `member` is inside repeat `household`. |
 | E-REPEAT-EMPTY | E | Repeat `member` has no questions. |
 | E-REF-UNKNOWN | E | `${hh_sise}` isn't a question. Did you mean `${hh_size}`? |
@@ -414,6 +428,7 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | E-FN-UNSUPPORTED | E | `pulldata()` isn't supported. |
 | E-FN-ARGS | E | `selected()` needs 2 values but got 1. |
 | E-EXPR-NOT-LIVE | E | `today()` can't be used in "relevant": forms check that while being filled, offline too. |
+| E-EXPR-TOO-COMPLEX | E | The formula in "relevant" is too complex to check while the form is being filled (over 4,000 characters once its calculations are written out). |
 | E-CALC-NOT-LIVE | E | "relevant" uses `age_years`, whose calculation can only run on the server. |
 | E-CALC-CYCLE | E | These calculations depend on each other in a loop: `total` → `share` → `total`. |
 | E-FILTER-UNSUPPORTED | E | This choice_filter can't be applied; use `column = ${question}` joined by `and`. |

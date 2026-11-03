@@ -139,6 +139,18 @@ CATALOGUE: dict[str, Entry] = {
 			N_("Row {row} closes a {kind} that was never opened."),
 			N_("Delete row {row}, or add the matching begin row above it."),
 		),
+		_e(
+			"E-GROUP-TOO-DEEP",
+			2,
+			N_("Row {row} opens a {kind} inside {depth} other groups or repeats; the limit is {limit}."),
+			N_("Close some groups before opening new ones, so fewer groups are inside each other."),
+		),
+		_e(
+			"E-FORM-TOO-COMPLEX",
+			2,
+			N_("The form couldn't be checked completely: it is nested too deeply for the {stage} checks."),
+			N_("Use fewer groups inside groups and shorter formulas, then upload again."),
+		),
 		# Stage 3: meaning
 		_e(
 			"E-TYPE-UNKNOWN",
@@ -266,6 +278,16 @@ CATALOGUE: dict[str, Entry] = {
 			),
 			N_(
 				"Use a simpler condition here, or move the check into a constraint, which is checked on save."
+			),
+		),
+		_e(
+			"E-EXPR-TOO-COMPLEX",
+			3,
+			N_(
+				'The formula in "{column}" is too complex to check while the form is being filled: written out with the calculations it uses, it is longer than {limit} characters or too deeply nested.'
+			),
+			N_(
+				"Simplify it, or use fewer calculations that build on each other. A constraint has no such limit, because it is checked when the form is saved."
 			),
 		),
 		_e(

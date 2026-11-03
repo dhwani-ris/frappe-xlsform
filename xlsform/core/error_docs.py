@@ -128,6 +128,20 @@ ENTRIES = [
 		},
 	},
 	{
+		"code": "E-FORM-TOO-COMPLEX",
+		"severity": "error",
+		"severity_text": "Error: blocks publishing",
+		"stage": 2,
+		"stage_name": "Structure",
+		"message": "The form couldn't be checked completely: it is nested too deeply for the ‹stage› checks.",
+		"suggestion": "Use fewer groups inside groups and shorter formulas, then upload again.",
+		"example": {
+			"where": "survey",
+			"message": "The form couldn't be checked completely: it is nested too deeply for the structure checks.",
+			"suggestion": "Use fewer groups inside groups and shorter formulas, then upload again.",
+		},
+	},
+	{
 		"code": "E-GROUP-EXTRA-END",
 		"severity": "error",
 		"severity_text": "Error: blocks publishing",
@@ -153,6 +167,20 @@ ENTRIES = [
 			"where": "survey!A4",
 			"message": "survey!A4: Row 4 closes a repeat, but the open block is a group started in row 2.",
 			"suggestion": "Change row 4 to end_group, or add the missing begin_repeat.",
+		},
+	},
+	{
+		"code": "E-GROUP-TOO-DEEP",
+		"severity": "error",
+		"severity_text": "Error: blocks publishing",
+		"stage": 2,
+		"stage_name": "Structure",
+		"message": "Row ‹row› opens a ‹kind› inside ‹depth› other groups or repeats; the limit is ‹limit›.",
+		"suggestion": "Close some groups before opening new ones, so fewer groups are inside each other.",
+		"example": {
+			"where": "survey!A32",
+			"message": "survey!A32: Row 32 opens a group inside 30 other groups or repeats; the limit is 30.",
+			"suggestion": "Close some groups before opening new ones, so fewer groups are inside each other.",
 		},
 	},
 	{
@@ -349,6 +377,20 @@ ENTRIES = [
 			"where": "survey!D3",
 			"message": "survey!D3: The formula can't be read: a bracket opened at character 3 is never closed.",
 			"suggestion": "Check the formula: if(${a} > 3, 'x'",
+		},
+	},
+	{
+		"code": "E-EXPR-TOO-COMPLEX",
+		"severity": "error",
+		"severity_text": "Error: blocks publishing",
+		"stage": 3,
+		"stage_name": "Meaning",
+		"message": 'The formula in "‹column›" is too complex to check while the form is being filled: written out with the calculations it uses, it is longer than ‹limit› characters or too deeply nested.',
+		"suggestion": "Simplify it, or use fewer calculations that build on each other. A constraint has no such limit, because it is checked when the form is saved.",
+		"example": {
+			"where": "survey!E21",
+			"message": 'survey!E21: The formula in "relevant" is too complex to check while the form is being filled: written out with the calculations it uses, it is longer than 4,000 characters or too deeply nested.',
+			"suggestion": "Simplify it, or use fewer calculations that build on each other. A constraint has no such limit, because it is checked when the form is saved.",
 		},
 	},
 	{

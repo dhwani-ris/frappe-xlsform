@@ -13,8 +13,10 @@ Every problem the validator reports has a stable code. Errors block publishing; 
 | [W-SHEET-UNKNOWN](W-SHEET-UNKNOWN.md) | warning | 1 | The sheet "‹sheet_name›" isn't used, so anything on it will be ignored. |
 | [E-COL-MISSING](E-COL-MISSING.md) | error | 2 | The ‹sheet_name› sheet has no "‹column›" column. |
 | [E-COL-UNSUPPORTED](E-COL-UNSUPPORTED.md) | error | 2 | Column "‹column›" isn't supported. |
+| [E-FORM-TOO-COMPLEX](E-FORM-TOO-COMPLEX.md) | error | 2 | The form couldn't be checked completely: it is nested too deeply for the ‹stage› checks. |
 | [E-GROUP-EXTRA-END](E-GROUP-EXTRA-END.md) | error | 2 | Row ‹row› closes a ‹kind› that was never opened. |
 | [E-GROUP-MISMATCH](E-GROUP-MISMATCH.md) | error | 2 | Row ‹row› closes a ‹closing›, but the open block is a ‹open_kind› started in row ‹open_row›. |
+| [E-GROUP-TOO-DEEP](E-GROUP-TOO-DEEP.md) | error | 2 | Row ‹row› opens a ‹kind› inside ‹depth› other groups or repeats; the limit is ‹limit›. |
 | [E-GROUP-UNCLOSED](E-GROUP-UNCLOSED.md) | error | 2 | The ‹kind› started in row ‹row› (‹name›) is never closed. |
 | [E-NAME-DUPLICATE](E-NAME-DUPLICATE.md) | error | 2 | The name ‹name› is used in rows ‹rows›. |
 | [E-NAME-INVALID](E-NAME-INVALID.md) | error | 2 | "‹name›" can't be used as a name: ‹reason›. |
@@ -29,6 +31,7 @@ Every problem the validator reports has a stable code. Errors block publishing; 
 | [E-EXPR-NOT-LIVE](E-EXPR-NOT-LIVE.md) | error | 3 | ‹what› can't be used in "‹column›": this rule is checked while the form is being filled, offline too. |
 | [E-EXPR-QUOTE](E-EXPR-QUOTE.md) | error | 3 | The formula uses curly quotes (‘ ’ or “ ”), which formulas don't accept. |
 | [E-EXPR-SYNTAX](E-EXPR-SYNTAX.md) | error | 3 | The formula can't be read: ‹reason›. |
+| [E-EXPR-TOO-COMPLEX](E-EXPR-TOO-COMPLEX.md) | error | 3 | The formula in "‹column›" is too complex to check while the form is being filled: written out with the calculations it uses, it is longer than ‹limit› characters or too deeply nested. |
 | [E-EXPR-TOO-LONG](E-EXPR-TOO-LONG.md) | error | 3 | The formula is ‹length› characters long; the limit is ‹limit›. |
 | [E-FILE-CSV-MISSING](E-FILE-CSV-MISSING.md) | error | 3 | Row ‹row› uses ‹file›, which wasn't uploaded with the form. |
 | [E-FILTER-COLUMN](E-FILTER-COLUMN.md) | error | 3 | choice_filter uses column "‹choice_column›", which isn't on the choices sheet for list "‹list›". |

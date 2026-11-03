@@ -31,6 +31,9 @@ from xlsform.core.expr.evaluate import format_number
 NUMERIC_TYPES = {"integer", "decimal", "range"}
 DATE_TYPES = {"date", "datetime", "time", "start", "end", "today"}
 EVAL_MARKER = "eval:"
+MAX_JS_LENGTH = 4000
+MAX_EMIT_DEPTH = 200
+MAX_INLINE_DEPTH = 20
 FORBIDDEN_LITERAL_CHARS = {"\n", "\r", " ", " ", "\t", "\x00"}
 
 
@@ -43,6 +46,20 @@ class NotLive(Exception):
 		self.calc = calc  # set when the culprit is a server-only calculate question
 
 
+class TooComplex(NotLive):
+	"""Written out with every calculation it uses, the formula is too long or too deep to ship."""
+
+	def __init__(self):
+		super().__init__("this formula")
+
+
+@dataclass
+class Budget:
+	"""Shared by a formula and the calculations inlined into it, so expansion stops early."""
+
+	depth: int = 0
+
+
 @dataclass
 class Scope:
 	"""Facts about the form that the emitter needs, supplied by the compiler."""
@@ -53,6 +70,7 @@ class Scope:
 	calc_ast: Callable[[str], dict | None] = lambda path: None  # calculate path -> resolved AST
 	scope_repeat: str | None = None  # repeat that owns the formula (rows evaluate with doc = row)
 	inlining: tuple[str, ...] = field(default_factory=tuple)
+	budget: Budget = field(default_factory=Budget)
 
 
 @dataclass
@@ -67,7 +85,13 @@ class Js:
 
 def emit(ast: dict, scope: Scope) -> str:
 	"""Return a boolean JavaScript expression (for depends_on-style properties)."""
-	return _as_bool(_emit(ast, scope))
+	return _checked(_as_bool(_emit(ast, scope)))
+
+
+def _checked(code: str) -> str:
+	if len(code) > MAX_JS_LENGTH:
+		raise TooComplex()
+	return code
 
 
 def emit_value(ast: dict, scope: Scope) -> Js:
@@ -99,7 +123,7 @@ def filter_value(ast: dict, scope: "Scope") -> str:
 	"""A link_filters value: always ``eval:`` code, so no designer text is ever read as code."""
 	if "lit" in ast and isinstance(ast["lit"], float):
 		return format_number(ast["lit"])
-	return EVAL_MARKER + _as_str(_emit(ast, scope))
+	return EVAL_MARKER + _checked(_as_str(_emit(ast, scope)))
 
 
 def _num_literal(value: float) -> str:
@@ -162,6 +186,20 @@ def _guarded(guards: tuple[str, ...], expr: str) -> str:
 
 
 def _emit(node: dict, scope: Scope) -> Js:
+	budget = scope.budget
+	budget.depth += 1
+	try:
+		if budget.depth > MAX_EMIT_DEPTH:
+			raise TooComplex()
+		js = _emit_node(node, scope)
+	finally:
+		budget.depth -= 1
+	if len(js.code) + sum(len(g) for g in js.guards) > MAX_JS_LENGTH:
+		raise TooComplex()
+	return js
+
+
+def _emit_node(node: dict, scope: Scope) -> Js:
 	if "lit" in node:
 		value = node["lit"]
 		if isinstance(value, float):
@@ -201,9 +239,13 @@ def _ref(path: str, scope: Scope) -> Js:
 		inner = scope.calc_ast(path)
 		if inner is None or path in scope.inlining:
 			raise NotLive(f"${{{name}}}", calc=name)
+		if len(scope.inlining) >= MAX_INLINE_DEPTH:
+			raise TooComplex()
 		sub = Scope(**{**scope.__dict__, "inlining": (*scope.inlining, path)})
 		try:
 			return _emit(inner, sub)
+		except TooComplex:
+			raise
 		except NotLive as exc:
 			raise NotLive(exc.what, calc=name) from exc
 	owner = _owner(path, scope)

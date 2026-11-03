@@ -25,6 +25,7 @@ from xlsform.core.reader import Row, Sheet, Workbook
 from xlsform.core.suggest import closest, slug
 
 NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.\-]*$")
+MAX_GROUP_DEPTH = 30
 
 SURVEY_COLUMNS = {
 	"type",
@@ -54,7 +55,9 @@ CHOICE_COLUMNS = {"list_name", "name", "label"}
 CHOICE_COLUMN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
-def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issue]]:
+def build_form(
+	wb: Workbook, filename: str = "", max_depth: int = MAX_GROUP_DEPTH
+) -> tuple[Form | None, list[Issue]]:
 	issues: list[Issue] = []
 	survey = wb.sheet("survey")
 	if survey is None and len(wb.sheets) == 1:
@@ -115,6 +118,20 @@ def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issu
 		node = Node(kind, name, info, row, parent=stack[-1])
 		stack[-1].children.append(node)
 		if kind != QUESTION:
+			if len(stack) > max_depth:
+				issues.append(
+					issue(
+						"E-GROUP-TOO-DEEP",
+						sheet="survey",
+						row=row.number,
+						column="type",
+						col_index=survey.column_index("type"),
+						kind=_block_kind(node),
+						depth=len(stack) - 1,
+						limit=max_depth,
+					)
+				)
+				return None, issues
 			stack.append(node)
 	for open_node in reversed(stack[1:]):
 		kind = _block_kind(open_node)

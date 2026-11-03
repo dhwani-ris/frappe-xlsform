@@ -5,9 +5,11 @@ REQUIREMENTS.md section 13: one failing and one passing fixture per code in sect
 
 import io
 import re
+import time
 import unittest
 import zipfile
 
+from xlsform.core.expr.parser import ExprSyntaxError, parse
 from xlsform.core.issues import CATALOGUE
 from xlsform.core.meaning import compare_versions
 from xlsform.core.validate import ValidateOptions, validate
@@ -166,6 +168,21 @@ def cases():
 			(simple(["text", "a", "A"], ["end_group"]), "f.xlsx", None),
 			(simple(["text", "a", "A"]), "f.xlsx", None),
 			{"row": 3},
+		),
+		"E-GROUP-TOO-DEEP": (
+			(nested_groups(31), "f.xlsx", None),
+			(nested_groups(30), "f.xlsx", None),
+			{"sheet": "survey", "row": 32, "cell": "A32"},
+		),
+		"E-FORM-TOO-COMPLEX": (
+			(nested_groups(1100), "f.xlsx", ValidateOptions(max_group_depth=10**6)),
+			(nested_groups(30), "f.xlsx", ValidateOptions(max_group_depth=10**6)),
+			{"sheet": "survey"},
+		),
+		"E-EXPR-TOO-COMPLEX": (
+			(calc_chain(18, "{prev} + {prev}", "{last} > 0"), "f.xlsx", None),
+			(calc_chain(3, "{prev} + {prev}", "{last} > 0"), "f.xlsx", None),
+			{"row": 21, "column": "relevant"},
 		),
 		"E-TYPE-UNKNOWN": (
 			(simple(["selec_one yn", "a", "A"]), "f.xlsx", None),
@@ -894,3 +911,66 @@ class TestIssueCatalogue(unittest.TestCase):
 		self.assertEqual(compare_versions("1.10", "1.9"), 1)
 		self.assertEqual(compare_versions("2", "2"), 0)
 		self.assertEqual(compare_versions("v2", "v10"), -1)
+
+
+def nested_groups(depth: int) -> bytes:
+	rows = [["begin_group", f"g{i}", "G"] for i in range(depth)]
+	return simple(*rows, ["text", "a", "A"], *[["end_group"]] * depth)
+
+
+def calc_chain(links: int, step: str, relevant: str) -> bytes:
+	rows = [["integer", "c0", "C", None, None]]
+	for k in range(1, links + 1):
+		rows.append(["calculate", f"c{k}", None, step.format(prev=f"${{c{k - 1}}}"), None])
+	rows.append(["text", "t", "T", None, relevant.format(last=f"${{c{links}}}")])
+	return simple(*rows, header=[*H, "calculation", "relevant"])
+
+
+class TestHostileInput(unittest.TestCase):
+	"""Uploads built to exhaust time or the stack get a located issue, never an exception."""
+
+	def codes(self, content, opts=None):
+		return {i.code for i in validate(content, "f.xlsx", opts).issues}
+
+	def test_deep_formulas_are_syntax_errors(self):
+		for text in (
+			"(" * 700 + "1" + ")" * 700,
+			"-" * 1990 + "1",
+			"not(" * 300 + "1" + ")" * 300,
+			"1" + " + 1" * 400,
+		):
+			with self.subTest(text=text[:20]):
+				with self.assertRaises(ExprSyntaxError):
+					parse(text)
+				content = simple(["integer", "a", "A"], ["text", "b", "B", text], header=[*H, "relevant"])
+				self.assertIn("E-EXPR-SYNTAX", self.codes(content))
+
+	def test_deep_instance_name(self):
+		for text, code in (
+			("(" * 150 + "'x'" + ")" * 150, "W-INSTANCE-NAME"),
+			("concat('" + "x" * 3000 + "')", "E-EXPR-TOO-LONG"),
+		):
+			with self.subTest(code=code):
+				content = wb(
+					[H, ["text", "a", "A"]], settings=[["form_id", "instance_name"], ["abc_form", text]]
+				)
+				self.assertIn(code, self.codes(content))
+
+	def test_long_calculation_chain(self):
+		content = calc_chain(1500, "{prev} + 1", "{last} > 0")
+		result = validate(content, "f.xlsx", ValidateOptions(max_questions=5000))
+		self.assertEqual(len(result.analysis.calc_order), 1500)
+		self.assertIn("E-EXPR-TOO-COMPLEX", {i.code for i in result.issues})
+
+	def test_exponential_inlining_stops_early(self):
+		start = time.monotonic()
+		codes = self.codes(calc_chain(18, "{prev} + {prev}", "{last} > 0"))
+		self.assertLess(time.monotonic() - start, 2)
+		self.assertIn("E-EXPR-TOO-COMPLEX", codes)
+		self.assertNotIn("E-EXPR-TOO-COMPLEX", self.codes(calc_chain(3, "{prev} + {prev}", "{last} > 0")))
+
+	def test_deep_groups(self):
+		self.assertIn("E-GROUP-TOO-DEEP", self.codes(nested_groups(40)))
+		self.assertIn(
+			"E-FORM-TOO-COMPLEX", self.codes(nested_groups(1100), ValidateOptions(max_group_depth=10**6))
+		)

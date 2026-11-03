@@ -430,7 +430,16 @@ def _check_settings(form: Form, opts: Options, analysis: Analysis) -> list[Issue
 			)
 
 	instance_name = form.settings.get("instance_name")
-	if instance_name:
+	if instance_name and len(instance_name) > opts.max_expression_length:
+		issues.append(
+			issue(
+				"E-EXPR-TOO-LONG",
+				length=len(instance_name),
+				limit=opts.max_expression_length,
+				**where("instance_name"),
+			)
+		)
+	elif instance_name:
 		analysis.instance_name = _instance_name_parts(instance_name, form)
 		if analysis.instance_name is None:
 			issues.append(issue("W-INSTANCE-NAME", **where("instance_name")))
@@ -614,33 +623,40 @@ def _check_cycles(form: Form, analysis: Analysis, issues: list[Issue]) -> None:
 	reported: set[frozenset] = set()
 	by_path = form.by_path()
 
-	def visit(p: str, stack: list[str]) -> None:
-		state[p] = 1
-		stack.append(p)
-		for d in sorted(graph.get(p, ())):
-			if state.get(d) == 1:
-				cycle = [*stack[stack.index(d) :], d]
-				key = frozenset(cycle)
-				if key not in reported:
-					reported.add(key)
-					node = by_path[cycle[0]]
-					column = "calculation" if "calculation" in analysis.asts.get(cycle[0], {}) else "relevant"
-					issues.append(
-						issue(
-							"E-CALC-CYCLE",
-							cycle=" → ".join(c.rsplit("/", 1)[-1] for c in cycle),
-							**_where(node, column),
-						)
-					)
-			elif state.get(d) is None:
-				visit(d, stack)
-		stack.pop()
-		state[p] = 2
-		order.append(p)
+	def report(cycle: list[str]) -> None:
+		key = frozenset(cycle)
+		if key in reported:
+			return
+		reported.add(key)
+		node = by_path[cycle[0]]
+		column = "calculation" if "calculation" in analysis.asts.get(cycle[0], {}) else "relevant"
+		issues.append(
+			issue(
+				"E-CALC-CYCLE",
+				cycle=" → ".join(c.rsplit("/", 1)[-1] for c in cycle),
+				**_where(node, column),
+			)
+		)
 
-	for p in sorted(graph):
-		if state.get(p) is None:
-			visit(p, [])
+	for start in sorted(graph):
+		if state.get(start) is not None:
+			continue
+		state[start] = 1
+		stack = [start]
+		pending = [iter(sorted(graph.get(start, ())))]
+		while pending:
+			d = next(pending[-1], None)
+			if d is None:
+				done = stack.pop()
+				pending.pop()
+				state[done] = 2
+				order.append(done)
+			elif state.get(d) == 1:
+				report([*stack[stack.index(d) :], d])
+			elif state.get(d) is None:
+				state[d] = 1
+				stack.append(d)
+				pending.append(iter(sorted(graph.get(d, ()))))
 	calcs = {p for p, cols in analysis.asts.items() if "calculation" in cols}
 	analysis.calc_order = [p for p in order if p in calcs]
 
@@ -679,11 +695,7 @@ def _check_live(form: Form, analysis: Analysis, issues: list[Issue]) -> None:
 			try:
 				emit_js.emit(cols[column], make_scope(form, analysis, node))
 			except emit_js.NotLive as exc:
-				where = _where(node, column)
-				if exc.calc:
-					issues.append(issue("E-CALC-NOT-LIVE", name=exc.calc, **where))
-				else:
-					issues.append(issue("E-EXPR-NOT-LIVE", what=exc.what, **where))
+				issues.append(_not_live_issue(exc, _where(node, column)))
 	for path, cols in analysis.asts.items():
 		if "calculation" in cols:
 			try:
@@ -691,6 +703,14 @@ def _check_live(form: Form, analysis: Analysis, issues: list[Issue]) -> None:
 				analysis.live_calcs.add(path)
 			except emit_js.NotLive:
 				pass
+
+
+def _not_live_issue(exc: emit_js.NotLive, where: dict) -> Issue:
+	if isinstance(exc, emit_js.TooComplex):
+		return issue("E-EXPR-TOO-COMPLEX", limit=emit_js.MAX_JS_LENGTH, **where)
+	if exc.calc:
+		return issue("E-CALC-NOT-LIVE", name=exc.calc, **where)
+	return issue("E-EXPR-NOT-LIVE", what=exc.what, **where)
 
 
 def _check_filters(form: Form, opts: Options, analysis: Analysis, issues: list[Issue]) -> None:
@@ -727,12 +747,9 @@ def _check_filters(form: Form, opts: Options, analysis: Analysis, issues: list[I
 				bad = True
 				continue
 			try:
-				emit_js.emit_value(value, make_scope(form, analysis, node))
+				emit_js.filter_value(value, make_scope(form, analysis, node))
 			except emit_js.NotLive as exc:
-				if exc.calc:
-					issues.append(issue("E-CALC-NOT-LIVE", name=exc.calc, **where))
-				else:
-					issues.append(issue("E-EXPR-NOT-LIVE", what=exc.what, **where))
+				issues.append(_not_live_issue(exc, where))
 				bad = True
 		if not bad:
 			analysis.filters[path] = terms
