@@ -31,6 +31,7 @@ from xlsform.core.form import (
 from xlsform.core.i18n import N_, tr
 from xlsform.core.issues import Issue, issue
 from xlsform.core.reader import Cell, Row
+from xlsform.core.structure import CHOICE_COLUMN_RE, choice_column_issue, is_extra_choice_column
 from xlsform.core.suggest import closest, slug
 
 FORM_ID_RE = re.compile(r"^[a-z][a-z0-9_]{2,40}$")
@@ -198,6 +199,15 @@ def _load_csv_lists(form: Form, opts: Options, issues: list[Issue]) -> None:
 		lst = ChoiceList(file_name, row=0, from_file=file_name)
 		text = content.decode("utf-8-sig", errors="replace")
 		reader = csv.DictReader(io.StringIO(text))
+		bad_columns = [
+			raw
+			for raw in reader.fieldnames or []
+			if is_extra_choice_column((raw or "").strip().lower())
+			and not CHOICE_COLUMN_RE.match((raw or "").strip().lower())
+		]
+		if bad_columns:
+			issues += [choice_column_issue(raw, sheet=file_name) for raw in bad_columns]
+			continue
 		for line_no, record in enumerate(reader, start=2):
 			record = {(k or "").strip().lower(): (v or "").strip() for k, v in record.items()}
 			name = record.get("name", "")

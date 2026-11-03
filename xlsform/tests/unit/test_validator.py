@@ -871,6 +871,23 @@ class TestIssueCatalogue(unittest.TestCase):
 		)
 		self.assertEqual([i.code for i in validate(content, "f.xlsx").issues if i.severity == "error"], [])
 
+	def test_choice_column_headers_must_be_identifiers(self):
+		bad = "<img src=x onerror=alert(1)>"
+		content = simple(
+			["select_one yn", "a", "A"],
+			choices=[["list_name", "name", "label", bad], ["yn", "yes", "Yes", "x"]],
+		)
+		hits = [i for i in validate(content, "f.xlsx").issues if i.code == "E-NAME-INVALID"]
+		self.assertEqual([(i.sheet, i.cell) for i in hits], [("choices", "D1")])
+		csv = b"name,label,state name\nx,X,s\n"
+		content = simple(["select_one_from_file v.csv", "a", "A"])
+		hits = [
+			i
+			for i in validate(content, "f.xlsx", ValidateOptions(files={"v.csv": csv})).issues
+			if i.code == "E-NAME-INVALID"
+		]
+		self.assertEqual([(i.sheet, i.column) for i in hits], [("v.csv", "state name")])
+
 	def test_version_ordering(self):
 		self.assertEqual(compare_versions("2026110301", "2026110201"), 1)
 		self.assertEqual(compare_versions("2025-03", "2024-12"), 1)

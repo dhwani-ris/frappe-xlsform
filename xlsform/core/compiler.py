@@ -308,7 +308,12 @@ class _Compiler:
 					"in_standard_filter": 1,
 				},
 			] + [
-				{"fieldname": fn, "label": col, "fieldtype": "Data", "in_standard_filter": 1}
+				{
+					"fieldname": fn,
+					"label": _plain(col)[:LABEL_MAX],
+					"fieldtype": "Data",
+					"in_standard_filter": 1,
+				}
 				for col, fn in columns.items()
 			]
 			out.append(
