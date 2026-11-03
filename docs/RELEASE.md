@@ -7,7 +7,7 @@ REQUIREMENTS.md section 12. Items marked **(people)** can't be done by code and 
 - [x] Frappe v16 app scaffolded with `bench new-app`; hooks only (no monkey-patching)
 - [x] CI: `ci.yml` (core unit + conformance with the 95% compiler coverage gate; server tests on v16; clean uninstall)
 - [x] CI: `linters.yml` (pre-commit: ruff, ruff-format, prettier, eslint; Frappe semgrep rules)
-- [x] CI: `conformance-sdk.yml` (emitted rules through the mForm SDK interpreter)
+- [x] Every emitted rule checked against the mForm SDK expression subset (`core/expr/profile.py`)
 - [x] CI: `corpus.yml` (pyxform cross-check on the real-world corpus)
 - [x] Settings DocType (XLSForm Settings); role and workspace shipped
 - [x] All user-facing strings translatable; Hindi `xlsform/locale/hi.po` complete (343/343)
