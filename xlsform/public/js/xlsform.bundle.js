@@ -1,6 +1,3 @@
-// Shared XLSForm Desk helpers (upload dialog, export, status). Loaded on every Desk page via
-// app_include_js so the list views and both form scripts can use them.
-
 window.xlsform = window.xlsform || {};
 
 xlsform.show_status = function (frm) {
@@ -17,11 +14,38 @@ xlsform.show_status = function (frm) {
 };
 
 xlsform.export = function (form, format) {
-	window.open(
-		"/api/method/xlsform.api.data.export?" + new URLSearchParams({ form, format }).toString(),
-		"_blank"
-	);
+	frappe
+		.call({
+			method: "xlsform.api.data.export",
+			args: { form, format },
+			freeze: true,
+			freeze_message: __("Preparing the export…"),
+		})
+		.then((r) => {
+			const res = r.message || {};
+			if (res.file_url) {
+				window.open(res.file_url, "_blank");
+			} else if (res.queued) {
+				frappe.show_alert({
+					message: __(
+						"The export is large, so it runs in the background. You will get a link when it is ready."
+					),
+					indicator: "blue",
+				});
+			}
+		});
 };
+
+frappe.realtime.on("xlsform_export_ready", (data) => {
+	frappe.msgprint({
+		title: __("Export ready"),
+		indicator: "green",
+		message: `<a href="${encodeURI(data.file_url)}" target="_blank" rel="noopener">${__(
+			"Download the export of {0}",
+			[frappe.utils.escape_html(data.form)]
+		)}</a>`,
+	});
+});
 
 xlsform.upload_dialog = function (form, frm) {
 	const d = new frappe.ui.Dialog({
@@ -67,7 +91,6 @@ xlsform.upload_dialog = function (form, frm) {
 					d.hide();
 					const res = r.message;
 					if (res.version) {
-						// a re-upload may replace the draft that is open right now: never show a stale copy
 						if (
 							frm &&
 							frm.doctype === "XLSForm Version" &&

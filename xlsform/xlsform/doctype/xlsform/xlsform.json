@@ -50,7 +50,8 @@
    "default": "Draft",
    "read_only": 1,
    "in_list_view": 1,
-   "in_standard_filter": 1
+   "in_standard_filter": 1,
+   "permlevel": 1
   },
   {
    "fieldname": "column_break_main",
@@ -62,14 +63,16 @@
    "label": "Current Version",
    "options": "XLSForm Version",
    "read_only": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "permlevel": 1
   },
   {
    "fieldname": "data_doctype",
    "fieldtype": "Link",
    "label": "Data DocType",
    "options": "DocType",
-   "read_only": 1
+   "read_only": 1,
+   "permlevel": 1
   },
   {
    "fieldname": "default_language",
@@ -82,7 +85,8 @@
    "fieldtype": "Datetime",
    "label": "Retired On",
    "read_only": 1,
-   "depends_on": "eval:doc.status=='Retired'"
+   "depends_on": "eval:doc.status=='Retired'",
+   "permlevel": 1
   },
   {
    "fieldname": "channels_section",
@@ -126,12 +130,13 @@
    "read_only": 1,
    "hidden": 1,
    "no_copy": 1,
-   "description": "DocTypes created for this form. Only these may be changed when it is published."
+   "description": "DocTypes created for this form. Only these may be changed when it is published.",
+   "permlevel": 1
   }
  ],
  "icon": "table",
  "links": [],
- "modified": "2026-11-03 18:00:00.000000",
+ "modified": "2026-11-03 21:19:39.712670",
  "modified_by": "Administrator",
  "module": "XLSForm",
  "name": "XLSForm",
@@ -158,6 +163,17 @@
    "report": 1,
    "export": 1,
    "print": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "write": 1,
+   "role": "System Manager"
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "XLSForm Designer"
   }
  ],
  "row_format": "Dynamic",

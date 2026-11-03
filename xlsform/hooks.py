@@ -22,12 +22,15 @@ app_include_css = "xlsform.bundle.css"
 fixtures = [{"dt": "Role", "filters": [["role_name", "in", ["XLSForm Designer"]]]}]
 
 after_install = "xlsform.runtime.hooks.after_install"
-after_migrate = "xlsform.runtime.hooks.after_install"
+after_migrate = "xlsform.runtime.hooks.after_migrate"
 before_uninstall = "xlsform.runtime.hooks.before_uninstall"
 
-# Server rules for every XLSForm record, from every channel. Returns at once for other DocTypes.
 doc_events = {
 	"*": {
 		"validate": "xlsform.runtime.hooks.validate_record",
 	}
+}
+
+scheduler_events = {
+	"daily": ["xlsform.api.data.delete_old_exports"],
 }

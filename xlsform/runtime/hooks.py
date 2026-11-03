@@ -1,9 +1,9 @@
-"""Document hooks for generated DocTypes, plus install and uninstall.
+"""Document hooks for generated DocTypes, plus install, migrate and uninstall.
 
-``validate_record`` is registered for every DocType (``doc_events["*"]``) and returns at
-once unless the DocType is an XLSForm parent (it has ``xf_form``), so it costs one cached
-meta lookup on other saves. For form records it runs the server rules on every channel —
-Desk, Web Form, mForm sync, REST — so a client that skips a check still can't store bad data.
+``validate_record`` is registered for every DocType (``doc_events["*"]``) and returns at once unless
+the DocType is an XLSForm parent, so other saves pay one cached meta lookup. For form records it runs
+the server rules on every channel (Desk, Web Form, mForm sync, REST), so a client that skips a check
+still cannot store bad data.
 """
 
 import json
@@ -15,7 +15,7 @@ from frappe.utils import now_datetime, nowdate
 import xlsform.runtime
 from xlsform.core import engine
 from xlsform.core.form import language_code
-from xlsform.runtime.settings import DATA_MODULE, DESIGNER, GENERATED_MODULES
+from xlsform.runtime.settings import DATA_MODULE, DEFAULTS, GENERATED_MODULES
 
 
 def _is_form_doctype(doc) -> bool:
@@ -24,6 +24,7 @@ def _is_form_doctype(doc) -> bool:
 
 
 def form_of(doctype: str) -> str | None:
+	"""The XLSForm whose published parent DocType is ``doctype``."""
 	key = f"xlsform:form-of:{doctype}"
 	form = frappe.cache.get_value(key)
 	if form is None:
@@ -33,16 +34,15 @@ def form_of(doctype: str) -> str | None:
 
 
 def version_meta(version: str) -> dict | None:
-	"""compiled_meta of a published version; immutable once published, so cached for good."""
+	"""compiled_meta of a published version. Published versions never change, so it is cached."""
 	key = f"xlsform:meta:{version}"
 	meta = frappe.cache.get_value(key)
 	if meta is None:
-		raw, docstatus = frappe.db.get_value("XLSForm Version", version, ["compiled_meta", "docstatus"]) or (
-			None,
-			0,
-		)
-		meta = json.loads(raw) if isinstance(raw, str) else raw
-		if meta and docstatus == 1:
+		row = frappe.db.get_value("XLSForm Version", version, ["compiled_meta", "docstatus"], as_dict=True)
+		if not row or row.docstatus != 1:
+			return None
+		meta = json.loads(row.compiled_meta) if isinstance(row.compiled_meta, str) else row.compiled_meta
+		if meta:
 			frappe.cache.set_value(key, meta)
 	return meta
 
@@ -62,31 +62,65 @@ def _channel(doc) -> str:
 def validate_record(doc, method=None) -> None:
 	if not _is_form_doctype(doc):
 		return
-	form_name = doc.get("xf_form") or form_of(doc.doctype)
+	form_name = form_of(doc.doctype)
 	if not form_name:
 		return
 	form = frappe.get_cached_value(
 		"XLSForm", form_name, ["status", "current_version", "retired_on"], as_dict=True
 	)
+	if not form:
+		return
 	if doc.is_new():
-		if form.status == "Retired":
-			when = frappe.utils.format_date(form.retired_on) if form.retired_on else ""
-			frappe.throw(
-				_("This form was closed on {0}; contact your supervisor.").format(when)
-				if when
-				else _("This form is closed; contact your supervisor."),
-				title=_("Form closed"),
-			)
-		doc.xf_form = form_name
-		doc.xf_version = doc.get("xf_version") or form.current_version
-		if not doc.get("xf_channel"):
-			doc.xf_channel = _channel(doc)
-	version = doc.get("xf_version") or form.current_version
-	meta = version_meta(version) if version else None
+		_prepare_new_record(doc, form_name, form)
+	else:
+		_refuse_identity_change(doc)
+	meta = version_meta(doc.xf_version) if doc.xf_version else None
 	if not meta:
 		return
 	_fill_metadata(doc, meta)
+	_apply_rules(doc, meta)
 
+
+def _prepare_new_record(doc, form_name: str, form) -> None:
+	if form.status == "Retired":
+		when = frappe.utils.format_date(form.retired_on) if form.retired_on else ""
+		frappe.throw(
+			_("This form was closed on {0}; contact your supervisor.").format(when)
+			if when
+			else _("This form is closed; contact your supervisor."),
+			title=_("Form closed"),
+		)
+	requested = doc.get("xf_version")
+	if requested and requested != form.current_version and not _is_published_version(requested, form_name):
+		frappe.throw(
+			_("Form version {0} isn't a published version of this form.").format(frappe.bold(requested)),
+			title=_("Unknown form version"),
+		)
+	doc.xf_form = form_name
+	doc.xf_version = requested or form.current_version
+	doc.xf_channel = _channel(doc)
+
+
+def _is_published_version(version: str, form_name: str) -> bool:
+	row = frappe.db.get_value("XLSForm Version", version, ["form", "docstatus"], as_dict=True)
+	return bool(row and row.form == form_name and row.docstatus == 1)
+
+
+def _refuse_identity_change(doc) -> None:
+	before = doc.get_doc_before_save()
+	if not before:
+		return
+	for fieldname in ("xf_form", "xf_version"):
+		if before.get(fieldname) and doc.get(fieldname) != before.get(fieldname):
+			frappe.throw(
+				_("{0} can't be changed after the record is created.").format(
+					doc.meta.get_label(fieldname) or fieldname
+				),
+				title=_("Not allowed"),
+			)
+
+
+def _apply_rules(doc, meta: dict) -> None:
 	outcome = engine.run(
 		meta,
 		doc.as_dict(convert_dates_to_str=True),
@@ -94,10 +128,8 @@ def validate_record(doc, method=None) -> None:
 		language=_language_label(meta),
 	)
 	for fieldname, value in outcome.parent_updates.items():
-		if doc.meta.get_field(fieldname) and doc.meta.get_field(fieldname).fieldtype in (
-			"Table",
-			"Table MultiSelect",
-		):
+		field = doc.meta.get_field(fieldname)
+		if field and field.fieldtype in ("Table", "Table MultiSelect"):
 			doc.set(fieldname, value or [])
 		else:
 			doc.set(fieldname, value)
@@ -115,7 +147,7 @@ def validate_record(doc, method=None) -> None:
 
 
 def _language_label(meta: dict) -> str | None:
-	"""Pick the form language matching the user's language, e.g. 'Hindi (hi)' for hi."""
+	"""The form language that matches the user's language, for example 'Hindi (hi)' for hi."""
 	lang = (frappe.local.lang or "en").lower()
 	for spec in meta.get("languages") or []:
 		code = language_code(spec)
@@ -129,13 +161,13 @@ def _fill_metadata(doc, meta: dict) -> None:
 		if f.get("retired_in") or f.get("kind", "question") != "question" or f["path"].count("/") > 1:
 			continue
 		t, fn = f["type"], f["fieldname"]
-		if t == "start" and not doc.get(fn):
+		if doc.get(fn):
+			continue
+		if t in ("start", "end"):
 			doc.set(fn, now_datetime())
-		elif t == "end":
-			doc.set(fn, now_datetime())
-		elif t == "today" and not doc.get(fn):
+		elif t == "today":
 			doc.set(fn, nowdate())
-		elif t == "username" and not doc.get(fn):
+		elif t == "username":
 			doc.set(fn, frappe.session.user)
 
 
@@ -165,27 +197,26 @@ def _failure_html(failures) -> str:
 	return "<ul>" + "".join(items) + "</ul>"
 
 
-# ── install / uninstall ────────────────────────────────────────────────────────
-
-
 def after_install() -> None:
+	"""Make the generated-data modules and fill XLSForm Settings with the documented defaults."""
 	from xlsform.runtime.apply import ensure_module
 
 	ensure_module()
-	if not frappe.db.exists("Role", DESIGNER):
-		frappe.get_doc({"doctype": "Role", "role_name": DESIGNER, "desk_access": 1}).insert(
-			ignore_permissions=True
-		)
 	settings = frappe.get_single("XLSForm Settings")
-	from xlsform.runtime.settings import DEFAULTS
-
 	for key, value in DEFAULTS.items():
 		if settings.get(key) in (None, "", 0) and value:
 			settings.set(key, value)
-	if not frappe.db.exists("Language", settings.default_language):
+	if settings.default_language and not frappe.db.exists("Language", settings.default_language):
 		settings.default_language = None
 	settings.flags.ignore_permissions = True
 	settings.save()
+
+
+def after_migrate() -> None:
+	"""Keep the generated-data modules present. Never touches settings an admin chose."""
+	from xlsform.runtime.apply import ensure_module
+
+	ensure_module()
 
 
 def before_uninstall() -> None:
@@ -199,17 +230,33 @@ def before_uninstall() -> None:
 			).format(len(generated)),
 			title=_("Uninstall stopped"),
 		)
-	from xlsform.runtime.apply import unregister_mobile
-
-	for name in frappe.get_all("XLSForm", pluck="data_doctype"):
-		if name:
-			unregister_mobile(name)
 	for wf in frappe.get_all("Web Form", filters={"module": DATA_MODULE}, pluck="name"):
 		frappe.delete_doc("Web Form", wf, force=True, ignore_permissions=True)
-	parents = [d for d in generated if not frappe.db.get_value("DocType", d, "istable")]
-	children = [d for d in generated if d not in parents]
-	for name in parents + children:
-		frappe.delete_doc("DocType", name, force=True, ignore_permissions=True)
+	remove_generated_doctypes(generated)
 	for module in GENERATED_MODULES:
 		if frappe.db.exists("Module Def", module):
 			frappe.delete_doc("Module Def", module, force=True, ignore_permissions=True)
+
+
+def remove_generated_doctypes(names: list[str]) -> None:
+	"""Delete generated DocTypes and drop their tables, parents before child tables.
+
+	Frappe keeps the table of a deleted DocType, so the records would otherwise stay in the database.
+	"""
+	generated = [
+		name
+		for name in names
+		if frappe.db.get_value("DocType", name, "module") in GENERATED_MODULES
+		and frappe.db.get_value("DocType", name, "custom")
+	]
+	parents = [d for d in generated if not frappe.db.get_value("DocType", d, "istable")]
+	children = [d for d in generated if d not in parents]
+	from xlsform.runtime.apply import unregister_mobile
+
+	for name in parents:
+		unregister_mobile(name)
+		for wf in frappe.get_all("Web Form", filters={"doc_type": name}, pluck="name"):
+			frappe.delete_doc("Web Form", wf, force=True, ignore_permissions=True)
+	for name in parents + children:
+		frappe.delete_doc("DocType", name, force=True, ignore_permissions=True)
+		frappe.db.sql_ddl("DROP TABLE IF EXISTS `tab{}`".format(name.replace("`", "``")))

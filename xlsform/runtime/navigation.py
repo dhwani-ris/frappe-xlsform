@@ -90,4 +90,5 @@ def _sync() -> None:
 	ws.content = json.dumps(content)
 	ws.flags.ignore_permissions = True
 	ws.flags.ignore_links = True
+	ws.flags.with_module = True
 	ws.save() if exists else ws.insert()

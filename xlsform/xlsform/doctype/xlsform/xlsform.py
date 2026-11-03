@@ -23,7 +23,7 @@ class XLSForm(Document):
 			navigation.sync_workspace()
 		if self.flags.xf_skip_access_sync or not self.data_doctype:
 			return
-		if self.has_value_changed("access") or self._access_changed():
+		if self._access_changed():
 			access.sync(self)
 		if self.status == "Published" and (
 			self.has_value_changed("allow_web") or self.has_value_changed("allow_mobile")
@@ -41,7 +41,7 @@ class XLSForm(Document):
 
 		def rows(doc):
 			return sorted(
-				tuple((r.role, *(int(r.get(k) or 0) for k in (*access.FLAGS, "only_own"))))
+				(r.role, *(int(r.get(k) or 0) for k in (*access.FLAGS, "only_own")))
 				for r in doc.get("access") or []
 			)
 

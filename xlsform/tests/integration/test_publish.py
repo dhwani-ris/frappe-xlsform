@@ -34,11 +34,11 @@ def household(form_id: str, version: str = "1", survey=None, choices=None, title
 	)
 
 
-def upload(content: bytes, filename="form.xlsx", form=None) -> dict:
+def upload(content: bytes, filename="form.xlsx", form=None, csv_urls=None) -> dict:
 	f = frappe.get_doc(
 		{"doctype": "File", "file_name": filename, "content": content, "is_private": 1}
 	).insert(ignore_permissions=True)
-	return forms.upload(file_url=f.file_url, form=form)
+	return forms.upload(file_url=f.file_url, form=form, csv_urls=csv_urls)
 
 
 def publish(content: bytes) -> dict:
@@ -246,8 +246,9 @@ class TestPublishAndCollect(IntegrationTestCase):
 		publish(household(fid))
 		dt = frappe.db.get_value("XLSForm", fid, "data_doctype")
 		frappe.get_doc({"doctype": dt, **GOOD}).insert()
-		data_api.export(fid, "xlsx")
-		wb = load_workbook(io.BytesIO(frappe.response["filecontent"]))
+		result = data_api.export(fid, "xlsx")
+		content = frappe.get_doc("File", {"file_url": result["file_url"]}).get_content()
+		wb = load_workbook(io.BytesIO(content))
 		self.assertEqual(wb.sheetnames, [fid, f"{fid}-member"])
 		header = [c.value for c in wb[fid][1]]
 		self.assertIn("hh_head", header)
