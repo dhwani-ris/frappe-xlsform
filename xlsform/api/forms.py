@@ -12,6 +12,7 @@ import xlsform.runtime
 from xlsform.core import annotate, engine
 from xlsform.core import template as starter
 from xlsform.core.issues import Issue
+from xlsform.core.meaning import normalize_form_id
 from xlsform.core.reader import read_workbook
 from xlsform.core.structure import build_form
 from xlsform.core.validate import validate
@@ -124,16 +125,8 @@ def _peek(content: bytes, filename: str) -> tuple[str | None, str | None, str | 
 	if settings is None or not settings.rows:
 		return None, None, None
 	row = settings.rows[0]
-	form_id = row.get("form_id") or None
-	if form_id and not frappe.db.exists("XLSForm", form_id) and not _valid_form_id(form_id):
-		form_id = None
+	form_id = normalize_form_id(row.get("form_id") or "") if row.get("form_id") else None
 	return form_id, row.get("version") or None, row.get("form_title") or None
-
-
-def _valid_form_id(form_id: str) -> bool:
-	from xlsform.core.meaning import FORM_ID_RE
-
-	return bool(FORM_ID_RE.match(form_id))
 
 
 def propose_version(form_id: str) -> str:

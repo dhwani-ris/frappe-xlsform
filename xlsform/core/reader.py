@@ -177,9 +177,32 @@ HEADER_ALIASES = {
 }
 
 
+SINGLE_COLON_BASES = {
+	"label",
+	"hint",
+	"constraint_message",
+	"constraint message",
+	"required_message",
+	"required message",
+	"guidance_hint",
+	"media",
+	"image",
+	"audio",
+	"video",
+	"bind",
+	"body",
+	"instance",
+}
+
+
 def normalise_header(raw: str) -> str:
 	"""Lower-case the column name but keep the language part of ``label::Hindi (hi)``."""
 	text = " ".join(raw.strip().split())
+	if "::" not in text and ":" in text:
+		# old pyxform spelling: label:English, hint:Hindi, bind:jr:constraintMsg
+		base, _, rest = text.partition(":")
+		if base.strip().lower() in SINGLE_COLON_BASES:
+			text = f"{base}::{rest}"
 	if "::" in text:
 		base, _, rest = text.partition("::")
 		base = base.strip().lower()

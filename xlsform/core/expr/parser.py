@@ -22,6 +22,8 @@ AST_VERSION = 1
 CURLY_QUOTES = "‘’“”‚‛„‟"
 NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_\-]*(?::[A-Za-z_][A-Za-z0-9_\-]*)?")
 REF_RE = re.compile(r"\$\{([^}]*)\}")
+# a choices-sheet column with a language, as used in choice_filter: label::English
+COLUMN_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_\-]*::[A-Za-z_][A-Za-z0-9_\- ()]*?(?=\s*(?:[=!<>)]|$))")
 NUMBER_RE = re.compile(r"(?:\d+(?:\.\d*)?|\.\d+)")
 
 
@@ -47,14 +49,15 @@ OPERATORS = ("!=", "<=", ">=", "=", "<", ">", "+", "-", "*")
 
 
 def tokenize(text: str) -> list[Token]:
-	for ch in CURLY_QUOTES:
-		if ch in text:
-			raise CurlyQuoteError("curly quotes", text.index(ch) + 1)
 	tokens: list[Token] = []
 	i = 0
 	n = len(text)
 	while i < n:
 		ch = text[i]
+		if ch in CURLY_QUOTES:
+			# inside a 'straight-quoted' string a curly quote is just text (don’t); here it was
+			# meant as a quote mark, which formulas don't accept
+			raise CurlyQuoteError("curly quotes", i + 1)
 		if ch.isspace():
 			i += 1
 			continue
@@ -106,7 +109,7 @@ def tokenize(text: str) -> list[Token]:
 				i += len(op)
 				break
 		else:
-			m = NAME_RE.match(text, i)
+			m = COLUMN_RE.match(text, i) or NAME_RE.match(text, i)
 			if m:
 				tokens.append(Token("name", m.group(0), i))
 				i = m.end()

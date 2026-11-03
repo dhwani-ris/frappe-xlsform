@@ -105,7 +105,7 @@ def cases():
 			{},
 		),
 		"E-SHEET-MISSING": (
-			(make_xlsx(survey=None, extra_sheets={"questions": [H, ["text", "a", "A"]]}), "f.xlsx", None),
+			(make_xlsx(survey=None, settings=[["form_id"], ["abc_form"]], extra_sheets={"questions": [H, ["text", "a", "A"]]}), "f.xlsx", None),
 			(make_xlsx(survey=[H, ["text", "a", "A"]]), "f.xlsx", None),
 			{},
 		),
@@ -593,9 +593,24 @@ def cases():
 			{"row": 2},
 		),
 		"E-SETTING-INVALID": (
+			(wb([H, ["text", "a", "A"]], settings=[["form_id"], ["???"]]), "f.xlsx", None),
+			(wb([H, ["text", "a", "A"]], settings=[["form_id"], ["household_survey"]]), "f.xlsx", None),
+			{"sheet": "settings", "cell": "A2"},
+		),
+		"W-FORM-ID": (
 			(wb([H, ["text", "a", "A"]], settings=[["form_id"], ["Household Survey"]]), "f.xlsx", None),
 			(wb([H, ["text", "a", "A"]], settings=[["form_id"], ["household_survey"]]), "f.xlsx", None),
 			{"sheet": "settings", "cell": "A2"},
+		),
+		"W-SHEET-UNKNOWN": (
+			(make_xlsx(survey=[H, ["text", "a", "A"]], extra_sheets={"stettings": [["form_id"], ["abc_form"]]}), "f.xlsx", None),
+			(make_xlsx(survey=[H, ["text", "a", "A"]], settings=[["form_id"], ["abc_form"]]), "f.xlsx", None),
+			{},
+		),
+		"E-SHEET-UNSUPPORTED": (
+			(make_xlsx(survey=[H, ["text", "a", "A"]], extra_sheets={"entities": [["dataset", "label"], ["trees", "Tree"]]}), "f.xlsx", None),
+			(make_xlsx(survey=[H, ["text", "a", "A"]]), "f.xlsx", None),
+			{"sheet": "entities"},
 		),
 		"E-SETTING-ENCRYPTED": (
 			(
@@ -806,6 +821,25 @@ class TestIssueCatalogue(unittest.TestCase):
 		self.assertIn("hh_size", data["suggestion"])
 		self.assertTrue(data["message"].startswith("survey!D3"))
 		self.assertTrue(data["docs_url"].endswith("#E-REF-UNKNOWN"))
+
+	def test_pyxform_compatibility(self):
+		# legacy spellings, single-colon languages, a lone sheet, an unnamed note, curly quotes in text
+		survey = [
+			["TYPE", "NAME", "label:English", "relevant"],
+			["phone number", "phone", "Phone", None],
+			["select one from yn", "s", "S", None],
+			["select all that apply from yn or specify other", "m", "M", None],
+			["note", None, "Just a note", None],
+			["text", "t", "T", "${phone} != 'don’t know'"],
+		]
+		r = validate(wb(survey), "f.xlsx")
+		self.assertEqual([(i.code, i.message) for i in r.issues if i.severity == "error"], [])
+		self.assertEqual(r.form.default_language, "default")
+		self.assertIn("English", r.form.languages)
+		only = make_xlsx(survey=None, extra_sheets={"Sheet1": [H, ["text", "a", "A"]]})
+		self.assertTrue(validate(only, "f.xlsx").ok)
+		loop = simple(["begin loop over yn", "l", None], ["integer", "n", "N"], ["end loop"])
+		self.assertIn("E-TYPE-UNSUPPORTED", {i.code for i in validate(loop, "f.xlsx").issues})
 
 	def test_pyxform_type_aliases_accepted(self):
 		content = simple(

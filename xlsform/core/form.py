@@ -46,6 +46,9 @@ SUPPORTED_TYPES = {
 META_IGNORED_TYPES = {"deviceid", "phonenumber", "email", "audit", "simserial", "subscriberid"}
 UNSUPPORTED_TYPES = {
 	"rank": "",
+	"osm": "",
+	"begin_loop": "",
+	"background-geopoint": "",
 	"trigger": "",
 	"background-audio": "",
 	"background_audio": "",
@@ -55,33 +58,127 @@ UNSUPPORTED_TYPES = {
 	"start-geopoint": "",
 	"start_geopoint": "",
 }
-STRUCTURE_TYPES = {"begin_group", "end_group", "begin_repeat", "end_repeat"}
+STRUCTURE_TYPES = {"begin_group", "end_group", "begin_repeat", "end_repeat", "end_loop"}
 SELECT_TYPES = {"select_one", "select_multiple", "select_one_from_file", "select_multiple_from_file"}
 META_TYPES = {"start", "end", "today", "username"}
 NO_LABEL_OK = {"calculate", "hidden", "start", "end", "today", "username", *META_IGNORED_TYPES}
 
-# pyxform-compatible spellings, after lower-casing and replacing spaces with underscores.
+# Every spelling pyxform 4.5 accepts (pyxform.question_type_dictionary and aliases), keyed by
+# the lower-cased type with spaces as underscores, mapped to the canonical v1 type.
 TYPE_ALIASES = {
+	# text
 	"string": "text",
+	"add_text_prompt": "text",
+	"q_string": "text",
+	"phone_number": "text",
+	# numbers
 	"int": "integer",
+	"add_integer_prompt": "integer",
+	"q_int": "integer",
+	"percentage": "integer",
+	"number_of_days_in_last_month": "integer",
+	"number_of_days_in_last_six_months": "integer",
+	"number_of_days_in_last_year": "integer",
 	"float": "decimal",
-	"select_all_that_apply": "select_multiple",
-	"select_one_from_file": "select_one_from_file",
+	"add_decimal_prompt": "decimal",
+	"q_decimal": "decimal",
+	# dates and times
+	"add_date_prompt": "date",
+	"q_date": "date",
+	"date_time": "datetime",
+	"add_date_time_prompt": "datetime",
+	"add_datetime_prompt": "datetime",
+	"q_date_time": "datetime",
+	"q_datetime": "datetime",
+	# location and media
 	"location": "geopoint",
 	"gps": "geopoint",
-	"date_time": "datetime",
-	"datetime": "datetime",
+	"add_location_prompt": "geopoint",
+	"q_location": "geopoint",
+	"q_geopoint": "geopoint",
+	"q_geoshape": "geoshape",
+	"q_geotrace": "geotrace",
 	"photo": "image",
-	"q_picture": "image",
+	"add_image_prompt": "image",
 	"q_image": "image",
+	"q_picture": "image",
+	"add_audio_prompt": "audio",
 	"q_audio": "audio",
+	"add_video_prompt": "video",
 	"q_video": "video",
-	"imei": "deviceid",
-	"begin_loop": "begin_repeat",
-	"end_loop": "end_repeat",
+	"add_file_prompt": "file",
+	"add_barcode_prompt": "barcode",
+	"q_barcode": "barcode",
+	# display and computed
+	"add_note_prompt": "note",
+	"q_note": "note",
+	"add_acknowledge_prompt": "acknowledge",
+	"q_acknowledge": "acknowledge",
+	"trigger": "trigger",
+	"add_calculate_prompt": "calculate",
+	"q_calculate": "calculate",
+	# metadata
 	"start_time": "start",
+	"get_start_time": "start",
 	"end_time": "end",
+	"get_end_time": "end",
+	"get_today": "today",
+	"device_id": "deviceid",
+	"get_device_id": "deviceid",
+	"imei": "deviceid",
+	"uri:deviceid": "deviceid",
+	"get_phone_number": "phonenumber",
+	"uri:phonenumber": "phonenumber",
+	"sim_id": "simserial",
+	"get_sim_id": "simserial",
+	"uri:simserial": "simserial",
+	"subscriber_id": "subscriberid",
+	"get_subscriber_id": "subscriberid",
+	"uri:subscriberid": "subscriberid",
+	"uri:email": "email",
+	"uri:username": "username",
+	# structure: begin/end + group, lgroup, repeat, looped group, loop
+	"begin_lgroup": "begin_repeat",
+	"end_lgroup": "end_repeat",
+	"begin_looped_group": "begin_repeat",
+	"end_looped_group": "end_repeat",
+	"begin_loop": "begin_loop",
+	"end_loop": "end_loop",
+	"background-geopoint": "background-geopoint",
+	"select_one_external": "select_one_external",
+	"select1": "select_one",
 }
+
+# Select spellings that take a list (or a file) after them, longest first so
+# "select one from file" wins over "select one from" and "select one".
+SELECT_PREFIXES = (
+	("add select multiple prompt using ", "select_multiple"),
+	("add select one prompt using ", "select_one"),
+	("select all that apply from ", "select_multiple"),
+	("select_multiple_from_file ", "select_multiple_from_file"),
+	("select multiple from file ", "select_multiple_from_file"),
+	("select_one_from_file ", "select_one_from_file"),
+	("select one from file ", "select_one_from_file"),
+	("select multiple from ", "select_multiple"),
+	("select multiple using ", "select_multiple"),
+	("select all that apply ", "select_multiple"),
+	("select_one_external ", "select_one_external"),
+	("select one external ", "select_one_external"),
+	("select one using ", "select_one"),
+	("select one from ", "select_one"),
+	("select_multiple ", "select_multiple"),
+	("select multiple ", "select_multiple"),
+	("select_one ", "select_one"),
+	("select one ", "select_one"),
+	("q select1 ", "select_one"),
+	("q select ", "select_multiple"),
+	("select1 ", "select_one"),
+	("rank ", "rank"),
+	("osm ", "osm"),
+	("begin loop over ", "begin_loop"),
+	("begin_loop over ", "begin_loop"),
+)
+OR_OTHER = (" or_other", " or specify other")
 
 ALL_KNOWN_TYPES = SUPPORTED_TYPES | META_IGNORED_TYPES | set(UNSUPPORTED_TYPES) | STRUCTURE_TYPES
 
@@ -95,28 +192,21 @@ class TypeInfo:
 
 
 def parse_type(raw: str) -> TypeInfo:
-	"""Split ``select_one yes_no`` / ``select one from file x.csv`` into a :class:`TypeInfo`."""
+	"""Split ``select_one yes_no`` / ``select one from file x.csv`` into a :class:`TypeInfo`.
+
+	Accepts every spelling pyxform does (``select one from yes_no``, ``phone number``,
+	``begin looped group`` …), in any letter case.
+	"""
 	text = " ".join(raw.strip().split())
 	lowered = text.lower()
-	for prefix, canonical in (
-		("select_one_from_file ", "select_one_from_file"),
-		("select one from file ", "select_one_from_file"),
-		("select_multiple_from_file ", "select_multiple_from_file"),
-		("select multiple from file ", "select_multiple_from_file"),
-		("select_one ", "select_one"),
-		("select one ", "select_one"),
-		("select_multiple ", "select_multiple"),
-		("select multiple ", "select_multiple"),
-		("select all that apply ", "select_multiple"),
-		("rank ", "rank"),
-		("select_one_external ", "select_one_external"),
-	):
+	for prefix, canonical in SELECT_PREFIXES:
 		if lowered.startswith(prefix):
 			arg = text[len(prefix) :].strip()
 			if canonical.endswith("_from_file"):
 				return TypeInfo(canonical, file_name=arg, raw=text)
-			if " or_other" in arg:
-				arg = arg.replace(" or_other", "").strip()
+			for suffix in OR_OTHER:
+				if arg.lower().endswith(suffix):
+					arg = arg[: -len(suffix)].strip()
 			return TypeInfo(canonical, list_name=arg, raw=text)
 	key = lowered.replace(" ", "_")
 	key = TYPE_ALIASES.get(key, key)

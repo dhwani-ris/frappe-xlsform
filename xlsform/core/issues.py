@@ -64,6 +64,18 @@ CATALOGUE: dict[str, Entry] = {
 			N_('The workbook has no "{sheet_name}" sheet.'),
 			N_('Rename your {purpose} sheet to "{sheet_name}" (lower case).'),
 		),
+		_e(
+			"W-SHEET-UNKNOWN",
+			1,
+			N_('The sheet "{sheet_name}" isn\'t used, so anything on it will be ignored.'),
+			N_('Did you mean "{guess}"? Rename the sheet if so.'),
+		),
+		_e(
+			"E-SHEET-UNSUPPORTED",
+			1,
+			N_('The "{sheet_name}" sheet (entities) isn\'t supported yet.'),
+			N_("Remove the sheet; Frappe DocTypes already store each record."),
+		),
 		# Stage 2: structure
 		_e(
 			"E-COL-MISSING",
@@ -331,6 +343,12 @@ CATALOGUE: dict[str, Entry] = {
 			3,
 			N_('The setting {setting} = "{value}" isn\'t valid: {reason}.'),
 			N_("{hint}"),
+		),
+		_e(
+			"W-FORM-ID",
+			3,
+			N_('The form ID "{value}" will be used as {fixed}, because form IDs may only use a-z, 0-9 and _.'),
+			N_("Change form_id to {fixed} in the settings sheet to keep them the same."),
 		),
 		_e(
 			"E-SETTING-ENCRYPTED",

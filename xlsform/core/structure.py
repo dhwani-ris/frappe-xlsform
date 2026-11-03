@@ -56,8 +56,11 @@ CHOICE_COLUMNS = {"list_name", "name", "label"}
 def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issue]]:
 	issues: list[Issue] = []
 	survey = wb.sheet("survey")
+	if survey is None and len(wb.sheets) == 1:
+		survey = next(iter(wb.sheets.values()))  # pyxform: a workbook's only sheet is the survey
 	if survey is None:
 		return None, [issue("E-SHEET-MISSING", sheet_name="survey", sheet="survey", purpose="questions")]
+	issues += _check_sheet_names(wb, survey)
 	issues += _check_survey_columns(survey)
 	if any(i.code == "E-COL-MISSING" for i in issues):
 		return None, issues
@@ -70,6 +73,8 @@ def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issu
 	default_language = language_name(settings.get("default_language", "")) or DEFAULT_LANGUAGE
 
 	choices_sheet = wb.sheet("choices")
+	if choices_sheet is not None and not choices_sheet.headers:
+		choices_sheet = None  # an empty choices sheet is the same as none
 	lists: dict[str, ChoiceList] = {}
 	choice_columns: set[str] = set()
 	if choices_sheet is not None:
@@ -99,17 +104,19 @@ def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issu
 				)
 			continue
 		info = parse_type(raw_type)
-		if info.base in ("end_group", "end_repeat"):
+		if info.base in ("end_group", "end_repeat", "end_loop"):
 			_close(stack, info.base, row, survey, issues)
 			continue
 		name = row.get("name")
-		kind = {"begin_group": GROUP, "begin_repeat": REPEAT}.get(info.base, QUESTION)
+		if not name and info.base == "note":
+			name = f"note_r{row.number}"  # pyxform accepts notes without a name
+		kind = {"begin_group": GROUP, "begin_repeat": REPEAT, "begin_loop": GROUP}.get(info.base, QUESTION)
 		node = Node(kind, name, info, row, parent=stack[-1])
 		stack[-1].children.append(node)
 		if kind != QUESTION:
 			stack.append(node)
 	for open_node in reversed(stack[1:]):
-		kind = "repeat" if open_node.kind == REPEAT else "group"
+		kind = _block_kind(open_node)
 		issues.append(
 			issue(
 				"E-GROUP-UNCLOSED",
@@ -152,6 +159,29 @@ def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issu
 		choice_columns=choice_columns,
 	)
 	return form, issues
+
+
+KNOWN_SHEETS = {"survey", "choices", "settings"}
+IGNORED_SHEETS = {"external_choices", "osm", "xlsform_report"}
+UNSUPPORTED_SHEETS = {"entities"}
+
+
+def _check_sheet_names(wb: Workbook, survey: Sheet) -> list[Issue]:
+	issues = []
+	for key, sheet in wb.sheets.items():
+		if sheet is survey or key in KNOWN_SHEETS or key in IGNORED_SHEETS:
+			continue
+		if key in UNSUPPORTED_SHEETS:
+			if sheet.rows:
+				issues.append(issue("E-SHEET-UNSUPPORTED", sheet_name=sheet.name, sheet=sheet.name, row=1))
+			continue
+		guess = closest(key, KNOWN_SHEETS)
+		if not guess:
+			continue  # unrelated extra sheets are ignored, as in pyxform
+		known = wb.sheet(guess)
+		if known is None or (not known.rows and sheet.rows) or not sheet.rows:
+			issues.append(issue("W-SHEET-UNKNOWN", sheet_name=sheet.name, guess=guess))
+	return issues
 
 
 def _stem(filename: str) -> str:
@@ -228,14 +258,20 @@ def _read_choices(sheet: Sheet, default_language: str) -> tuple[dict[str, Choice
 	return lists, extra_columns
 
 
+def _block_kind(node: Node) -> str:
+	if node.kind == REPEAT:
+		return "repeat"
+	return "loop" if node.base_type == "begin_loop" else "group"
+
+
 def _close(stack: list[Node], end_type: str, row: Row, sheet: Sheet, issues: list[Issue]) -> None:
-	closing = "repeat" if end_type == "end_repeat" else "group"
+	closing = end_type.removeprefix("end_")
 	where = dict(sheet="survey", row=row.number, column="type", col_index=sheet.column_index("type"))
 	if len(stack) == 1:
 		issues.append(issue("E-GROUP-EXTRA-END", kind=closing, **where))
 		return
 	top = stack[-1]
-	open_kind = "repeat" if top.kind == REPEAT else "group"
+	open_kind = _block_kind(top)
 	if open_kind != closing:
 		issues.append(
 			issue(

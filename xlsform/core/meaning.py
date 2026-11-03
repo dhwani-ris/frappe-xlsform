@@ -162,7 +162,7 @@ def _questions(form: Form) -> list[Node]:
 
 def _check_types(form: Form) -> list[Issue]:
 	issues = []
-	for node in _questions(form):
+	for node in [*_questions(form), *(n for n in form.nodes() if n.base_type == "begin_loop")]:
 		base = node.base_type
 		if base in SUPPORTED_TYPES:
 			continue
@@ -170,6 +170,7 @@ def _check_types(form: Form) -> list[Issue]:
 		if base in META_IGNORED_TYPES:
 			issues.append(issue("W-META-IGNORED", type=base, **where))
 		elif base in UNSUPPORTED_TYPES:
+			base = {"begin_loop": "loop", "select_one_external": "select_one_external"}.get(base, base)
 			alternative = tr(N_(", or use select_multiple")) if base == "rank" else ""
 			issues.append(issue("E-TYPE-UNSUPPORTED", type=base, alternative=alternative, **where))
 		else:
@@ -384,20 +385,21 @@ def _check_settings(form: Form, opts: Options, analysis: Analysis) -> list[Issue
 
 	form_id = form.settings.get("form_id", "")
 	if not FORM_ID_RE.match(form_id):
-		fixed = slug(form_id)[:41]
-		if len(fixed) < 3:
-			fixed = (fixed + "_form")[:41]
-		hint = tr(N_("Use {fixed}: lower-case letters, numbers and _, 3 to 41 characters."), fixed=fixed)
-		issues.append(
-			issue(
-				"E-SETTING-INVALID",
-				setting="form_id",
-				value=form_id,
-				reason=tr(N_("form IDs must start with a letter and use only a-z, 0-9 and _")),
-				hint=hint,
-				**where("form_id"),
+		fixed = normalize_form_id(form_id)
+		if fixed:
+			form.settings["form_id"] = fixed
+			issues.append(issue("W-FORM-ID", value=form_id, fixed=fixed, **where("form_id")))
+		else:
+			issues.append(
+				issue(
+					"E-SETTING-INVALID",
+					setting="form_id",
+					value=form_id,
+					reason=tr(N_("it has no letters or numbers to build a form ID from")),
+					hint=tr(N_("Use lower-case letters, numbers and _, e.g. household_survey.")),
+					**where("form_id"),
+				)
 			)
-		)
 	if form.settings.get("public_key"):
 		issues.append(issue("E-SETTING-ENCRYPTED", **where("public_key")))
 	for key in form.settings:
@@ -423,6 +425,20 @@ def _check_settings(form: Form, opts: Options, analysis: Analysis) -> list[Issue
 		if analysis.instance_name is None:
 			issues.append(issue("W-INSTANCE-NAME", **where("instance_name")))
 	return issues
+
+
+def normalize_form_id(raw: str) -> str | None:
+	"""``Flat test`` -> ``flat_test``; None when nothing usable is left."""
+	if FORM_ID_RE.match(raw or ""):
+		return raw
+	if not any(ch.isalnum() for ch in raw or ""):
+		return None
+	fixed = slug(raw)[:41].strip("_")
+	if fixed[0].isdigit() or fixed.startswith("q_"):
+		fixed = ("f_" + fixed.removeprefix("q_"))[:41]
+	if len(fixed) < 3:
+		fixed = f"{fixed}_form"
+	return fixed if FORM_ID_RE.match(fixed) else None
 
 
 def _instance_name_parts(text: str, form: Form) -> list[dict] | None:
@@ -674,6 +690,8 @@ def _check_filters(form: Form, opts: Options, analysis: Analysis, issues: list[I
 			continue
 		node = by_path[path]
 		where = _where(node, "choice_filter")
+		if node.base_type not in SUPPORTED_TYPES:
+			continue  # already reported as an unsupported type
 		if node.base_type not in ("select_one", "select_one_from_file"):
 			issues.append(issue("E-FILTER-MULTI", **where))
 			continue
