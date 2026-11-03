@@ -147,7 +147,7 @@ class TestCompiler(unittest.TestCase):
 		]
 		choices = [["list_name", "name", "label"], ["long", "x" * 25, "X"]]
 		f = fields(plan_for(survey, choices))
-		self.assertEqual(f["s"]["length"], 140)  # Frappe's default Link length
+		self.assertEqual(f["s"]["length"], 63)
 		self.assertEqual(f["s"]["default"], "x" * 25)
 		self.assertEqual(f["d"]["default"], "Today")
 		self.assertEqual(f["k"]["default"], "1")
@@ -204,16 +204,28 @@ class TestCompiler(unittest.TestCase):
 		self.assertEqual(f["xf_version"]["search_index"], 1)
 		self.assertNotIn("set_only_once", f["xf_channel"])
 
-	def test_choice_links_use_frappe_default_length(self):
+	def test_many_selects_fit_the_default_row_budget(self):
+		survey = [H, *[["select_one yn", f"s{i}", f"S{i}"] for i in range(150)]]
+		plan = plan_for(survey, choices=[["list_name", "name", "label"], ["yn", "y", "Y"]])
+		self.assertEqual(fields(plan)["s0"]["length"], 63)
+
+	def test_long_choice_names_widen_the_link(self):
+		plan = plan_for(
+			[H, ["select_one long", "s", "S"]],
+			choices=[["list_name", "name", "label"], ["long", "x" * 80, "X"]],
+		)
+		self.assertEqual(fields(plan)["s"]["length"], 80)
+
+	def test_choice_links_fit_a_one_byte_length_prefix(self):
 		plan = plan_for(
 			[H, ["select_one yn", "s", "S"], ["select_multiple yn", "m", "M"]],
 			choices=[["list_name", "name", "label"], ["yn", "y", "Y"]],
 		)
-		self.assertEqual(fields(plan)["s"]["length"], 140)
+		self.assertEqual(fields(plan)["s"]["length"], 63)
 		kinds = {d["xf_kind"]: d for d in plan["doctypes"]}
 		choice_name = next(x for x in kinds["list"]["fields"] if x["fieldname"] == "choice_name")
-		self.assertEqual(choice_name["length"], 140)
-		self.assertEqual(kinds["pick"]["fields"][0]["length"], 140)
+		self.assertEqual(choice_name["length"], 63)
+		self.assertEqual(kinds["pick"]["fields"][0]["length"], 63)
 
 	def test_web_form_spec(self):
 		plan = plan_for(
@@ -249,7 +261,7 @@ class TestRepublish(unittest.TestCase):
 		self.assertEqual(f["a"]["hidden"], 1)
 		self.assertEqual(f["a_v2"]["fieldtype"], "Int")  # new column for the new type
 		self.assertEqual(f["b"]["hidden"], 1)  # removed question kept hidden
-		self.assertEqual(f["c"]["length"], 140)  # Frappe's default Link length, never narrowed
+		self.assertEqual(f["c"]["length"], 63)
 		self.assertIn("d", f)
 		self.assertEqual(r2.change_summary["removed"], ["b"])
 		self.assertEqual(r2.change_summary["type_changed"], [{"name": "a", "from": "text", "to": "integer"}])

@@ -30,7 +30,7 @@ MODULE = "XLSForm Data"
 CHOICES_MODULE = "XLSForm Choices"
 RESERVED_PARENT_FIELDS = ("xf_form", "xf_version", "xf_channel")
 LABEL_MAX = 140
-LINK_LENGTH = 140
+LINK_LENGTH = 63
 TAB_THRESHOLD = 3
 
 FIELDTYPES = {
