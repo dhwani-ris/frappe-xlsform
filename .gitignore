@@ -60,3 +60,5 @@ jspm_packages/
 .pytest_cache/
 .coverage
 htmlcov/
+
+.claude/
