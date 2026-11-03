@@ -18,6 +18,7 @@ frappe.ui.form.on("XLSForm Version", {
 	refresh(frm) {
 		frm.disable_save();
 		frm.page.clear_primary_action();
+		frm.page.clear_secondary_action();
 		frm.get_field("report_view").$wrapper.html(frm.doc.report_html || "");
 		frm.get_field("change_view").$wrapper.html(frm.doc.change_html || "");
 		bind_copy_links(frm);

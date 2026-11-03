@@ -48,13 +48,14 @@ def version_meta(version: str) -> dict | None:
 
 
 def _channel(doc) -> str:
+	"""Where a new record came from, by the called method or the request path."""
 	request = getattr(frappe.local, "request", None)
-	path = getattr(request, "path", "") or ""
-	if "web_form" in path or "webform" in path:
+	called = f"{frappe.form_dict.get('cmd') or ''} {getattr(request, 'path', '') or ''}"
+	if "web_form" in called or "webform" in called:
 		return "Web"
 	if doc.get("mobile_uuid"):
 		return "mForm"
-	if "frappe.desk.form.save" in path or "savedocs" in path:
+	if "frappe.desk.form.save" in called or "savedocs" in called:
 		return "Desk"
 	return "API"
 

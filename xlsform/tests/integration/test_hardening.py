@@ -141,6 +141,18 @@ class TestRecordIntegrity(IntegrationTestCase):
 		doc = frappe.get_doc({"doctype": self.dt_a, **GOOD, "xf_channel": "Web"}).insert()
 		self.assertEqual(doc.xf_channel, "API")
 
+	def test_channel_follows_the_called_method(self):
+		for cmd, channel in (
+			("frappe.website.doctype.web_form.web_form.accept", "Web"),
+			("frappe.desk.form.save.savedocs", "Desk"),
+		):
+			frappe.form_dict.cmd = cmd
+			try:
+				doc = frappe.get_doc({"doctype": self.dt_a, **GOOD}).insert()
+			finally:
+				frappe.form_dict.pop("cmd", None)
+			self.assertEqual(doc.xf_channel, channel)
+
 	def test_retired_form_cannot_be_bypassed(self):
 		fid = f"hh_{uid()}"
 		publish(household(fid))
