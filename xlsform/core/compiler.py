@@ -18,7 +18,7 @@ import html
 import re
 from dataclasses import dataclass, field
 
-from xlsform.core.expr import emit_js
+from xlsform.core.expr import emit_js, profile
 from xlsform.core.expr.parser import AST_VERSION, strip_positions
 from xlsform.core.form import GROUP, QUESTION, REPEAT, SELECT_TYPES, SUPPORTED_TYPES, Form, Node
 from xlsform.core.issues import Issue, issue
@@ -439,7 +439,7 @@ class _Compiler:
 					"fieldtype": "Tab Break" if is_tab else "Section Break",
 				}
 				if conditions:
-					brk["depends_on"] = _eval_and(conditions)
+					self._set_live(brk, "depends_on", _eval_and(conditions), node, "relevant")
 				out.append(brk)
 				self._record_field(node, doctype, brk)
 				self._translate_label(node, brk, doctype)
@@ -453,7 +453,7 @@ class _Compiler:
 					"label": (_plain(self.form.title)[:LABEL_MAX] if use_tabs else (section_prefix or "")),
 				}
 				if inherited:
-					spacer["depends_on"] = _eval_and(inherited)
+					self._set_live(spacer, "depends_on", _eval_and(inherited), None, "relevant")
 				out.append(spacer)
 				after_group = False
 			if node.kind == REPEAT:
@@ -526,7 +526,7 @@ class _Compiler:
 			"options": self.repeats[node.path],
 		}
 		if conditions:
-			field["depends_on"] = _eval_and(conditions)
+			self._set_live(field, "depends_on", _eval_and(conditions), node, "relevant")
 		self._record_field(node, doctype, field)
 		self._translate_label(node, field, doctype)
 		return field
@@ -584,7 +584,7 @@ class _Compiler:
 		own = self._relevant_js(node)
 		conditions = [*inherited, *([own] if own else [])]
 		if conditions:
-			field["depends_on"] = _eval_and(conditions)
+			self._set_live(field, "depends_on", _eval_and(conditions), node, "relevant")
 
 		static = self.a.static.get(node.path, {})
 		required_ast = self.a.asts.get(node.path, {}).get("required")
@@ -598,16 +598,26 @@ class _Compiler:
 			if static.get("required") and not conditions:
 				field["reqd"] = 1
 			elif static.get("required"):
-				field["mandatory_depends_on"] = _eval_and(conditions)
+				self._set_live(field, "mandatory_depends_on", _eval_and(conditions), node, "required")
 			elif required_ast:
-				field["mandatory_depends_on"] = _eval_and(
-					[*conditions, emit_js.emit(required_ast, self._scope(node))]
+				self._set_live(
+					field,
+					"mandatory_depends_on",
+					_eval_and([*conditions, emit_js.emit(required_ast, self._scope(node))]),
+					node,
+					"required",
 				)
 		read_only_ast = self.a.asts.get(node.path, {}).get("read_only")
 		if static.get("read_only"):
 			field["read_only"] = 1
 		elif read_only_ast:
-			field["read_only_depends_on"] = "eval:" + emit_js.emit(read_only_ast, self._scope(node))
+			self._set_live(
+				field,
+				"read_only_depends_on",
+				"eval:" + emit_js.emit(read_only_ast, self._scope(node)),
+				node,
+				"read_only",
+			)
 
 		default = self.a.defaults.get(node.path)
 		if default is not None and qtype not in ("select_multiple", "select_multiple_from_file", "note"):
@@ -621,6 +631,19 @@ class _Compiler:
 		self._record_field(node, doctype, field)
 		self._translate_label(node, field, doctype)
 		return field
+
+	def _set_live(self, field: dict, key: str, value: str, node: Node | None, column: str) -> None:
+		"""Ship an ``eval:`` property only when it is in the JavaScript profile.
+
+		Each part was checked when emitted; this catches what joining parts can add (nesting).
+		"""
+		if profile.is_valid(value.removeprefix("eval:")):
+			field[key] = value
+			return
+		where = {}
+		if node is not None and node.row:
+			where = dict(sheet="survey", row=node.row_number, column=column, col_index=node.col(column))
+		self.issues.append(issue("E-EXPR-TOO-COMPLEX", limit=emit_js.MAX_JS_LENGTH, **where))
 
 	def _filter_value(self, ast: dict, node: Node) -> str:
 		return emit_js.filter_value(ast, self._scope(node))

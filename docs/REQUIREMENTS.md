@@ -333,7 +333,7 @@ AST shape (`astVersion: 1`):
 
 ### 6.2 JavaScript emitter (Live subset)
 
-The target grammar is the intersection of JavaScript and the SDK interpreter: literals, `doc.x`, `parent.x`, `! && || ?:`, `=== !== < <= > >= + - * / %`, `.length`, `.includes`, `.startsWith`, `.endsWith`, `.some`, `.map`, `.join`, `.split`, arrow functions, and the Frappe globals `cint`, `flt`, `cstr`.
+The target grammar is the intersection of JavaScript and the SDK interpreter: literals, `doc.x`, `parent.x`, `! && || ?:`, `=== !== < <= > >= + - * / %`, `.length`, `.includes`, `.startsWith`, `.endsWith`, `.some`, `.map`, `.join`, `.split`, `.filter`, one-parameter arrow functions, array literals, and the Frappe globals `cint`, `flt`, `cstr`. `core/expr/profile.py` enforces it on every emitted string (section 6.4). A formula whose emitted string, with its calculations written out, is over 4,000 characters is not Live (`E-EXPR-TOO-COMPLEX`).
 
 | XLSForm | Emitted (inside a row, own-row refs use `doc`, outer refs use `parent`) |
 | --- | --- |
@@ -345,6 +345,8 @@ The target grammar is the intersection of JavaScript and the SDK interpreter: li
 | `count(${rep})` | `(doc.rep \|\| []).length` |
 | `if(c, a, b)` | `(c ? a : b)` |
 | `int(x)` / `number(x)` | `cint(x)` / `flt(x)` |
+| a number used as a condition | `!!(x)` (false for 0 and NaN) |
+| `region = 'd1'` in `choice_filter` | link filter value `eval:"d1"` |
 
 ### 6.3 Semantics (each is a conformance fixture group)
 
@@ -365,7 +367,13 @@ The target grammar is the intersection of JavaScript and the SDK interpreter: li
 
 ### 6.4 Conformance
 
-`xlsform/tests/conformance/cases/*.json` holds cases of `{expr, doc, expected}`: 305 written by hand plus 882 generated from an independent ODK oracle (`generate_matrix.py`), 1,187 in all. Each case goes through the real pipeline (workbook → validator → compiler) and is checked three ways: the Python evaluator; the emitted JavaScript run in Node with Frappe's own `cint`/`flt`/`cstr` source (as Desk runs it); and, for Live cases, the same JavaScript through the SDK's `js_expression.dart` at a pinned commit (`scripts/conformance-dart.sh`). All three agree on every case.
+`xlsform/tests/conformance/cases/*.json` holds cases of `{expr, doc, expected}`: 319 written by hand plus 882 generated from an independent ODK oracle (`generate_matrix.py`), 1,201 in all. Each case goes through the real pipeline (workbook → validator → compiler) and is checked three ways:
+
+1. the Python evaluator;
+2. the emitted JavaScript, run in Node with Frappe's own `cint`/`flt`/`cstr` source (as Desk runs it), including the `eval:` values of `link_filters` as `link.js` evaluates them;
+3. the **SDK profile**: every emitted string must parse in `xlsform/core/expr/profile.py`, a small tokenizer and parser for the part of the subset documented in the header of the SDK's `js_expression.dart` that is also unambiguous JavaScript: numbers with digits and one `.` only (no exponent, no leading zero), double-quoted strings with only `\\` and `\"` escapes, `doc`/`parent`/arrow parameters, member access by name, the SDK's whitelisted methods, `cint`/`flt`/`cstr`/`in_list`/`Boolean`, one-parameter single-expression arrows as the argument of `some`/`every`/`filter`/`map`/`find`, unary `! - +`, `=== !== == != < <= > >= && || + - * / %`, `?:`, brackets and array literals. Statements, assignment, `new`, template and regex literals, comments, `++`/`--`, other identifiers (`window`, `frappe`) and a second `eval:` are rejected.
+
+The compiler runs every emitted string (`depends_on`, `mandatory_depends_on`, `read_only_depends_on` and the `eval:` parts of `link_filters`) through the profile. A string outside it is an emitter bug: the formula is reported as not Live (`E-EXPR-NOT-LIVE`, or `E-EXPR-TOO-COMPLEX` when joining a group's conditions nests it too deeply) and the string is never shipped. The SDK repository runs the same cases in Dart from `python -m xlsform.tests.conformance.export <out.json>`; this repository no longer clones the SDK.
 
 ## 7. Validation and user-friendly errors
 
@@ -532,12 +540,12 @@ Issue object:
 | Layer | Tool | Proves |
 | --- | --- | --- |
 | Validator fixtures | pytest (no site) | Each code fires on a minimal bad workbook with the right location; good workbooks give zero issues |
-| Expression conformance | pytest + Node + Dart (SDK interpreter) | Python, JavaScript and the SDK agree on every case |
+| Expression conformance | pytest + Node | Python and Frappe's JavaScript agree with ODK on every case, and every emitted string is in the SDK profile (`core/expr/profile.py`) |
 | Compiler unit | pytest (no site) | Type mapping, sanitising, layout, selects, budget, diffs (snapshots) |
 | Server integration | `bench run-tests --app xlsform` | Upload → publish → DocTypes → valid/invalid records → republish → old records still valid → access per role → retire |
 | Corpus | `scripts/pyxform_crosscheck.py` (nightly) | Agreement with pyxform on real workbooks |
 
-Security tests: `<script>` in labels is inert; quotes and backslashes in literals can't break out of `eval:` strings; a non-designer gets 403 on upload/publish; `apply()` refuses a DocType outside `XLSForm Data`.
+Security tests: `<script>` in labels is inert; quotes and backslashes in literals can't break out of `eval:` strings; a `choice_filter` literal never reaches `link_filters` as raw text; strings outside the JavaScript profile are rejected (`xlsform/tests/unit/test_profile.py`); hostile workbooks (deep nesting, exponential calculations, huge declared dimensions, zip bombs, slow regexes, huge function arguments) get located issues within bounded time (`TestHostileInput`, `TestCollectorDataCantSlowASave`); a non-designer gets 403 on upload/publish; `apply()` refuses a DocType outside `XLSForm Data`.
 
 ## 14. Milestones
 

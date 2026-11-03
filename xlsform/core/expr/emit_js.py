@@ -27,6 +27,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from xlsform.core.expr import profile
 from xlsform.core.expr.evaluate import NUMBER_TEXT_RE, format_number
 
 NUMERIC_TYPES = {"integer", "decimal", "range"}
@@ -90,8 +91,13 @@ def emit(ast: dict, scope: Scope) -> str:
 
 
 def _checked(code: str) -> str:
+	"""Every shipped string is within the size cap and the JavaScript profile."""
 	if len(code) > MAX_JS_LENGTH:
 		raise TooComplex()
+	try:
+		profile.check(code)
+	except profile.OutsideProfile as exc:
+		raise NotLive("this formula") from exc
 	return code
 
 

@@ -5,7 +5,8 @@ Every case in ``cases/*.json`` is checked against the ODK result written in the 
 1. Python — the server evaluator, on the AST the validator stored in ``compiled_meta``;
 2. JavaScript — the ``depends_on`` string the compiler emitted, run by ``run_js.js``
    with Frappe's own ``cstr``/``cint``/``flt`` source, as Frappe Desk runs it;
-3. Dart — the same string run by the mForm SDK's interpreter (``dart/bin/run.dart``).
+3. the mForm SDK profile — the same string must parse in ``core/expr/profile.py``, the
+   subset of JavaScript that the SDK's ``js_expression.dart`` documents and Desk agrees on.
 
 Cases go through the real pipeline: each case becomes a probe question in a generated
 workbook (``relevant`` for Live cases, ``constraint``/``calculation`` for server-only ones),
