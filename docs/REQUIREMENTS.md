@@ -375,6 +375,8 @@ Rules for every issue: located (sheet, Excel row, column, cell), plain language,
 
 | Limit | Value | Where | Issue |
 | --- | --- | --- | --- |
+| Unpacked size of the workbook (sum of the zip entries, checked before any XML is parsed) | 50 MB (`max_unpacked_mb`) | `core/reader.py` `MAX_UNPACKED_MB` | `E-FILE-UNPACKED` |
+| Rows and columns read per sheet (the sheet's declared dimension is ignored; survey, choices and settings are read in full, other sheets only for their first 50 rows) | 30,000 rows, 200 columns | `core/reader.py` `MAX_ROWS`, `MAX_COLUMNS` | `E-FILE-SHEET-SIZE` (data in row 30,001+ or column 201). Cells after column 201 are not seen. |
 | Nesting inside one formula (brackets, functions, operators) | 100 levels | `core/expr/parser.py` `MAX_DEPTH` | `E-EXPR-SYNTAX` |
 | Groups and repeats inside each other | 30 levels | `core/structure.py` `MAX_GROUP_DEPTH` | `E-GROUP-TOO-DEEP` |
 | Emitted JavaScript for one Live formula, with its calculations written out | 4,000 characters, 200 levels, 20 inlined calculations in a chain | `core/expr/emit_js.py` `MAX_JS_LENGTH`, `MAX_EMIT_DEPTH`, `MAX_INLINE_DEPTH` | `E-EXPR-TOO-COMPLEX` |
@@ -387,7 +389,7 @@ pyxform is **not** run on sites: every pyxform release pins `xlrd==2.0.1`, which
 
 Designers see issues on the XLSForm Version form (summary bar + table grouped by sheet), as a downloadable **annotated copy of their workbook** (cells filled red/amber with the message as a comment), and in the API.
 
-**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (65 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
+**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (67 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
 
 | Code | Sev | Example message |
 | --- | --- | --- |
@@ -395,6 +397,8 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | E-FILE-SIZE | E | The file is 9 MB; the limit is 5 MB. |
 | E-FILE-PROTECTED | E | The workbook is password-protected, so it can't be read. |
 | E-FILE-UNREADABLE | E | The workbook can't be opened; it may be damaged. |
+| E-FILE-UNPACKED | E | The workbook unpacks to 60 MB of data; the limit is 50 MB. |
+| E-FILE-SHEET-SIZE | E | The "survey" sheet has data outside the first 30000 rows and 200 columns (A to GR). |
 | E-SHEET-MISSING | E | The workbook has no "survey" sheet. |
 | E-COL-MISSING | E | The survey sheet has no "type" column. |
 | W-COL-UNKNOWN | W | Column "lable" isn't recognised and will be ignored. Did you mean "label"? |

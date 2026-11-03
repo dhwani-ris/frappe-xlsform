@@ -47,6 +47,20 @@ CATALOGUE: dict[str, Entry] = {
 			N_("Remove embedded images or unused sheets."),
 		),
 		_e(
+			"E-FILE-UNPACKED",
+			1,
+			N_("The workbook unpacks to {size_mb} MB of data; the limit is {limit_mb} MB."),
+			N_("Remove embedded images and unused sheets, save it again as .xlsx and upload the new file."),
+		),
+		_e(
+			"E-FILE-SHEET-SIZE",
+			1,
+			N_(
+				'The "{sheet_name}" sheet has data outside the first {max_rows} rows and {max_columns} columns (A to {column_name}).'
+			),
+			N_("Delete everything after the form's last row and column, or split the form."),
+		),
+		_e(
 			"E-FILE-PROTECTED",
 			1,
 			N_("The workbook is password-protected, so it can't be read."),

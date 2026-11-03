@@ -17,6 +17,7 @@ from xlsform.core.issues import ERROR, Issue, issue, sort_key
 @dataclass
 class ValidateOptions:
 	max_upload_mb: float = 5
+	max_unpacked_mb: float = reader.MAX_UNPACKED_MB
 	max_questions: int = 400
 	max_choices_per_list: int = 20000
 	max_expression_length: int = 2000
@@ -69,7 +70,7 @@ def validate(content: bytes, filename: str, opts: ValidateOptions | None = None)
 def _validate(
 	content: bytes, filename: str, opts: ValidateOptions, result: Result, stage: list[int]
 ) -> Result:
-	wb, issues = reader.read_workbook(content, filename, opts.max_upload_mb)
+	wb, issues = reader.read_workbook(content, filename, opts.max_upload_mb, opts.max_unpacked_mb)
 	result.issues += issues
 	if wb is None:
 		return _finish(result, from_stage=2)

@@ -5,8 +5,10 @@ Every problem the validator reports has a stable code. Errors block publishing; 
 | Code | Severity | Stage | Meaning |
 | --- | --- | --- | --- |
 | [E-FILE-PROTECTED](E-FILE-PROTECTED.md) | error | 1 | The workbook is password-protected, so it can't be read. |
+| [E-FILE-SHEET-SIZE](E-FILE-SHEET-SIZE.md) | error | 1 | The "‹sheet_name›" sheet has data outside the first ‹max_rows› rows and ‹max_columns› columns (A to ‹column_name›). |
 | [E-FILE-SIZE](E-FILE-SIZE.md) | error | 1 | The file is ‹size_mb› MB; the limit is ‹limit_mb› MB. |
 | [E-FILE-TYPE](E-FILE-TYPE.md) | error | 1 | This file is not an Excel workbook (.xlsx). |
+| [E-FILE-UNPACKED](E-FILE-UNPACKED.md) | error | 1 | The workbook unpacks to ‹size_mb› MB of data; the limit is ‹limit_mb› MB. |
 | [E-FILE-UNREADABLE](E-FILE-UNREADABLE.md) | error | 1 | The workbook can't be opened; it may be damaged. |
 | [E-SHEET-MISSING](E-SHEET-MISSING.md) | error | 1 | The workbook has no "‹sheet_name›" sheet. |
 | [E-SHEET-UNSUPPORTED](E-SHEET-UNSUPPORTED.md) | error | 1 | The "‹sheet_name›" sheet (entities) isn't supported yet. |

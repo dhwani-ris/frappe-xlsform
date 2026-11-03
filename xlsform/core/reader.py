@@ -10,8 +10,13 @@ import io
 import zipfile
 from dataclasses import dataclass, field
 
-from xlsform.core.issues import Issue, issue
+from xlsform.core.issues import Issue, column_letter, issue
 
+MAX_ROWS = 30000
+MAX_COLUMNS = 200
+MAX_UNPACKED_MB = 50
+USED_SHEETS = {"survey", "choices", "settings"}
+PEEK_ROWS = 50
 OLE_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 MACRO_CONTENT_TYPE = b"macroEnabled"
 
@@ -60,8 +65,15 @@ class Workbook:
 		return self.sheets.get(name)
 
 
-def read_workbook(content: bytes, filename: str, max_mb: int | float) -> tuple[Workbook | None, list[Issue]]:
-	"""Return the workbook, or ``None`` with stage 1 issues when it can't be read."""
+def read_workbook(
+	content: bytes, filename: str, max_mb: int | float, max_unpacked_mb: int | float = MAX_UNPACKED_MB
+) -> tuple[Workbook | None, list[Issue]]:
+	"""Return the workbook, or ``None`` with stage 1 issues when it can't be read.
+
+	Bounded work: the unpacked size is checked from the zip directory before any XML is
+	parsed, declared sheet dimensions are ignored, each sheet is read up to ``MAX_ROWS`` x
+	``MAX_COLUMNS``, and sheets the validator doesn't use are only peeked at.
+	"""
 	issues: list[Issue] = []
 	size_mb = len(content) / (1024 * 1024)
 	lower = (filename or "").lower()
@@ -76,6 +88,7 @@ def read_workbook(content: bytes, filename: str, max_mb: int | float) -> tuple[W
 	try:
 		with zipfile.ZipFile(io.BytesIO(content)) as zf:
 			names = set(zf.namelist())
+			unpacked = sum(info.file_size for info in zf.infolist())
 			content_types = zf.read("[Content_Types].xml") if "[Content_Types].xml" in names else b""
 	except zipfile.BadZipFile:
 		return None, [issue("E-FILE-UNREADABLE")]
@@ -83,6 +96,14 @@ def read_workbook(content: bytes, filename: str, max_mb: int | float) -> tuple[W
 		return None, [issue("E-FILE-TYPE")]
 	if size_mb > max_mb:
 		return None, [issue("E-FILE-SIZE", size_mb=_round_mb(size_mb), limit_mb=max_mb)]
+	if unpacked > max_unpacked_mb * 1024 * 1024:
+		return None, [
+			issue(
+				"E-FILE-UNPACKED",
+				size_mb=_round_mb(unpacked / (1024 * 1024)),
+				limit_mb=max_unpacked_mb,
+			)
+		]
 
 	try:
 		import openpyxl
@@ -93,11 +114,16 @@ def read_workbook(content: bytes, filename: str, max_mb: int | float) -> tuple[W
 
 	sheets: dict[str, Sheet] = {}
 	try:
+		only_sheet = len(wb.worksheets) == 1
 		for ws in wb.worksheets:
 			key = ws.title.strip().lower()
 			if key in sheets:
 				continue
-			sheets[key] = _read_sheet(ws)
+			full = only_sheet or key in USED_SHEETS
+			sheet, overflow = _read_sheet(ws, None if full else PEEK_ROWS)
+			if overflow:
+				return None, [overflow]
+			sheets[key] = sheet
 	except Exception:
 		return None, [issue("E-FILE-UNREADABLE")]
 	finally:
@@ -110,11 +136,33 @@ def _round_mb(size_mb: float) -> float | int:
 	return int(rounded) if rounded == int(rounded) else rounded
 
 
-def _read_sheet(ws) -> Sheet:
+def _read_sheet(ws, peek: int | None) -> tuple[Sheet, Issue | None]:
+	"""Rows of one sheet, or the E-FILE-SHEET-SIZE issue for data outside the limits."""
 	headers: list[tuple[int, str, str]] = []
 	sheet = Sheet(name=ws.title, headers=headers)
 	header_seen = False
-	for row_number, values in enumerate(ws.iter_rows(values_only=True), start=1):
+	ws.reset_dimensions()
+	rows = ws.iter_rows(max_row=peek, max_col=MAX_COLUMNS + 1, values_only=True)
+	known_empty = None
+	for row_number, values in enumerate(rows, start=1):
+		if values is known_empty:
+			continue
+		if values.count(None) == len(values):
+			known_empty = values
+			continue
+		if row_number > MAX_ROWS or values[MAX_COLUMNS:].count(None) != len(values[MAX_COLUMNS:]):
+			col = MAX_COLUMNS + 1 if row_number <= MAX_ROWS else 1
+			return sheet, issue(
+				"E-FILE-SHEET-SIZE",
+				sheet=ws.title,
+				row=row_number,
+				col_index=col,
+				sheet_name=ws.title,
+				max_rows=MAX_ROWS,
+				max_columns=MAX_COLUMNS,
+				column_name=column_letter(MAX_COLUMNS),
+			)
+		values = values[:MAX_COLUMNS]
 		if not header_seen:
 			if all(_to_text(v) == "" for v in values):
 				continue
@@ -132,7 +180,7 @@ def _read_sheet(ws) -> Sheet:
 					cells[norm] = Cell(text, col)
 		if cells:
 			sheet.rows.append(Row(row_number, cells))
-	return sheet
+	return sheet, None
 
 
 def _to_text(value) -> str:

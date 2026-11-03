@@ -16,6 +16,20 @@ ENTRIES = [
 		},
 	},
 	{
+		"code": "E-FILE-SHEET-SIZE",
+		"severity": "error",
+		"severity_text": "Error: blocks publishing",
+		"stage": 1,
+		"stage_name": "File",
+		"message": 'The "‹sheet_name›" sheet has data outside the first ‹max_rows› rows and ‹max_columns› columns (A to ‹column_name›).',
+		"suggestion": "Delete everything after the form's last row and column, or split the form.",
+		"example": {
+			"where": "survey!GS1",
+			"message": 'survey!GS1: The "survey" sheet has data outside the first 30,000 rows and 200 columns (A to GR).',
+			"suggestion": "Delete everything after the form's last row and column, or split the form.",
+		},
+	},
+	{
 		"code": "E-FILE-SIZE",
 		"severity": "error",
 		"severity_text": "Error: blocks publishing",
@@ -41,6 +55,20 @@ ENTRIES = [
 			"where": "",
 			"message": "This file is not an Excel workbook (.xlsx).",
 			"suggestion": "Save it as .xlsx from Excel or Google Sheets and upload again.",
+		},
+	},
+	{
+		"code": "E-FILE-UNPACKED",
+		"severity": "error",
+		"severity_text": "Error: blocks publishing",
+		"stage": 1,
+		"stage_name": "File",
+		"message": "The workbook unpacks to ‹size_mb› MB of data; the limit is ‹limit_mb› MB.",
+		"suggestion": "Remove embedded images and unused sheets, save it again as .xlsx and upload the new file.",
+		"example": {
+			"where": "",
+			"message": "The workbook unpacks to 0.1 MB of data; the limit is 0.05 MB.",
+			"suggestion": "Remove embedded images and unused sheets, save it again as .xlsx and upload the new file.",
 		},
 	},
 	{

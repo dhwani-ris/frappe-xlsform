@@ -62,6 +62,45 @@ def macro_workbook() -> bytes:
 	return out.getvalue()
 
 
+FAR_CELL_SHEET = (
+	b'<?xml version="1.0" encoding="UTF-8"?>'
+	b'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+	b'<dimension ref="A1:XFD1048576"/><sheetData><row r="1048576">'
+	b'<c r="A1048576" t="inlineStr"><is><t>type</t></is></c></row></sheetData></worksheet>'
+)
+
+
+def _replace_part(content: bytes, part: str, data: bytes) -> bytes:
+	out = io.BytesIO()
+	with zipfile.ZipFile(io.BytesIO(content)) as src, zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as dst:
+		for item in src.infolist():
+			dst.writestr(item.filename, data if item.filename == part else src.read(item.filename))
+	return out.getvalue()
+
+
+def far_cell_workbook(sheet: str = "survey") -> bytes:
+	"""~5 KB: a sheet that declares the whole grid and has one cell in the last Excel row."""
+	extra = {"notes": [["x"], ["y"]]} if sheet == "notes" else None
+	content = make_xlsx(
+		survey=[H, ["text", "a", "A"]], settings=[["form_id"], ["xx_form"]], extra_sheets=extra
+	)
+	part = "xl/worksheets/sheet3.xml" if sheet == "notes" else "xl/worksheets/sheet1.xml"
+	return _replace_part(content, part, FAR_CELL_SHEET)
+
+
+def padded_workbook(size: int) -> bytes:
+	content = simple(["text", "a", "A"])
+	with zipfile.ZipFile(io.BytesIO(content)) as zf:
+		sheet = zf.read("xl/worksheets/sheet1.xml")
+	return _replace_part(content, "xl/worksheets/sheet1.xml", sheet + b" " * size)
+
+
+def wide_survey(columns: int) -> bytes:
+	return simple(
+		["text", "a", "A", *["x"] * (columns - 3)], header=[*H, *[f"c{i}" for i in range(columns - 3)]]
+	)
+
+
 PREV_SURVEY = [
 	["type", "name", "label"],
 	["text", "village", "Village name"],
@@ -105,6 +144,16 @@ def cases():
 			(broken_zip(), "f.xlsx", None),
 			(simple(["text", "a", "A"]), "f.xlsx", None),
 			{},
+		),
+		"E-FILE-UNPACKED": (
+			(padded_workbook(100000), "f.xlsx", ValidateOptions(max_unpacked_mb=0.05)),
+			(simple(["text", "a", "A"]), "f.xlsx", ValidateOptions(max_unpacked_mb=0.05)),
+			{},
+		),
+		"E-FILE-SHEET-SIZE": (
+			(wide_survey(201), "f.xlsx", None),
+			(wide_survey(200), "f.xlsx", None),
+			{"sheet": "survey", "row": 1, "cell": "GS1"},
 		),
 		"E-SHEET-MISSING": (
 			(
@@ -968,6 +1017,22 @@ class TestHostileInput(unittest.TestCase):
 		self.assertLess(time.monotonic() - start, 2)
 		self.assertIn("E-EXPR-TOO-COMPLEX", codes)
 		self.assertNotIn("E-EXPR-TOO-COMPLEX", self.codes(calc_chain(3, "{prev} + {prev}", "{last} > 0")))
+
+	def test_declared_dimension_does_not_hang_the_reader(self):
+		start = time.monotonic()
+		result = validate(far_cell_workbook(), "f.xlsx")
+		self.assertLess(time.monotonic() - start, 5)
+		hits = [i for i in result.issues if i.code == "E-FILE-SHEET-SIZE"]
+		self.assertEqual([(i.sheet, i.row) for i in hits], [("survey", 1048576)])
+
+	def test_unused_sheets_are_not_read_in_full(self):
+		start = time.monotonic()
+		result = validate(far_cell_workbook(sheet="notes"), "f.xlsx")
+		self.assertLess(time.monotonic() - start, 5)
+		self.assertTrue(result.ok, [i.message for i in result.issues])
+
+	def test_unpacked_size_is_checked_before_parsing(self):
+		self.assertEqual(self.codes(padded_workbook(60 * 1024 * 1024)), {"E-FILE-UNPACKED"})
 
 	def test_deep_groups(self):
 		self.assertIn("E-GROUP-TOO-DEEP", self.codes(nested_groups(40)))
