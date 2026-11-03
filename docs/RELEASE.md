@@ -9,7 +9,6 @@ REQUIREMENTS.md section 12. Items marked **(people)** can't be done by code and 
 - [x] CI: `linters.yml` (pre-commit: ruff, ruff-format, prettier, eslint; Frappe semgrep rules)
 - [x] CI: `conformance-sdk.yml` (emitted rules through the mForm SDK interpreter)
 - [x] CI: `corpus.yml` (pyxform cross-check on the real-world corpus)
-- [x] CI: `ui-tests.yml` (Playwright smoke suite against a real bench)
 - [x] Settings DocType (XLSForm Settings); role and workspace shipped
 - [x] All user-facing strings translatable; Hindi `xlsform/locale/hi.po` complete (343/343)
 - [x] v16 apps screen entry (`add_to_apps_screen`, lower-case name), workspace, logo
@@ -27,7 +26,7 @@ REQUIREMENTS.md section 12. Items marked **(people)** can't be done by code and 
 | Logo | `xlsform/public/images/logo.svg` (square, no text). Export a 512×512 PNG for the listing | **(people)**: approve |
 | Short description | "Build data-collection forms in Excel and collect into DocTypes" (62 chars) | done |
 | Long description | `docs/marketplace.md` | done (review) |
-| Screenshots | Generate with `cd ui-tests && npx playwright test` then take the five screens listed in `docs/marketplace.md` | **(people)** |
+| Screenshots | Take the five screens listed in `docs/marketplace.md` on a demo site | **(people)** |
 | Support URL / Privacy Policy URL | GitHub Issues; Dhwani privacy page URL | **(people)** |
 | Demo video (3–4 min) | Script in `docs/marketplace.md` | **(people)** |
 | Category | Utilities (or Data Collection) | **(people)** |

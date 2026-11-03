@@ -9,7 +9,7 @@
 | `xlsform/api/` | Whitelisted endpoints |
 | `xlsform/xlsform/doctype/` | XLSForm, XLSForm Access, XLSForm Version, XLSForm Settings |
 
-`compile_form()` is pure: it has no database access. `runtime/apply.py` is the only code that changes a site's schema. [REQUIREMENTS.md](REQUIREMENTS.md) is the source of truth. [CLAUDE.md](../CLAUDE.md) lists the rules for changes.
+`compile_form()` is pure: it has no database access. `runtime/apply.py` is the only code that changes a site's schema. [REQUIREMENTS.md](REQUIREMENTS.md) is the source of truth.
 
 ## API
 
@@ -40,31 +40,31 @@ Records of generated DocTypes use the standard REST API. The server rules run on
 
 ## Development setup
 
-1. Start the dev container:
+1. Get the app on a Frappe v16 bench and install it on a site:
 
    ```bash
-   docker compose -f .devcontainer/docker-compose.yml -p xlsform-dev up -d
-   docker compose -f .devcontainer/docker-compose.yml -p xlsform-dev exec frappe /workspace/xlsform/.devcontainer/setup-bench.sh
+   bench get-app https://github.com/dhwani-ris/frappe-xlsform --branch develop
+   bench --site <site> install-app xlsform
+   bench --site <site> set-config allow_tests true
    ```
 
 2. Install the pre-commit hooks. The hooks run ruff, ruff-format, prettier and eslint.
 
    ```bash
+   cd apps/xlsform
    pip install pre-commit
    pre-commit install
    ```
 
 ## Tests
 
-Run these inside the container:
+Run these from the bench folder:
 
 | What | Command |
 |---|---|
-| Unit and conformance (no site) | `~/bench/frappe-bench/env/bin/python -m pytest xlsform/tests/unit xlsform/tests/conformance` |
-| Server integration | `bench --site test.localhost run-tests --app xlsform` |
-| mForm SDK conformance | `scripts/conformance-dart.sh ~/bench/frappe-bench/env/bin/python` |
-| pyxform cross-check | `python scripts/pyxform_crosscheck.py ~/pyxform-venv/bin/python xlsform/tests/fixtures/corpus` |
-| Browser | `cd ui-tests && npx playwright test` |
+| Unit and conformance (no site) | `cd apps/xlsform && ../../env/bin/python -m pytest xlsform/tests/unit xlsform/tests/conformance` |
+| Server integration | `bench --site <site> run-tests --app xlsform` |
+| pyxform cross-check | `python scripts/pyxform_crosscheck.py <pyxform-venv>/bin/python xlsform/tests/fixtures/corpus` |
 | Lint | `pre-commit run --all-files` |
 
 CI also runs the Frappe Semgrep rules.

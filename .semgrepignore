@@ -1,4 +1,3 @@
-# Semgrep's default ignores (a .semgrepignore file replaces them, so they are repeated here)
 node_modules/
 build/
 dist/
@@ -15,8 +14,4 @@ tests/
 .semgrep
 .semgrep_logs/
 frappe-semgrep-rules/
-
-# Developer tools, never installed on a site: they read and write files under the repo by design.
-# The app itself (xlsform/ outside tests) is scanned in full.
 scripts/
-ui-tests/

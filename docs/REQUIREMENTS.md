@@ -1,6 +1,6 @@
 # XLSForm for Frappe — Requirements
 
-Revision 3 · 3 Nov 2026 · supersedes `docs/original/REQUIREMENTS-2026-11-03.md` (revision 1). Revision 3 records what building and testing v1 settled (section 16) and matches the code in PR #4.
+Revision 3 · 3 Nov 2026. Revision 3 records what building and testing v1 settled (section 16) and matches the code in PR #4.
 
 Revision 2 records three decisions taken with the product owner on 3 Nov 2026 (section 16 has the full log):
 
@@ -496,7 +496,7 @@ Issue object:
 - Extends only through hooks: `doc_events`, `fixtures`, `after_install`, `before_uninstall`, `add_to_apps_screen`.
 - Role fixture and standard Workspace; all strings in `_()` / `__()` (`N_()` markers in the framework-free core); Hindi in `xlsform/locale/hi.po` (all 343 strings; `scripts/generate_pot.py` regenerates `main.pot`).
 - Dependencies: none beyond Frappe (openpyxl ships with it); no system packages, no Java, no Node at runtime. pyxform is used in CI only (section 7).
-- Lint: ruff, ruff-format, prettier, eslint (pre-commit) and Frappe semgrep rules in CI. Every workflow action is pinned to a commit SHA (org policy); `.semgrepignore` excludes only developer tools (`scripts/`, `ui-tests/`).
+- Lint: ruff, ruff-format, prettier, eslint (pre-commit) and Frappe semgrep rules in CI. Every workflow action is pinned to a commit SHA (org policy); `.semgrepignore` excludes only developer tools (`scripts/`).
 - Marketplace items needing people (logo, screenshots, video, privacy URL, listing, `frappe/marketplace` PR) are tracked in `docs/RELEASE.md`.
 
 ## 13. Testing strategy
@@ -507,7 +507,6 @@ Issue object:
 | Expression conformance | pytest + Node + Dart (SDK interpreter) | Python, JavaScript and the SDK agree on every case |
 | Compiler unit | pytest (no site) | Type mapping, sanitising, layout, selects, budget, diffs (snapshots) |
 | Server integration | `bench run-tests --app xlsform` | Upload → publish → DocTypes → valid/invalid records → republish → old records still valid → access per role → retire |
-| Desk/Web smoke | Playwright (`ui-tests/`, every PR and nightly) | Designer: upload a broken form, see the cell, download the highlighted workbook, upload the fix, preview with live skip logic, check answers, publish. Collector: skip logic and save on Desk; skip logic on the Web Form |
 | Corpus | `scripts/pyxform_crosscheck.py` (nightly) | Agreement with pyxform on real workbooks |
 
 Security tests: `<script>` in labels is inert; quotes and backslashes in literals can't break out of `eval:` strings; a non-designer gets 403 on upload/publish; `apply()` refuses a DocType outside `XLSForm Data`.

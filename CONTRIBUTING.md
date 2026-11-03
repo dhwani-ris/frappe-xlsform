@@ -13,7 +13,7 @@ Participation is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By contr
 - Support for more XLSForm features (see [Compatibility](docs/compatibility.md))
 - Test coverage, conformance cases and corpus workbooks
 
-For large or API-breaking changes, open an issue first to agree on direction. Read [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) and [CLAUDE.md](CLAUDE.md) before you start. If the code and the specification disagree, raise it in the issue.
+For large or API-breaking changes, open an issue first to agree on direction. Read [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) and the [developer guide](docs/developer-guide.md) before you start. If the code and the specification disagree, raise it in the issue.
 
 ## Development setup
 
@@ -23,8 +23,8 @@ Follow [Development setup](docs/developer-guide.md#development-setup) in the dev
 
 ```bash
 pre-commit run --all-files
-~/bench/frappe-bench/env/bin/python -m pytest xlsform/tests/unit xlsform/tests/conformance
-bench --site test.localhost run-tests --app xlsform
+../../env/bin/python -m pytest xlsform/tests/unit xlsform/tests/conformance
+bench --site <site> run-tests --app xlsform
 ```
 
 A change to formula behavior also needs `scripts/conformance-dart.sh`. See [Rules for changes](docs/developer-guide.md#rules-for-changes).

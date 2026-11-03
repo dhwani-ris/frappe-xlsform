@@ -14,7 +14,7 @@ from babel.messages.extract import extract_from_dir
 from frappe.gettext.translate import PYTHON_KEYWORDS, get_method_map, new_catalog, write_catalog
 
 APP = "xlsform"
-SKIP_DIRS = {"node_modules", "ui-tests", "tests", "dist", "corpus"}
+SKIP_DIRS = {"node_modules", "tests", "dist", "corpus"}
 
 
 def main(site: str) -> None:
