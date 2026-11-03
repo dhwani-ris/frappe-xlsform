@@ -20,8 +20,8 @@ REQUIREMENTS.md section 12. Items marked **(people)** can't be done by code and 
 
 | Requirement | Status | Owner |
 | --- | --- | --- |
-| Public GitHub repo owned by the publisher | Create `dhwani-ris/xlsform` (public) and push `develop` + `version-16` | **(people)** |
-| Unique app name | Check `xlsform` is free on Frappe Cloud before the first tag; fallback `xlsform_frappe` | **(people)** |
+| Public GitHub repo owned by the publisher | `dhwani-ris/frappe_xlsform` (app name `xlsform`); push `develop`, then branch `version-16` | done when pushed |
+| Unique app name | `xlsform`: free on PyPI and in the `frappe/marketplace` registry (checked 3 Nov 2026); confirm in the Frappe Cloud publisher dashboard | **(people)** |
 | Supports current stable Frappe | v16 | done |
 | CI passing (linters + server tests) | Workflows in `.github/workflows` — first run happens on the first push | **(people)**: push |
 | Logo | `xlsform/public/images/logo.svg` (square, no text). Export a 512×512 PNG for the listing | **(people)**: approve |

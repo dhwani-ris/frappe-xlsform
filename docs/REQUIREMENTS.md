@@ -511,7 +511,7 @@ Security tests: `<script>` in labels is inert; quotes and backslashes in literal
 
 ## 15. Open items needing people
 
-- Marketplace name check for `xlsform`; GitHub org/repo creation.
+- Names (decided 3 Nov 2026): app `xlsform`, repo `dhwani-ris/frappe_xlsform`, listing title "XLSForm for Frappe". Confirm the app name in the Frappe Cloud publisher dashboard.
 - 50 anonymised client forms for the regression corpus.
 - Moderated test with 3 client M&E staff.
 - Logo, screenshots, demo video, privacy policy URL, listing submission.
