@@ -114,6 +114,20 @@ class TestPublishAndCollect(IntegrationTestCase):
 		self.assertFalse(doc.hh_head)
 		self.assertEqual(doc.services, [])
 
+	def test_form_data_workspace_and_ownership(self):
+		fid = f"hh_{uid()}"
+		publish(household(fid, title=f"Findable {fid}"))
+		form = frappe.get_doc("XLSForm", fid)
+		ws = frappe.get_doc("Workspace", "Form Data")
+		self.assertIn(form.data_doctype, [s.link_to for s in ws.shortcuts])
+		owned = set(json.loads(form.generated_doctypes))
+		self.assertIn(form.data_doctype, owned)
+		self.assertEqual(len(owned), 7)  # parent, member, 4 lists, 1 pick table
+		self.assertNotIn("[xlsform", frappe.db.get_value("DocType", form.data_doctype, "description"))
+		forms.retire(fid)
+		ws.reload()
+		self.assertNotIn(form.data_doctype, [s.link_to for s in ws.shortcuts])
+
 	def test_invalid_record_lists_every_problem(self):
 		fid = f"hh_{uid()}"
 		publish(household(fid))

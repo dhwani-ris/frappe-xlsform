@@ -16,9 +16,9 @@ from xlsform.core.meaning import normalize_form_id
 from xlsform.core.reader import read_workbook
 from xlsform.core.structure import build_form
 from xlsform.core.validate import validate
+from xlsform.runtime import navigation, validation
 from xlsform.runtime import publish as xf_publish
 from xlsform.runtime import settings as xf_settings
-from xlsform.runtime import validation
 
 TRANSIENT_SECONDS = 3600
 TEST_RESULTS_KEPT = 20
@@ -331,6 +331,7 @@ def retire(form: str) -> dict:
 	if doc.data_doctype:
 		_unpublish_web_form(doc.data_doctype)
 		unregister_mobile(doc.data_doctype)
+	navigation.sync_workspace()
 	return {"status": doc.status, "retired_on": str(doc.retired_on)}
 
 

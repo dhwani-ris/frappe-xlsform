@@ -20,7 +20,8 @@
   "column_break_channels",
   "allow_mobile",
   "access_section",
-  "access"
+  "access",
+  "generated_doctypes"
  ],
  "fields": [
   {
@@ -117,11 +118,20 @@
    "fieldtype": "Table",
    "label": "Access",
    "options": "XLSForm Access"
+  },
+  {
+   "fieldname": "generated_doctypes",
+   "fieldtype": "Long Text",
+   "label": "Generated DocTypes",
+   "read_only": 1,
+   "hidden": 1,
+   "no_copy": 1,
+   "description": "DocTypes created for this form. Only these may be changed when it is published."
   }
  ],
  "icon": "table",
  "links": [],
- "modified": "2026-11-03 12:00:00.000000",
+ "modified": "2026-11-03 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "XLSForm",
  "name": "XLSForm",

@@ -15,8 +15,8 @@ from frappe.utils.synchronization import filelock
 import xlsform.runtime
 from xlsform.core.validate import validate
 from xlsform.runtime import apply as xf_apply
+from xlsform.runtime import navigation, validation
 from xlsform.runtime import settings as xf_settings
-from xlsform.runtime import validation
 
 LOCK = "xlsform-publish"
 
@@ -125,3 +125,4 @@ def _publish(version) -> None:
 	form.flags.xf_skip_access_sync = True
 	form.save()
 	frappe.cache.delete_value(f"xlsform:form-of:{form.data_doctype}")
+	navigation.sync_workspace()

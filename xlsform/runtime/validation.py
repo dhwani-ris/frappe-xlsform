@@ -12,8 +12,8 @@ import xlsform.runtime
 from xlsform.core import preview
 from xlsform.core.issues import ERROR, INFO, WARNING, Issue
 from xlsform.core.validate import Result, ValidateOptions, validate
+from xlsform.runtime import ownership
 from xlsform.runtime import settings as xf_settings
-from xlsform.runtime.settings import GENERATED_MARK, GENERATED_MODULES
 
 ASYNC_BYTES = 1024 * 1024
 
@@ -33,15 +33,7 @@ def leftover_doctypes(form: str | None) -> set[str]:
 	"""DocTypes an earlier, failed publish of this form created (MariaDB DDL can't be rolled
 	back). Treating them as the form's own lets the next publish reuse them instead of
 	creating "XF Survey 2"."""
-	if not form:
-		return set()
-	mark = GENERATED_MARK.format(form)
-	rows = frappe.get_all(
-		"DocType",
-		filters={"module": ["in", GENERATED_MODULES], "custom": 1, "description": ["like", f"%{mark}%"]},
-		fields=["name", "description"],
-	)
-	return {r.name for r in rows if mark in (r.description or "")}  # LIKE treats _ as a wildcard
+	return ownership.owned(form)
 
 
 def own_doctypes(meta: dict | None) -> set[str]:

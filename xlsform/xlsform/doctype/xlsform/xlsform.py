@@ -7,7 +7,7 @@ from frappe.model.document import Document
 
 import xlsform.runtime
 from xlsform.core.meaning import FORM_ID_RE
-from xlsform.runtime import access
+from xlsform.runtime import access, navigation
 
 
 class XLSForm(Document):
@@ -19,6 +19,8 @@ class XLSForm(Document):
 		access.validate_rows(self)
 
 	def on_update(self):
+		if self.data_doctype and self.has_value_changed("title"):
+			navigation.sync_workspace()
 		if self.flags.xf_skip_access_sync or not self.data_doctype:
 			return
 		if self.has_value_changed("access") or self._access_changed():

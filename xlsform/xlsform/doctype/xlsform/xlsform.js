@@ -12,10 +12,8 @@ frappe.ui.form.on("XLSForm", {
 		frm.change_custom_button_type(__("Upload new version"), null, "primary");
 
 		if (frm.doc.data_doctype) {
-			frm.add_custom_button(
-				__("Open data"),
-				() => frappe.set_route("List", frm.doc.data_doctype),
-				__("Data")
+			frm.add_custom_button(__("Open records"), () =>
+				frappe.set_route("List", frm.doc.data_doctype)
 			);
 			frm.add_custom_button(
 				__("Export Excel"),
