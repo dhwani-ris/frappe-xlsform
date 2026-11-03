@@ -29,12 +29,17 @@ def validate_rows(form) -> None:
 	for row in form.get("access") or []:
 		if row.role in BLOCKED_ROLES:
 			frappe.throw(
-				_("Row {0}: the role {1} can't be given access to form data.").format(row.idx, frappe.bold(row.role))
+				_("Row {0}: the role {1} can't be given access to form data.").format(
+					row.idx, frappe.bold(row.role)
+				)
 			)
 		if row.role in seen:
 			frappe.throw(_("Row {0}: the role {1} is listed twice.").format(row.idx, frappe.bold(row.role)))
 		seen.add(row.role)
-		if any(row.get(k) for k in ("can_write", "can_create", "can_delete", "can_export", "can_report", "can_print")):
+		if any(
+			row.get(k)
+			for k in ("can_write", "can_create", "can_delete", "can_export", "can_report", "can_print")
+		):
 			row.can_read = 1
 
 
@@ -106,7 +111,20 @@ def _write(doctype: str, rules: list[dict]) -> None:
 	frappe.clear_cache(doctype=doctype)
 
 
-PERM_KEYS = ("role", "read", "write", "create", "delete", "report", "export", "print", "email", "share", "import", "if_owner")
+PERM_KEYS = (
+	"role",
+	"read",
+	"write",
+	"create",
+	"delete",
+	"report",
+	"export",
+	"print",
+	"email",
+	"share",
+	"import",
+	"if_owner",
+)
 
 
 def _normalise(p: dict) -> tuple:

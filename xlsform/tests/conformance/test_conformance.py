@@ -42,7 +42,9 @@ class TestConformance(unittest.TestCase):
 			if "expected_value" in case:
 				got = RESULTS["python"][case["id"]]
 				if got != case["expected_value"]:
-					failures.append(f"{case['id']}: {case['expr']} -> {got!r}, ODK {case['expected_value']!r}")
+					failures.append(
+						f"{case['id']}: {case['expr']} -> {got!r}, ODK {case['expected_value']!r}"
+					)
 		self.assertEqual(failures, [], "\n".join(failures))
 
 	def test_not_live_rejected(self):
@@ -51,7 +53,9 @@ class TestConformance(unittest.TestCase):
 			if case.get("not_live"):
 				codes = RESULTS["validation"][case["id"]]
 				if not codes & {"E-EXPR-NOT-LIVE", "E-CALC-NOT-LIVE"}:
-					failures.append(f"{case['id']}: {case['expr']} was accepted in relevant ({sorted(codes)})")
+					failures.append(
+						f"{case['id']}: {case['expr']} was accepted in relevant ({sorted(codes)})"
+					)
 		self.assertEqual(failures, [], "\n".join(failures))
 
 	def test_frappe_javascript_matches_odk(self):

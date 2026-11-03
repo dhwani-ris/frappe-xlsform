@@ -15,7 +15,7 @@ from frappe import _
 
 from xlsform.core.form import language_code
 from xlsform.runtime import access
-from xlsform.runtime.settings import DATA_MODULE, GENERATED_MARK
+from xlsform.runtime.settings import DATA_MODULE, GENERATED_MARK, GENERATED_MODULES
 
 DOCTYPE_PROPS = (
 	"istable",
@@ -47,9 +47,21 @@ FIELD_PROPS = (
 	"in_standard_filter",
 	"non_negative",
 	"unique",
+	"max_height",
 )
 # Properties cleared when the plan doesn't set them, so removed rules really go away.
-CLEARABLE = ("reqd", "read_only", "hidden", "depends_on", "mandatory_depends_on", "read_only_depends_on", "description", "default", "link_filters")
+CLEARABLE = (
+	"reqd",
+	"read_only",
+	"hidden",
+	"depends_on",
+	"mandatory_depends_on",
+	"read_only_depends_on",
+	"description",
+	"default",
+	"link_filters",
+	"max_height",
+)
 
 
 class ApplyRefused(frappe.ValidationError):
@@ -57,19 +69,24 @@ class ApplyRefused(frappe.ValidationError):
 
 
 def ensure_module() -> None:
-	if not frappe.db.exists("Module Def", DATA_MODULE):
-		frappe.get_doc(
-			{"doctype": "Module Def", "module_name": DATA_MODULE, "app_name": "xlsform", "custom": 1}
-		).insert(ignore_permissions=True)
+	for module in GENERATED_MODULES:
+		if not frappe.db.exists("Module Def", module):
+			frappe.get_doc(
+				{"doctype": "Module Def", "module_name": module, "app_name": "xlsform", "custom": 1}
+			).insert(ignore_permissions=True)
 
 
 def guard(name: str, prefix: str, form: str) -> None:
 	if not name.startswith(prefix + " "):
 		raise ApplyRefused(_("Refusing to change DocType {0}: it isn't an XLSForm DocType.").format(name))
 	if frappe.db.exists("DocType", name):
-		module, custom, description = frappe.db.get_value("DocType", name, ["module", "custom", "description"])
-		if module != DATA_MODULE or not custom:
-			raise ApplyRefused(_("Refusing to change DocType {0}: it belongs to module {1}.").format(name, module))
+		module, custom, description = frappe.db.get_value(
+			"DocType", name, ["module", "custom", "description"]
+		)
+		if module not in GENERATED_MODULES or not custom:
+			raise ApplyRefused(
+				_("Refusing to change DocType {0}: it belongs to module {1}.").format(name, module)
+			)
 		if GENERATED_MARK.format(form) not in (description or ""):
 			raise ApplyRefused(_("Refusing to change DocType {0}: it belongs to another form.").format(name))
 
@@ -104,7 +121,7 @@ def _upsert_doctype(spec: dict, form) -> None:
 	doc = frappe.get_doc("DocType", name) if exists else frappe.new_doc("DocType")
 	if not exists:
 		doc.name = name
-		doc.module = DATA_MODULE
+		doc.module = spec.get("module") or DATA_MODULE
 		doc.custom = 1
 		doc.engine = "InnoDB"
 		doc.row_format = "Dynamic"
@@ -133,7 +150,21 @@ def _upsert_doctype(spec: dict, form) -> None:
 			)
 		for prop in CLEARABLE:
 			if prop not in f:
-				row.set(prop, None if prop in ("depends_on", "mandatory_depends_on", "read_only_depends_on", "description", "default", "link_filters") else 0)
+				row.set(
+					prop,
+					None
+					if prop
+					in (
+						"depends_on",
+						"mandatory_depends_on",
+						"read_only_depends_on",
+						"description",
+						"default",
+						"link_filters",
+						"max_height",
+					)
+					else 0,
+				)
 		for prop, value in _props(f).items():
 			if prop == "length" and row.length and value and int(value) < int(row.length):
 				continue  # never narrow a column
@@ -141,7 +172,11 @@ def _upsert_doctype(spec: dict, form) -> None:
 	# keep fields the plan no longer has (retired questions, mobile_uuid, …), hidden, at the end
 	for fieldname, row in existing.items():
 		if fieldname not in order:
-			if not fieldname.startswith("mobile_") and row.fieldtype not in ("Section Break", "Tab Break", "Column Break"):
+			if not fieldname.startswith("mobile_") and row.fieldtype not in (
+				"Section Break",
+				"Tab Break",
+				"Column Break",
+			):
 				row.hidden = 1
 			order.append(fieldname)
 	position = {fn: i for i, fn in enumerate(order)}
@@ -161,7 +196,9 @@ def _props(f: dict) -> dict:
 def _sync_choices(doctype: str, records: list[dict]) -> None:
 	existing = {
 		r.name: r
-		for r in frappe.get_all(doctype, fields=["name", "label", "xf_order", "xf_retired"], limit_page_length=0)
+		for r in frappe.get_all(
+			doctype, fields=["name", "label", "xf_order", "xf_retired"], limit_page_length=0
+		)
 	}
 	columns = [c for c in (records[0].keys() if records else []) if c not in ("choice_name",)]
 	keep = set()
@@ -178,7 +215,16 @@ def _sync_choices(doctype: str, records: list[dict]) -> None:
 		else:
 			new_rows.append(r)
 	if new_rows:
-		fields = ["name", "choice_name", *columns, "owner", "modified_by", "creation", "modified", "docstatus"]
+		fields = [
+			"name",
+			"choice_name",
+			*columns,
+			"owner",
+			"modified_by",
+			"creation",
+			"modified",
+			"docstatus",
+		]
 		values = [
 			(r["choice_name"], r["choice_name"], *[r.get(c) for c in columns], user, user, now, now, 0)
 			for r in new_rows
@@ -245,6 +291,7 @@ def _sync_web_form(spec: dict, form) -> None:
 			"show_list": 1,
 			"apply_document_permissions": 1,
 			"anonymous": 0,
+			"custom_css": spec.get("custom_css") or "",
 		}
 	)
 	doc.set("web_form_fields", [])
@@ -265,7 +312,9 @@ def _unpublish_web_form(parent: str) -> None:
 
 
 def _register_mobile(parent: str) -> None:
-	if "mobile_control" not in frappe.get_installed_apps() or not frappe.db.exists("DocType", "Mobile Configuration"):
+	if "mobile_control" not in frappe.get_installed_apps() or not frappe.db.exists(
+		"DocType", "Mobile Configuration"
+	):
 		return
 	config = frappe.get_single("Mobile Configuration")
 	if any(row.mobile_workspace_item == parent for row in config.get("table_lwis") or []):
@@ -276,14 +325,18 @@ def _register_mobile(parent: str) -> None:
 	if frappe.db.exists("DocType", "Mobile Workspace Group"):
 		group = "Forms"
 		if not frappe.db.exists("Mobile Workspace Group", group):
-			frappe.get_doc({"doctype": "Mobile Workspace Group", "group_name": group}).insert(ignore_permissions=True)
+			frappe.get_doc({"doctype": "Mobile Workspace Group", "group_name": group}).insert(
+				ignore_permissions=True
+			)
 	config.append("table_lwis", {"mobile_workspace_item": parent, "workspace_group_name": group})
 	config.flags.ignore_permissions = True
 	config.save()
 
 
 def unregister_mobile(parent: str) -> None:
-	if "mobile_control" not in frappe.get_installed_apps() or not frappe.db.exists("DocType", "Mobile Configuration"):
+	if "mobile_control" not in frappe.get_installed_apps() or not frappe.db.exists(
+		"DocType", "Mobile Configuration"
+	):
 		return
 	config = frappe.get_single("Mobile Configuration")
 	rows = [r for r in config.get("table_lwis") or [] if r.mobile_workspace_item != parent]

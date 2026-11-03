@@ -63,12 +63,22 @@ def annotate(content: bytes, issues: list[Issue], proposed_version: str | None =
 	if REPORT_SHEET in wb.sheetnames:
 		del wb[REPORT_SHEET]
 	report = wb.create_sheet(REPORT_SHEET)
-	headers = [tr(N_("Severity")), tr(N_("Code")), tr(N_("Where")), tr(N_("Problem")), tr(N_("Suggested fix"))]
+	headers = [
+		tr(N_("Severity")),
+		tr(N_("Code")),
+		tr(N_("Where")),
+		tr(N_("Problem")),
+		tr(N_("Suggested fix")),
+	]
 	report.append(headers)
 	for c in report[1]:
 		c.font = Font(bold=True)
 	for i in issues:
-		where = f"{i.sheet}!{i.cell}" if i.sheet and i.cell else (f"{i.sheet} row {i.row}" if i.sheet and i.row else "")
+		where = (
+			f"{i.sheet}!{i.cell}"
+			if i.sheet and i.cell
+			else (f"{i.sheet} row {i.row}" if i.sheet and i.row else "")
+		)
 		report.append([i.severity, i.code, where, i.message, i.suggestion])
 		report.cell(row=report.max_row, column=1).fill = FILLS[i.severity]
 	for col, width in zip("ABCDE", (10, 22, 16, 80, 60), strict=True):

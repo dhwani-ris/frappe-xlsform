@@ -8,7 +8,7 @@ import frappe
 from frappe import _
 from frappe.rate_limiter import rate_limit
 
-import xlsform.runtime  # noqa: F401
+import xlsform.runtime
 from xlsform.core import annotate, engine
 from xlsform.core import template as starter
 from xlsform.core.issues import Issue
@@ -42,7 +42,9 @@ def upload(file_url: str | None = None, form: str | None = None, csv_urls: str |
 	form_id, version_str, title = _peek(content, filename)
 	if form and form_id and form_id != form:
 		frappe.throw(
-			_("This workbook is for form {0} (settings sheet), not {1}.").format(frappe.bold(form_id), frappe.bold(form))
+			_("This workbook is for form {0} (settings sheet), not {1}.").format(
+				frappe.bold(form_id), frappe.bold(form)
+			)
 		)
 	form_id = form_id or form
 	if not form_id:
@@ -170,7 +172,12 @@ def _transient(content: bytes, filename: str, csvs: dict, form: str | None, allo
 	token = secrets.token_urlsafe(16)
 	frappe.cache.set_value(
 		f"xlsform:transient:{token}",
-		{"user": frappe.session.user, "content": content.hex(), "filename": filename, "issues": [i.__dict__ for i in result.issues]},
+		{
+			"user": frappe.session.user,
+			"content": content.hex(),
+			"filename": filename,
+			"issues": [i.__dict__ for i in result.issues],
+		},
 		expires_in_sec=TRANSIENT_SECONDS,
 	)
 	report = result.report()
@@ -224,7 +231,9 @@ class _StoredIssue(Issue):
 	"""An issue read back from ``validation_report``, keeping its stored wording."""
 
 	def __init__(self, d: dict):
-		super().__init__(d["code"], d["severity"], d.get("sheet"), d.get("row"), d.get("column"), d.get("cell"), {})
+		super().__init__(
+			d["code"], d["severity"], d.get("sheet"), d.get("row"), d.get("column"), d.get("cell"), {}
+		)
 		self._stored_message = d.get("message") or ""
 		self._stored_suggestion = d.get("suggestion") or ""
 
@@ -248,7 +257,9 @@ def preview(version: str) -> dict:
 	if not doc.preview_json:
 		frappe.throw(_("Fix the errors first; the preview needs a form without errors."))
 	data = json.loads(doc.preview_json) if isinstance(doc.preview_json, str) else doc.preview_json
-	data["test_results"] = json.loads(doc.test_results) if isinstance(doc.test_results, str) else (doc.test_results or [])
+	data["test_results"] = (
+		json.loads(doc.test_results) if isinstance(doc.test_results, str) else (doc.test_results or [])
+	)
 	return data
 
 
@@ -275,7 +286,13 @@ def check_answers(version: str, values: str | dict) -> dict:
 	results = json.loads(doc.test_results) if isinstance(doc.test_results, str) else (doc.test_results or [])
 	results.insert(
 		0,
-		{"at": frappe.utils.now(), "by": frappe.session.user, "ok": not failures, "failures": failures, "values": values},
+		{
+			"at": frappe.utils.now(),
+			"by": frappe.session.user,
+			"ok": not failures,
+			"failures": failures,
+			"values": values,
+		},
 	)
 	doc.db_set("test_results", json.dumps(results[:TEST_RESULTS_KEPT], ensure_ascii=False, default=str))
 	return {"ok": not failures, "failures": failures, "calculated": calculated}

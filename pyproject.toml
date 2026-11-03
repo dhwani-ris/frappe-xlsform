@@ -9,6 +9,9 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # "frappe~=16.0.0" # Installed and managed by bench.
+    # openpyxl comes with Frappe. pyxform is deliberately NOT a dependency: every release pins
+    # xlrd==2.0.1, which conflicts with Frappe v16's xlrd~=2.0.2. It is used in CI only, from
+    # its own virtualenv, as a second opinion on the validator (scripts/pyxform-crosscheck.py).
 ]
 
 [build-system]
@@ -17,6 +20,8 @@ build-backend = "flit_core.buildapi"
 
 # These dependencies are only installed when developer mode is enabled
 [tool.bench.dev-dependencies]
+pytest = "~=9.0"
+pytest-cov = "~=7.0"
 # package_name = "~=1.1.0"
 
 # These apt dependencies will be installed from Ubuntu repositories when you host your app on Frappe Cloud
@@ -56,6 +61,10 @@ ignore = [
     "UP032", # Use f-string instead of `format` call (translations)
     "UP037", # quoted annotations
     "UP040", # Use type aliases instead of type annotations
+    "RUF001", # ambiguous unicode: the app parses curly quotes, Hindi labels and line separators on purpose
+    "RUF002",
+    "RUF003",
+    "RUF012", # mutable class attributes in unittest fixtures
 ]
 typing-modules = ["frappe.types.DF"]
 

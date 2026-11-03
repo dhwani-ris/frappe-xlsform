@@ -12,7 +12,10 @@ SKIP = {"xf_form", "xf_version", "xf_channel"}
 def build(plan: dict) -> dict:
 	by_name = {dt["name"]: dt for dt in plan["doctypes"]}
 	choices = {
-		dt: [{"value": r["choice_name"], "label": r["label"] or r["choice_name"]} for r in rows[:PREVIEW_CHOICE_LIMIT]]
+		dt: [
+			{"value": r["choice_name"], "label": r["label"] or r["choice_name"]}
+			for r in rows[:PREVIEW_CHOICE_LIMIT]
+		]
 		for dt, rows in plan["choices"].items()
 	}
 	truncated = sorted(dt for dt, rows in plan["choices"].items() if len(rows) > PREVIEW_CHOICE_LIMIT)
@@ -25,7 +28,9 @@ def build(plan: dict) -> dict:
 
 
 def _keep(f: dict) -> bool:
-	return f["fieldname"] not in SKIP and not (f.get("hidden") and f["fieldtype"] not in ("Section Break", "Tab Break"))
+	return f["fieldname"] not in SKIP and not (
+		f.get("hidden") and f["fieldtype"] not in ("Section Break", "Tab Break")
+	)
 
 
 def _field(f: dict, by_name: dict, choices: dict) -> dict:
@@ -78,7 +83,9 @@ def _field(f: dict, by_name: dict, choices: dict) -> dict:
 		out["fields"] = [
 			{**_field(cf, by_name, choices), "in_list_view": 1}
 			for cf in child["fields"]
-			if _keep(cf) and cf["fieldtype"] not in ("Section Break", "Tab Break", "Column Break", "HTML", "Table", "Table MultiSelect")
+			if _keep(cf)
+			and cf["fieldtype"]
+			not in ("Section Break", "Tab Break", "Column Break", "HTML", "Table", "Table MultiSelect")
 		]
 		out.pop("options", None)
 	return out

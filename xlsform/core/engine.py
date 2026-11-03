@@ -85,13 +85,19 @@ class _Engine:
 
 	def label(self, path: str) -> str:
 		labels = self.labels.get(path) or {}
-		return labels.get(self.lang) or labels.get(self.meta.get("default_language")) or next(
-			iter(labels.values()), path.rsplit("/", 1)[-1]
+		return (
+			labels.get(self.lang)
+			or labels.get(self.meta.get("default_language"))
+			or next(iter(labels.values()), path.rsplit("/", 1)[-1])
 		)
 
 	def message(self, path: str, kind: str) -> str | None:
 		msgs = (self.messages.get(path) or {}).get(kind) or {}
-		return msgs.get(self.lang) or msgs.get(self.meta.get("default_language")) or next(iter(msgs.values()), None)
+		return (
+			msgs.get(self.lang)
+			or msgs.get(self.meta.get("default_language"))
+			or next(iter(msgs.values()), None)
+		)
 
 	def ctx(self, path: str | None, row: int | None, scope_repeat: str | None):
 		return self.index.context(self.data, scope_repeat=scope_repeat, row=row, self_path=path, **self.kw)
@@ -163,8 +169,9 @@ class _Engine:
 				result = self.is_relevant(parent, None if parent_is_repeat else row)
 			ast = self.exprs.get(path, {}).get("relevant")
 			if result and ast:
-				# a repeat's own relevant is evaluated in the scope around it
-				scope = self.index.repeat_of.get(path) if f.get("kind") != "repeat" else self.index.repeat_of.get(path)
+				# a repeat's own relevant is evaluated in the scope around it, which is also what
+				# repeat_of gives for the repeat's path (repeats aren't nested in v1)
+				scope = self.index.repeat_of.get(path)
 				result = to_bool(self.eval(ast, None, row if scope else None, scope))
 		self.out.relevant[key] = result
 		return result

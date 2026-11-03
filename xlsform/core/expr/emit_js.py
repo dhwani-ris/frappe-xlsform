@@ -276,7 +276,9 @@ def _fn(fn: str, args: list, scope: Scope) -> Js:
 				guards = (f"({cond} ? {_guarded(a.guards, 'true')} : {_guarded(b.guards, 'true')})",)
 			return Js(f"({cond} ? {a.code} : {b.code})", "num", guards)
 		numeric = {"num", "numref"}
-		if a.kind in numeric and b.kind in numeric | {"str"} or b.kind in numeric and a.kind in numeric | {"str"}:
+		if (a.kind in numeric and b.kind in numeric | {"str"}) or (
+			b.kind in numeric and a.kind in numeric | {"str"}
+		):
 			return Js(f"({cond} ? {_raw(a)} : {_raw(b)})", "numref" if {a.kind, b.kind} & numeric else "str")
 		return Js(f"({cond} ? {_as_str(a)} : {_as_str(b)})", "str")
 	if fn == "coalesce":

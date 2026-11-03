@@ -12,10 +12,10 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime, nowdate
 
-import xlsform.runtime  # noqa: F401
+import xlsform.runtime
 from xlsform.core import engine
 from xlsform.core.form import language_code
-from xlsform.runtime.settings import DATA_MODULE, DESIGNER
+from xlsform.runtime.settings import DATA_MODULE, DESIGNER, GENERATED_MODULES
 
 
 def _is_form_doctype(doc) -> bool:
@@ -37,7 +37,10 @@ def version_meta(version: str) -> dict | None:
 	key = f"xlsform:meta:{version}"
 	meta = frappe.cache.get_value(key)
 	if meta is None:
-		raw, docstatus = frappe.db.get_value("XLSForm Version", version, ["compiled_meta", "docstatus"]) or (None, 0)
+		raw, docstatus = frappe.db.get_value("XLSForm Version", version, ["compiled_meta", "docstatus"]) or (
+			None,
+			0,
+		)
 		meta = json.loads(raw) if isinstance(raw, str) else raw
 		if meta and docstatus == 1:
 			frappe.cache.set_value(key, meta)
@@ -62,7 +65,9 @@ def validate_record(doc, method=None) -> None:
 	form_name = doc.get("xf_form") or form_of(doc.doctype)
 	if not form_name:
 		return
-	form = frappe.get_cached_value("XLSForm", form_name, ["status", "current_version", "retired_on"], as_dict=True)
+	form = frappe.get_cached_value(
+		"XLSForm", form_name, ["status", "current_version", "retired_on"], as_dict=True
+	)
 	if doc.is_new():
 		if form.status == "Retired":
 			when = frappe.utils.format_date(form.retired_on) if form.retired_on else ""
@@ -89,7 +94,10 @@ def validate_record(doc, method=None) -> None:
 		language=_language_label(meta),
 	)
 	for fieldname, value in outcome.parent_updates.items():
-		if doc.meta.get_field(fieldname) and doc.meta.get_field(fieldname).fieldtype in ("Table", "Table MultiSelect"):
+		if doc.meta.get_field(fieldname) and doc.meta.get_field(fieldname).fieldtype in (
+			"Table",
+			"Table MultiSelect",
+		):
 			doc.set(fieldname, value or [])
 		else:
 			doc.set(fieldname, value)
@@ -152,7 +160,7 @@ def _failure_html(failures) -> str:
 	for f in failures:
 		where = ""
 		if f.row is not None and f.repeat_label:
-			where = _("{0}, row {1}: ").format(frappe.utils.escape_html(f.repeat_label), f.row + 1)
+			where = _("{0}, row {1}:").format(frappe.utils.escape_html(f.repeat_label), f.row + 1) + " "
 		items.append(f"<li>{where}{frappe.utils.escape_html(f.message)}</li>")
 	return "<ul>" + "".join(items) + "</ul>"
 
@@ -165,7 +173,9 @@ def after_install() -> None:
 
 	ensure_module()
 	if not frappe.db.exists("Role", DESIGNER):
-		frappe.get_doc({"doctype": "Role", "role_name": DESIGNER, "desk_access": 1}).insert(ignore_permissions=True)
+		frappe.get_doc({"doctype": "Role", "role_name": DESIGNER, "desk_access": 1}).insert(
+			ignore_permissions=True
+		)
 	settings = frappe.get_single("XLSForm Settings")
 	from xlsform.runtime.settings import DEFAULTS
 
@@ -180,7 +190,7 @@ def after_install() -> None:
 
 def before_uninstall() -> None:
 	allowed = frappe.db.get_single_value("XLSForm Settings", "allow_data_removal_on_uninstall")
-	generated = frappe.get_all("DocType", filters={"module": DATA_MODULE}, pluck="name")
+	generated = frappe.get_all("DocType", filters={"module": ["in", GENERATED_MODULES]}, pluck="name")
 	if generated and not allowed:
 		frappe.throw(
 			_(
@@ -200,5 +210,6 @@ def before_uninstall() -> None:
 	children = [d for d in generated if d not in parents]
 	for name in parents + children:
 		frappe.delete_doc("DocType", name, force=True, ignore_permissions=True)
-	if frappe.db.exists("Module Def", DATA_MODULE):
-		frappe.delete_doc("Module Def", DATA_MODULE, force=True, ignore_permissions=True)
+	for module in GENERATED_MODULES:
+		if frappe.db.exists("Module Def", module):
+			frappe.delete_doc("Module Def", module, force=True, ignore_permissions=True)

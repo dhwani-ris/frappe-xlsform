@@ -43,7 +43,9 @@ def diff(form: Form, analysis: Analysis, prev_meta: dict | None) -> tuple[dict, 
 		old_repeat = _repeat_name(r, prev_meta)
 		direction = "into" if new_repeat is not None else "out of"
 		repeat_name = new_repeat.name if new_repeat is not None else old_repeat
-		issues.append(issue("W-MOVE-REPEAT", name=name, direction=direction, repeat=repeat_name, **where(node)))
+		issues.append(
+			issue("W-MOVE-REPEAT", name=name, direction=direction, repeat=repeat_name, **where(node))
+		)
 		summary["moved"].append(name)
 		removed.remove(r)
 		added.remove(match)
@@ -80,7 +82,13 @@ def diff(form: Form, analysis: Analysis, prev_meta: dict | None) -> tuple[dict, 
 		)
 		if new_type != old["fieldtype"] or list_changed:
 			issues.append(
-				issue("W-TYPE-CHANGE", name=node.name, old=old.get("type"), new=node.base_type, **where(node, "type"))
+				issue(
+					"W-TYPE-CHANGE",
+					name=node.name,
+					old=old.get("type"),
+					new=node.base_type,
+					**where(node, "type"),
+				)
 			)
 			summary["type_changed"].append({"name": node.name, "from": old.get("type"), "to": node.base_type})
 	return summary, issues

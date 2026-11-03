@@ -14,7 +14,7 @@ import zipfile
 import frappe
 from frappe import _
 
-import xlsform.runtime  # noqa: F401
+import xlsform.runtime
 from xlsform.core.values import MULTI
 
 PAGE = 5000
@@ -70,14 +70,22 @@ def build_sheets(meta: dict, parent: str, include_retired: bool) -> dict[str, tu
 	while True:
 		batch = frappe.get_list(
 			parent,
-			fields=["name", "owner", "creation", "xf_version", *(f["fieldname"] for f in parent_cols if f["fieldtype"] != "Table MultiSelect")],
+			fields=[
+				"name",
+				"owner",
+				"creation",
+				"xf_version",
+				*(f["fieldname"] for f in parent_cols if f["fieldtype"] != "Table MultiSelect"),
+			],
 			order_by="creation asc",
 			limit_start=start,
 			limit_page_length=PAGE,
 		)
 		if not batch:
 			break
-		multi = _multi_values(parent, [f for f in parent_cols if f["fieldtype"] == "Table MultiSelect"], [r.name for r in batch])
+		multi = _multi_values(
+			parent, [f for f in parent_cols if f["fieldtype"] == "Table MultiSelect"], [r.name for r in batch]
+		)
 		for r in batch:
 			names.append(r.name)
 			rows.append(
@@ -95,12 +103,21 @@ def build_sheets(meta: dict, parent: str, include_retired: bool) -> dict[str, tu
 			records = frappe.get_all(
 				child,
 				filters={"parent": ["in", chunk], "parenttype": parent, "parentfield": table["fieldname"]},
-				fields=["name", "parent", "idx", *(f["fieldname"] for f in cols if f["fieldtype"] != "Table MultiSelect")],
+				fields=[
+					"name",
+					"parent",
+					"idx",
+					*(f["fieldname"] for f in cols if f["fieldtype"] != "Table MultiSelect"),
+				],
 				order_by="parent asc, idx asc",
 			)
-			multi = _multi_values(child, [f for f in cols if f["fieldtype"] == "Table MultiSelect"], [r.name for r in records])
+			multi = _multi_values(
+				child, [f for f in cols if f["fieldtype"] == "Table MultiSelect"], [r.name for r in records]
+			)
 			for r in records:
-				child_rows.append([f"{r.parent}/{table['name']}[{r.idx}]", r.parent, *(_cell(f, r, multi) for f in cols)])
+				child_rows.append(
+					[f"{r.parent}/{table['name']}[{r.idx}]", r.parent, *(_cell(f, r, multi) for f in cols)]
+				)
 		sheet_header = ["KEY", "PARENT_KEY", *(_title(f) for f in cols)]
 		sheets[f"{meta['form_id']}-{table['name']}"[:31]] = (sheet_header, child_rows)
 	return sheets

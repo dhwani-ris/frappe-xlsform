@@ -22,10 +22,10 @@ import glob
 import json
 import os
 
-from xlsform.core.expr.evaluate import to_bool, to_string
 from xlsform.core.engine import calculated_data
-from xlsform.core.values import MetaIndex
+from xlsform.core.expr.evaluate import to_bool, to_string
 from xlsform.core.validate import ValidateOptions, validate
+from xlsform.core.values import MetaIndex
 from xlsform.tests.workbooks import make_xlsx
 
 HERE = os.path.dirname(__file__)
@@ -95,9 +95,23 @@ def _workbook(cases: list[dict], column: str) -> bytes:
 		cells = {"relevant": None, "constraint": None, "calculation": None}
 		cells[column] = case["expr"]
 		qtype = "calculate" if column == "calculation" else "text"
-		row = _row(qtype, name, None if qtype == "calculate" else "Probe", cells["relevant"], cells["constraint"], cells["calculation"])
+		row = _row(
+			qtype,
+			name,
+			None if qtype == "calculate" else "Probe",
+			cells["relevant"],
+			cells["constraint"],
+			cells["calculation"],
+		)
 		(inner if case.get("scope") == "member" else top).append(row)
-	survey = [HEADER] + [_row(*r) for r in BASE_SURVEY] + top + [_row(*r) for r in REPEAT_SURVEY] + inner + [_row("end_repeat")]
+	survey = (
+		[HEADER]
+		+ [_row(*r) for r in BASE_SURVEY]
+		+ top
+		+ [_row(*r) for r in REPEAT_SURVEY]
+		+ inner
+		+ [_row("end_repeat")]
+	)
 	settings = [["form_id", "version"], ["conformance", "1"]]
 	return make_xlsx(survey=survey, choices=CHOICES, settings=settings)
 
@@ -116,7 +130,9 @@ def build(cases: list[dict]) -> dict:
 		result = validate(_workbook(group, column), "conformance.xlsx", ValidateOptions(max_questions=100000))
 		errors = [i for i in result.issues if i.severity == "error"]
 		if errors:
-			raise AssertionError("conformance workbook failed validation: " + "; ".join(i.message for i in errors))
+			raise AssertionError(
+				"conformance workbook failed validation: " + "; ".join(i.message for i in errors)
+			)
 		meta = result.plan["compiled_meta"]
 		index = MetaIndex(meta)
 		fields = {f["path"]: f for f in meta["fields"]}

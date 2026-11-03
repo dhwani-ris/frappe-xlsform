@@ -125,7 +125,7 @@ def _read_sheet(ws) -> Sheet:
 			header_seen = True
 			continue
 		cells: dict[str, Cell] = {}
-		for col, raw, norm in headers:
+		for col, _raw, norm in headers:
 			if col - 1 < len(values):
 				text = _to_text(values[col - 1])
 				if text != "" and norm not in cells:

@@ -34,7 +34,12 @@ def published_meta(survey, choices=YN):
 
 
 def ocsp_encrypted() -> bytes:
-	return b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\x00" * 64 + "EncryptedPackage".encode("utf-16-le") + b"\x00" * 64
+	return (
+		b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+		+ b"\x00" * 64
+		+ "EncryptedPackage".encode("utf-16-le")
+		+ b"\x00" * 64
+	)
 
 
 def broken_zip() -> bytes:
@@ -79,10 +84,26 @@ def prev_meta():
 def cases():
 	big = ValidateOptions(max_upload_mb=0.001)
 	return {
-		"E-FILE-TYPE": ((b"name,label\n", "form.csv", None), (simple(["text", "a", "A"]), "form.xlsx", None), {}),
-		"E-FILE-SIZE": ((simple(["text", "a", "A"]), "f.xlsx", big), (simple(["text", "a", "A"]), "f.xlsx", None), {}),
-		"E-FILE-PROTECTED": ((ocsp_encrypted(), "f.xlsx", None), (simple(["text", "a", "A"]), "f.xlsx", None), {}),
-		"E-FILE-UNREADABLE": ((broken_zip(), "f.xlsx", None), (simple(["text", "a", "A"]), "f.xlsx", None), {}),
+		"E-FILE-TYPE": (
+			(b"name,label\n", "form.csv", None),
+			(simple(["text", "a", "A"]), "form.xlsx", None),
+			{},
+		),
+		"E-FILE-SIZE": (
+			(simple(["text", "a", "A"]), "f.xlsx", big),
+			(simple(["text", "a", "A"]), "f.xlsx", None),
+			{},
+		),
+		"E-FILE-PROTECTED": (
+			(ocsp_encrypted(), "f.xlsx", None),
+			(simple(["text", "a", "A"]), "f.xlsx", None),
+			{},
+		),
+		"E-FILE-UNREADABLE": (
+			(broken_zip(), "f.xlsx", None),
+			(simple(["text", "a", "A"]), "f.xlsx", None),
+			{},
+		),
 		"E-SHEET-MISSING": (
 			(make_xlsx(survey=None, extra_sheets={"questions": [H, ["text", "a", "A"]]}), "f.xlsx", None),
 			(make_xlsx(survey=[H, ["text", "a", "A"]]), "f.xlsx", None),
@@ -108,8 +129,16 @@ def cases():
 			(wb([["type", "name", "label"], ["text", "a", "A"]]), "f.xlsx", None),
 			{"cell": "D1"},
 		),
-		"E-NAME-MISSING": ((simple(["text", None, "Household size"]), "f.xlsx", None), (simple(["text", "hh_size", "Household size"]), "f.xlsx", None), {"row": 2, "cell": "B2"}),
-		"E-NAME-INVALID": ((simple(["text", "Household size", "A"]), "f.xlsx", None), (simple(["text", "household_size", "A"]), "f.xlsx", None), {"row": 2, "cell": "B2"}),
+		"E-NAME-MISSING": (
+			(simple(["text", None, "Household size"]), "f.xlsx", None),
+			(simple(["text", "hh_size", "Household size"]), "f.xlsx", None),
+			{"row": 2, "cell": "B2"},
+		),
+		"E-NAME-INVALID": (
+			(simple(["text", "Household size", "A"]), "f.xlsx", None),
+			(simple(["text", "household_size", "A"]), "f.xlsx", None),
+			{"row": 2, "cell": "B2"},
+		),
 		"E-NAME-DUPLICATE": (
 			(simple(["text", "age", "A"], ["integer", "age", "B"]), "f.xlsx", None),
 			(simple(["text", "age", "A"], ["integer", "child_age", "B"]), "f.xlsx", None),
@@ -125,14 +154,42 @@ def cases():
 			(simple(["begin_group", "g", "G"], ["text", "a", "A"], ["end_group"]), "f.xlsx", None),
 			{"row": 4},
 		),
-		"E-GROUP-EXTRA-END": ((simple(["text", "a", "A"], ["end_group"]), "f.xlsx", None), (simple(["text", "a", "A"]), "f.xlsx", None), {"row": 3}),
-		"E-TYPE-UNKNOWN": ((simple(["selec_one yn", "a", "A"]), "f.xlsx", None), (simple(["select_one yn", "a", "A"]), "f.xlsx", None), {"row": 2, "cell": "A2"}),
-		"E-TYPE-UNSUPPORTED": ((simple(["rank yn", "a", "A"]), "f.xlsx", None), (simple(["select_multiple yn", "a", "A"]), "f.xlsx", None), {"row": 2}),
-		"W-META-IGNORED": ((simple(["deviceid", "dev"], ["text", "a", "A"]), "f.xlsx", None), (simple(["text", "a", "A"]), "f.xlsx", None), {"row": 2}),
-		"E-LIST-MISSING": ((simple(["select_one district", "a", "A"]), "f.xlsx", None), (simple(["select_one yn", "a", "A"]), "f.xlsx", None), {"row": 2}),
+		"E-GROUP-EXTRA-END": (
+			(simple(["text", "a", "A"], ["end_group"]), "f.xlsx", None),
+			(simple(["text", "a", "A"]), "f.xlsx", None),
+			{"row": 3},
+		),
+		"E-TYPE-UNKNOWN": (
+			(simple(["selec_one yn", "a", "A"]), "f.xlsx", None),
+			(simple(["select_one yn", "a", "A"]), "f.xlsx", None),
+			{"row": 2, "cell": "A2"},
+		),
+		"E-TYPE-UNSUPPORTED": (
+			(simple(["rank yn", "a", "A"]), "f.xlsx", None),
+			(simple(["select_multiple yn", "a", "A"]), "f.xlsx", None),
+			{"row": 2},
+		),
+		"W-META-IGNORED": (
+			(simple(["deviceid", "dev"], ["text", "a", "A"]), "f.xlsx", None),
+			(simple(["text", "a", "A"]), "f.xlsx", None),
+			{"row": 2},
+		),
+		"E-LIST-MISSING": (
+			(simple(["select_one district", "a", "A"]), "f.xlsx", None),
+			(simple(["select_one yn", "a", "A"]), "f.xlsx", None),
+			{"row": 2},
+		),
 		"E-LIST-EMPTY": (
-			(simple(["select_one_from_file v.csv", "a", "A"]), "f.xlsx", ValidateOptions(files={"v.csv": b"name,label\n"})),
-			(simple(["select_one_from_file v.csv", "a", "A"]), "f.xlsx", ValidateOptions(files={"v.csv": b"name,label\nx,X\n"})),
+			(
+				simple(["select_one_from_file v.csv", "a", "A"]),
+				"f.xlsx",
+				ValidateOptions(files={"v.csv": b"name,label\n"}),
+			),
+			(
+				simple(["select_one_from_file v.csv", "a", "A"]),
+				"f.xlsx",
+				ValidateOptions(files={"v.csv": b"name,label\nx,X\n"}),
+			),
 			{},
 		),
 		"E-CHOICE-DUPLICATE": (
@@ -141,8 +198,16 @@ def cases():
 			{"sheet": "choices", "row": 3},
 		),
 		"E-CHOICE-NAME": (
-			(simple(["select_multiple c", "a", "A"], choices=[YN[0], ["c", "not sure", "Not sure"]]), "f.xlsx", None),
-			(simple(["select_multiple c", "a", "A"], choices=[YN[0], ["c", "not_sure", "Not sure"]]), "f.xlsx", None),
+			(
+				simple(["select_multiple c", "a", "A"], choices=[YN[0], ["c", "not sure", "Not sure"]]),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(["select_multiple c", "a", "A"], choices=[YN[0], ["c", "not_sure", "Not sure"]]),
+				"f.xlsx",
+				None,
+			),
 			{"sheet": "choices", "row": 2, "cell": "B2"},
 		),
 		"E-LIST-TOO-LARGE": (
@@ -152,22 +217,52 @@ def cases():
 		),
 		"E-FILE-CSV-MISSING": (
 			(simple(["select_one_from_file v.csv", "a", "A"]), "f.xlsx", None),
-			(simple(["select_one_from_file v.csv", "a", "A"]), "f.xlsx", ValidateOptions(files={"v.csv": b"name,label\nx,X\n"})),
+			(
+				simple(["select_one_from_file v.csv", "a", "A"]),
+				"f.xlsx",
+				ValidateOptions(files={"v.csv": b"name,label\nx,X\n"}),
+			),
 			{"row": 2},
 		),
 		"E-REPEAT-NESTED": (
-			(simple(["begin_repeat", "hh", "H"], ["begin_repeat", "m", "M"], ["text", "a", "A"], ["end_repeat"], ["end_repeat"]), "f.xlsx", None),
+			(
+				simple(
+					["begin_repeat", "hh", "H"],
+					["begin_repeat", "m", "M"],
+					["text", "a", "A"],
+					["end_repeat"],
+					["end_repeat"],
+				),
+				"f.xlsx",
+				None,
+			),
 			(simple(["begin_repeat", "hh", "H"], ["text", "a", "A"], ["end_repeat"]), "f.xlsx", None),
 			{"row": 3},
 		),
 		"E-REPEAT-EMPTY": (
 			(simple(["text", "a", "A"], ["begin_repeat", "m", "M"], ["end_repeat"]), "f.xlsx", None),
-			(simple(["text", "a", "A"], ["begin_repeat", "m", "M"], ["text", "b", "B"], ["end_repeat"]), "f.xlsx", None),
+			(
+				simple(["text", "a", "A"], ["begin_repeat", "m", "M"], ["text", "b", "B"], ["end_repeat"]),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3},
 		),
 		"E-REF-UNKNOWN": (
-			(simple(["integer", "hh_size", "A"], ["text", "b", "B", "${hh_sise} > 1"], header=[*H, "relevant"]), "f.xlsx", None),
-			(simple(["integer", "hh_size", "A"], ["text", "b", "B", "${hh_size} > 1"], header=[*H, "relevant"]), "f.xlsx", None),
+			(
+				simple(
+					["integer", "hh_size", "A"], ["text", "b", "B", "${hh_sise} > 1"], header=[*H, "relevant"]
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["integer", "hh_size", "A"], ["text", "b", "B", "${hh_size} > 1"], header=[*H, "relevant"]
+				),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3, "cell": "D3"},
 		),
 		"E-REF-SELF": (
@@ -176,68 +271,292 @@ def cases():
 			{"row": 2},
 		),
 		"E-REF-REPEAT": (
-			(simple(["begin_repeat", "member", "M"], ["integer", "age", "A"], ["end_repeat"], ["calculate", "x", None, "${age} + 1"], header=[*H, "calculation"]), "f.xlsx", None),
-			(simple(["begin_repeat", "member", "M"], ["integer", "age", "A"], ["end_repeat"], ["calculate", "x", None, "sum(${age})"], header=[*H, "calculation"]), "f.xlsx", None),
+			(
+				simple(
+					["begin_repeat", "member", "M"],
+					["integer", "age", "A"],
+					["end_repeat"],
+					["calculate", "x", None, "${age} + 1"],
+					header=[*H, "calculation"],
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["begin_repeat", "member", "M"],
+					["integer", "age", "A"],
+					["end_repeat"],
+					["calculate", "x", None, "sum(${age})"],
+					header=[*H, "calculation"],
+				),
+				"f.xlsx",
+				None,
+			),
 			{"row": 5},
 		),
 		"E-EXPR-SYNTAX": (
-			(simple(["integer", "a", "A"], ["text", "b", "B", "if(${a} > 3, 'x'"], header=[*H, "relevant"]), "f.xlsx", None),
-			(simple(["integer", "a", "A"], ["text", "b", "B", "if(${a} > 3, 'x', '')"], header=[*H, "relevant"]), "f.xlsx", None),
+			(
+				simple(
+					["integer", "a", "A"], ["text", "b", "B", "if(${a} > 3, 'x'"], header=[*H, "relevant"]
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["integer", "a", "A"],
+					["text", "b", "B", "if(${a} > 3, 'x', '')"],
+					header=[*H, "relevant"],
+				),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3},
 		),
 		"E-EXPR-QUOTE": (
-			(simple(["text", "a", "A"], ["text", "b", "B", "${a} = ‘x’"], header=[*H, "relevant"]), "f.xlsx", None),
-			(simple(["text", "a", "A"], ["text", "b", "B", "${a} = 'x'"], header=[*H, "relevant"]), "f.xlsx", None),
+			(
+				simple(["text", "a", "A"], ["text", "b", "B", "${a} = ‘x’"], header=[*H, "relevant"]),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(["text", "a", "A"], ["text", "b", "B", "${a} = 'x'"], header=[*H, "relevant"]),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3},
 		),
 		"E-EXPR-TOO-LONG": (
-			(simple(["text", "a", "A"], ["text", "b", "B", "${a} = '" + "x" * 50 + "'"], header=[*H, "relevant"]), "f.xlsx", ValidateOptions(max_expression_length=20)),
-			(simple(["text", "a", "A"], ["text", "b", "B", "${a} = 'x'"], header=[*H, "relevant"]), "f.xlsx", ValidateOptions(max_expression_length=20)),
+			(
+				simple(
+					["text", "a", "A"],
+					["text", "b", "B", "${a} = '" + "x" * 50 + "'"],
+					header=[*H, "relevant"],
+				),
+				"f.xlsx",
+				ValidateOptions(max_expression_length=20),
+			),
+			(
+				simple(["text", "a", "A"], ["text", "b", "B", "${a} = 'x'"], header=[*H, "relevant"]),
+				"f.xlsx",
+				ValidateOptions(max_expression_length=20),
+			),
 			{"row": 3},
 		),
 		"E-FN-UNSUPPORTED": (
-			(simple(["calculate", "a", None, "pulldata('x', 'y', 'z', 'w')"], header=[*H, "calculation"]), "f.xlsx", None),
-			(simple(["calculate", "a", None, "concat('x', 'y')"], header=[*H, "calculation"]), "f.xlsx", None),
+			(
+				simple(["calculate", "a", None, "pulldata('x', 'y', 'z', 'w')"], header=[*H, "calculation"]),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(["calculate", "a", None, "concat('x', 'y')"], header=[*H, "calculation"]),
+				"f.xlsx",
+				None,
+			),
 			{"row": 2},
 		),
 		"E-FN-ARGS": (
-			(simple(["select_multiple yn", "s", "S"], ["text", "b", "B", "selected(${s})"], header=[*H, "relevant"]), "f.xlsx", None),
-			(simple(["select_multiple yn", "s", "S"], ["text", "b", "B", "selected(${s}, 'yes')"], header=[*H, "relevant"]), "f.xlsx", None),
+			(
+				simple(
+					["select_multiple yn", "s", "S"],
+					["text", "b", "B", "selected(${s})"],
+					header=[*H, "relevant"],
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["select_multiple yn", "s", "S"],
+					["text", "b", "B", "selected(${s}, 'yes')"],
+					header=[*H, "relevant"],
+				),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3},
 		),
 		"E-EXPR-NOT-LIVE": (
-			(simple(["date", "d", "D"], ["text", "b", "B", "${d} < today()"], header=[*H, "relevant"]), "f.xlsx", None),
-			(simple(["date", "d", "D"], ["text", "b", "B", "${d} != ''"], header=[*H, "relevant"]), "f.xlsx", None),
+			(
+				simple(["date", "d", "D"], ["text", "b", "B", "${d} < today()"], header=[*H, "relevant"]),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(["date", "d", "D"], ["text", "b", "B", "${d} != ''"], header=[*H, "relevant"]),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3, "column": "relevant"},
 		),
 		"E-CALC-NOT-LIVE": (
-			(simple(["date", "d", "D"], ["calculate", "age", None, None, "int((today() - ${d}) div 365)"], ["text", "b", "B", "${age} > 18", None], header=[*H, "relevant", "calculation"]), "f.xlsx", None),
-			(simple(["date", "d", "D"], ["calculate", "age", None, None, "int((today() - ${d}) div 365)"], ["text", "b", "B", "${d} != ''", None], header=[*H, "relevant", "calculation"]), "f.xlsx", None),
+			(
+				simple(
+					["date", "d", "D"],
+					["calculate", "age", None, None, "int((today() - ${d}) div 365)"],
+					["text", "b", "B", "${age} > 18", None],
+					header=[*H, "relevant", "calculation"],
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["date", "d", "D"],
+					["calculate", "age", None, None, "int((today() - ${d}) div 365)"],
+					["text", "b", "B", "${d} != ''", None],
+					header=[*H, "relevant", "calculation"],
+				),
+				"f.xlsx",
+				None,
+			),
 			{"row": 4},
 		),
 		"E-CALC-CYCLE": (
-			(simple(["calculate", "total", None, "${share} + 1"], ["calculate", "share", None, "${total} div 2"], header=[*H, "calculation"]), "f.xlsx", None),
-			(simple(["calculate", "total", None, "1"], ["calculate", "share", None, "${total} div 2"], header=[*H, "calculation"]), "f.xlsx", None),
+			(
+				simple(
+					["calculate", "total", None, "${share} + 1"],
+					["calculate", "share", None, "${total} div 2"],
+					header=[*H, "calculation"],
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["calculate", "total", None, "1"],
+					["calculate", "share", None, "${total} div 2"],
+					header=[*H, "calculation"],
+				),
+				"f.xlsx",
+				None,
+			),
 			{},
 		),
 		"E-FILTER-UNSUPPORTED": (
-			(simple(["select_one d", "d", "D", None], ["select_one v", "v", "V", "district = ${d} or district = ''"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", None),
-			(simple(["select_one d", "d", "D", None], ["select_one v", "v", "V", "district = ${d}"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", None),
+			(
+				simple(
+					["select_one d", "d", "D", None],
+					["select_one v", "v", "V", "district = ${d} or district = ''"],
+					header=[*H, "choice_filter"],
+					choices=[
+						["list_name", "name", "label", "district"],
+						["d", "d1", "D1", None],
+						["v", "v1", "V1", "d1"],
+					],
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["select_one d", "d", "D", None],
+					["select_one v", "v", "V", "district = ${d}"],
+					header=[*H, "choice_filter"],
+					choices=[
+						["list_name", "name", "label", "district"],
+						["d", "d1", "D1", None],
+						["v", "v1", "V1", "d1"],
+					],
+				),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3},
 		),
 		"E-FILTER-COLUMN": (
-			(simple(["select_one d", "d", "D", None], ["select_one v", "v", "V", "state = ${d}"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", None),
-			(simple(["select_one d", "d", "D", None], ["select_one v", "v", "V", "district = ${d}"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", None),
+			(
+				simple(
+					["select_one d", "d", "D", None],
+					["select_one v", "v", "V", "state = ${d}"],
+					header=[*H, "choice_filter"],
+					choices=[
+						["list_name", "name", "label", "district"],
+						["d", "d1", "D1", None],
+						["v", "v1", "V1", "d1"],
+					],
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["select_one d", "d", "D", None],
+					["select_one v", "v", "V", "district = ${d}"],
+					header=[*H, "choice_filter"],
+					choices=[
+						["list_name", "name", "label", "district"],
+						["d", "d1", "D1", None],
+						["v", "v1", "V1", "d1"],
+					],
+				),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3},
 		),
 		"E-FILTER-MULTI": (
-			(simple(["select_one d", "d", "D", None], ["select_multiple v", "v", "V", "district = ${d}"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", None),
-			(simple(["select_one d", "d", "D", None], ["select_one v", "v", "V", "district = ${d}"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", None),
+			(
+				simple(
+					["select_one d", "d", "D", None],
+					["select_multiple v", "v", "V", "district = ${d}"],
+					header=[*H, "choice_filter"],
+					choices=[
+						["list_name", "name", "label", "district"],
+						["d", "d1", "D1", None],
+						["v", "v1", "V1", "d1"],
+					],
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["select_one d", "d", "D", None],
+					["select_one v", "v", "V", "district = ${d}"],
+					header=[*H, "choice_filter"],
+					choices=[
+						["list_name", "name", "label", "district"],
+						["d", "d1", "D1", None],
+						["v", "v1", "V1", "d1"],
+					],
+				),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3},
 		),
 		"W-WEB-FILTER": (
-			(simple(["select_one d", "d", "D", None], ["select_one v", "v", "V", "district = ${d}"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", None),
-			(simple(["select_one d", "d", "D", None], ["select_one v", "v", "V", "district = ${d}"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", ValidateOptions(allow_web=False)),
+			(
+				simple(
+					["select_one d", "d", "D", None],
+					["select_one v", "v", "V", "district = ${d}"],
+					header=[*H, "choice_filter"],
+					choices=[
+						["list_name", "name", "label", "district"],
+						["d", "d1", "D1", None],
+						["v", "v1", "V1", "d1"],
+					],
+				),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(
+					["select_one d", "d", "D", None],
+					["select_one v", "v", "V", "district = ${d}"],
+					header=[*H, "choice_filter"],
+					choices=[
+						["list_name", "name", "label", "district"],
+						["d", "d1", "D1", None],
+						["v", "v1", "V1", "d1"],
+					],
+				),
+				"f.xlsx",
+				ValidateOptions(allow_web=False),
+			),
 			{"row": 3},
 		),
 		"W-WEB-FIELD": (
@@ -246,41 +565,99 @@ def cases():
 			{"row": 2},
 		),
 		"E-DEFAULT-DYNAMIC": (
-			(simple(["integer", "a", "A", None], ["integer", "b", "B", "${a}"], header=[*H, "default"]), "f.xlsx", None),
-			(simple(["integer", "a", "A", None], ["date", "b", "B", "today()"], header=[*H, "default"]), "f.xlsx", None),
+			(
+				simple(["integer", "a", "A", None], ["integer", "b", "B", "${a}"], header=[*H, "default"]),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(["integer", "a", "A", None], ["date", "b", "B", "today()"], header=[*H, "default"]),
+				"f.xlsx",
+				None,
+			),
 			{"row": 3},
 		),
-		"W-APPEARANCE": ((simple(["text", "a", "A", "quick-compact"], header=[*H, "appearance"]), "f.xlsx", None), (simple(["text", "a", "A", "multiline"], header=[*H, "appearance"]), "f.xlsx", None), {"row": 2}),
-		"W-PARAMETER": ((simple(["image", "a", "A", "max-pixels=1024"], header=[*H, "parameters"]), "f.xlsx", None), (simple(["image", "a", "A", None], header=[*H, "parameters"]), "f.xlsx", None), {"row": 2}),
-		"E-PARAMETER-INVALID": ((simple(["range", "a", "A", "start=one end=10"], header=[*H, "parameters"]), "f.xlsx", None), (simple(["range", "a", "A", "start=1 end=10"], header=[*H, "parameters"]), "f.xlsx", None), {"row": 2}),
+		"W-APPEARANCE": (
+			(simple(["text", "a", "A", "quick-compact"], header=[*H, "appearance"]), "f.xlsx", None),
+			(simple(["text", "a", "A", "multiline"], header=[*H, "appearance"]), "f.xlsx", None),
+			{"row": 2},
+		),
+		"W-PARAMETER": (
+			(simple(["image", "a", "A", "max-pixels=1024"], header=[*H, "parameters"]), "f.xlsx", None),
+			(simple(["image", "a", "A", None], header=[*H, "parameters"]), "f.xlsx", None),
+			{"row": 2},
+		),
+		"E-PARAMETER-INVALID": (
+			(simple(["range", "a", "A", "start=one end=10"], header=[*H, "parameters"]), "f.xlsx", None),
+			(simple(["range", "a", "A", "start=1 end=10"], header=[*H, "parameters"]), "f.xlsx", None),
+			{"row": 2},
+		),
 		"E-SETTING-INVALID": (
 			(wb([H, ["text", "a", "A"]], settings=[["form_id"], ["Household Survey"]]), "f.xlsx", None),
 			(wb([H, ["text", "a", "A"]], settings=[["form_id"], ["household_survey"]]), "f.xlsx", None),
 			{"sheet": "settings", "cell": "A2"},
 		),
 		"E-SETTING-ENCRYPTED": (
-			(wb([H, ["text", "a", "A"]], settings=[["form_id", "public_key"], ["abc_form", "MIIB"]]), "f.xlsx", None),
+			(
+				wb([H, ["text", "a", "A"]], settings=[["form_id", "public_key"], ["abc_form", "MIIB"]]),
+				"f.xlsx",
+				None,
+			),
 			(wb([H, ["text", "a", "A"]], settings=[["form_id"], ["abc_form"]]), "f.xlsx", None),
 			{"sheet": "settings"},
 		),
 		"W-SETTING-IGNORED": (
-			(wb([H, ["text", "a", "A"]], settings=[["form_id", "submission_url"], ["abc_form", "https://x"]]), "f.xlsx", None),
+			(
+				wb(
+					[H, ["text", "a", "A"]],
+					settings=[["form_id", "submission_url"], ["abc_form", "https://x"]],
+				),
+				"f.xlsx",
+				None,
+			),
 			(wb([H, ["text", "a", "A"]], settings=[["form_id"], ["abc_form"]]), "f.xlsx", None),
 			{"sheet": "settings", "cell": "B2"},
 		),
 		"W-INSTANCE-NAME": (
-			(wb([H, ["text", "a", "A"]], settings=[["form_id", "instance_name"], ["abc_form", "uuid()"]]), "f.xlsx", None),
-			(wb([H, ["text", "a", "A"]], settings=[["form_id", "instance_name"], ["abc_form", "concat(${a}, '-x')"]]), "f.xlsx", None),
+			(
+				wb([H, ["text", "a", "A"]], settings=[["form_id", "instance_name"], ["abc_form", "uuid()"]]),
+				"f.xlsx",
+				None,
+			),
+			(
+				wb(
+					[H, ["text", "a", "A"]],
+					settings=[["form_id", "instance_name"], ["abc_form", "concat(${a}, '-x')"]],
+				),
+				"f.xlsx",
+				None,
+			),
 			{"sheet": "settings"},
 		),
 		"E-VERSION-ORDER": (
-			(wb([H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", "2024-01"]]), "f.xlsx", ValidateOptions(published_version="2025-03")),
-			(wb([H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", "2025-04"]]), "f.xlsx", ValidateOptions(published_version="2025-03")),
+			(
+				wb([H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", "2024-01"]]),
+				"f.xlsx",
+				ValidateOptions(published_version="2025-03"),
+			),
+			(
+				wb([H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", "2025-04"]]),
+				"f.xlsx",
+				ValidateOptions(published_version="2025-03"),
+			),
 			{"sheet": "settings"},
 		),
 		"E-VERSION-PUBLISHED": (
-			(wb([H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", "2025-03"]]), "f.xlsx", ValidateOptions(published_version="2025-03")),
-			(wb([H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", "2025-03b"]]), "f.xlsx", ValidateOptions(published_version="2025-03")),
+			(
+				wb([H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", "2025-03"]]),
+				"f.xlsx",
+				ValidateOptions(published_version="2025-03"),
+			),
+			(
+				wb([H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", "2025-03b"]]),
+				"f.xlsx",
+				ValidateOptions(published_version="2025-03"),
+			),
 			{"sheet": "settings"},
 		),
 		"E-LIMIT-QUESTIONS": (
@@ -289,22 +666,53 @@ def cases():
 			{},
 		),
 		"E-ROW-BUDGET": (
-			(simple(*[["barcode", f"b{i}", "B"] for i in range(5)]), "f.xlsx", ValidateOptions(row_budget_bytes=5000)),
-			(simple(*[["text", f"b{i}", "B"] for i in range(5)]), "f.xlsx", ValidateOptions(row_budget_bytes=5000)),
+			(
+				simple(*[["barcode", f"b{i}", "B"] for i in range(5)]),
+				"f.xlsx",
+				ValidateOptions(row_budget_bytes=5000),
+			),
+			(
+				simple(*[["text", f"b{i}", "B"] for i in range(5)]),
+				"f.xlsx",
+				ValidateOptions(row_budget_bytes=5000),
+			),
 			{},
 		),
 		"W-RENAME": (
-			(wb([PREV_SURVEY[0], ["text", "village_name", "Village name"], *PREV_SURVEY[2:]]), "f.xlsx", "prev"),
+			(
+				wb([PREV_SURVEY[0], ["text", "village_name", "Village name"], *PREV_SURVEY[2:]]),
+				"f.xlsx",
+				"prev",
+			),
 			(wb(PREV_SURVEY), "f.xlsx", "prev"),
 			{"row": 2},
 		),
 		"W-MOVE-REPEAT": (
-			(wb([PREV_SURVEY[0], PREV_SURVEY[1], PREV_SURVEY[2], PREV_SURVEY[4], ["begin_repeat", "member", "Members"], ["text", "mname", "Name"], ["integer", "age", "Age"], ["end_repeat"]]), "f.xlsx", "prev"),
+			(
+				wb(
+					[
+						PREV_SURVEY[0],
+						PREV_SURVEY[1],
+						PREV_SURVEY[2],
+						PREV_SURVEY[4],
+						["begin_repeat", "member", "Members"],
+						["text", "mname", "Name"],
+						["integer", "age", "Age"],
+						["end_repeat"],
+					]
+				),
+				"f.xlsx",
+				"prev",
+			),
 			(wb(PREV_SURVEY), "f.xlsx", "prev"),
 			{"row": 7},
 		),
 		"W-TYPE-CHANGE": (
-			(wb([PREV_SURVEY[0], PREV_SURVEY[1], ["text", "income", "Income"], *PREV_SURVEY[3:]]), "f.xlsx", "prev"),
+			(
+				wb([PREV_SURVEY[0], PREV_SURVEY[1], ["text", "income", "Income"], *PREV_SURVEY[3:]]),
+				"f.xlsx",
+				"prev",
+			),
 			(wb(PREV_SURVEY), "f.xlsx", "prev"),
 			{"row": 3},
 		),
@@ -313,7 +721,11 @@ def cases():
 			(wb(PREV_SURVEY), "f.xlsx", "prev"),
 			{},
 		),
-		"I-NO-LABEL": ((simple(["text", "a", None]), "f.xlsx", None), (simple(["text", "a", "A"]), "f.xlsx", None), {"row": 2}),
+		"I-NO-LABEL": (
+			(simple(["text", "a", None]), "f.xlsx", None),
+			(simple(["text", "a", "A"]), "f.xlsx", None),
+			{"row": 2},
+		),
 	}
 
 
@@ -373,14 +785,22 @@ class TestIssueCatalogue(unittest.TestCase):
 		self.assertEqual(codes, {"E-FILE-TYPE"})
 
 	def test_xls_rejected(self):
-		codes = {i.code for i in validate(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\x00" * 100, "f.xls").issues}
+		codes = {
+			i.code for i in validate(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\x00" * 100, "f.xls").issues
+		}
 		self.assertEqual(codes, {"E-FILE-TYPE"})
 
 	def test_issue_dict_shape(self):
-		result = validate(simple(["integer", "hh_size", "A"], ["text", "b", "B", "${hh_sise} > 1"], header=[*H, "relevant"]), "f.xlsx")
+		result = validate(
+			simple(
+				["integer", "hh_size", "A"], ["text", "b", "B", "${hh_sise} > 1"], header=[*H, "relevant"]
+			),
+			"f.xlsx",
+		)
 		data = next(i for i in result.issues if i.code == "E-REF-UNKNOWN").as_dict()
 		self.assertEqual(
-			set(data), {"code", "severity", "sheet", "row", "column", "cell", "message", "suggestion", "docs_url"}
+			set(data),
+			{"code", "severity", "sheet", "row", "column", "cell", "message", "suggestion", "docs_url"},
 		)
 		self.assertEqual(data["cell"], "D3")
 		self.assertIn("hh_size", data["suggestion"])
@@ -388,7 +808,12 @@ class TestIssueCatalogue(unittest.TestCase):
 		self.assertTrue(data["docs_url"].endswith("#E-REF-UNKNOWN"))
 
 	def test_pyxform_type_aliases_accepted(self):
-		content = simple(["begin group", "g", "G"], ["select one yn", "a", "A"], ["select multiple yn", "b", "B"], ["end group"])
+		content = simple(
+			["begin group", "g", "G"],
+			["select one yn", "a", "A"],
+			["select multiple yn", "b", "B"],
+			["end group"],
+		)
 		self.assertEqual([i.code for i in validate(content, "f.xlsx").issues if i.severity == "error"], [])
 
 	def test_version_ordering(self):

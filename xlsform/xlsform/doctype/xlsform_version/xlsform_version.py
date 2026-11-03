@@ -5,14 +5,18 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-import xlsform.runtime  # noqa: F401
+import xlsform.runtime
 from xlsform.runtime import validation
 
 
 class XLSFormVersion(Document):
 	def before_insert(self):
 		if not self.form or not self.version:
-			frappe.throw(_("Upload workbooks with the Upload button on the XLSForm, so the form and version are read from it."))
+			frappe.throw(
+				_(
+					"Upload workbooks with the Upload button on the XLSForm, so the form and version are read from it."
+				)
+			)
 
 	def validate(self):
 		if self.docstatus != 0:
@@ -41,7 +45,9 @@ class XLSFormVersion(Document):
 
 	def before_submit(self):
 		if not self.flags.xf_publishing:
-			frappe.throw(_("Use the Publish button: it checks the form and creates its DocTypes before publishing."))
+			frappe.throw(
+				_("Use the Publish button: it checks the form and creates its DocTypes before publishing.")
+			)
 
 	def before_cancel(self):
 		frappe.throw(_("A published version can't be cancelled. Upload a new version, or retire the form."))
@@ -58,5 +64,10 @@ def validate_in_background(version_name: str) -> None:
 	validation.run_for_version(doc)
 	doc.flags.ignore_permissions = True
 	doc.db_update()
-	frappe.db.commit()
-	frappe.publish_realtime("xlsform_validated", {"version": version_name}, doctype="XLSForm Version", docname=version_name)
+	frappe.publish_realtime(
+		"xlsform_validated",
+		{"version": version_name},
+		doctype="XLSForm Version",
+		docname=version_name,
+		after_commit=True,
+	)

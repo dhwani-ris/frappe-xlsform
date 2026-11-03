@@ -8,12 +8,12 @@ import frappe
 from frappe import _
 from frappe.model.document import RESERVED_KEYWORDS, Document
 
-import xlsform.runtime  # noqa: F401  (installs the translator)
+import xlsform.runtime
 from xlsform.core import preview
 from xlsform.core.issues import ERROR, INFO, WARNING, Issue
 from xlsform.core.validate import Result, ValidateOptions, validate
 from xlsform.runtime import settings as xf_settings
-from xlsform.runtime.settings import DATA_MODULE, GENERATED_MARK
+from xlsform.runtime.settings import GENERATED_MARK, GENERATED_MODULES
 
 ASYNC_BYTES = 1024 * 1024
 
@@ -38,7 +38,7 @@ def leftover_doctypes(form: str | None) -> set[str]:
 	mark = GENERATED_MARK.format(form)
 	rows = frappe.get_all(
 		"DocType",
-		filters={"module": DATA_MODULE, "custom": 1, "description": ["like", f"%{mark}%"]},
+		filters={"module": ["in", GENERATED_MODULES], "custom": 1, "description": ["like", f"%{mark}%"]},
 		fields=["name", "description"],
 	)
 	return {r.name for r in rows if mark in (r.description or "")}  # LIKE treats _ as a wildcard
@@ -48,8 +48,11 @@ def own_doctypes(meta: dict | None) -> set[str]:
 	if not meta:
 		return set()
 	d = meta.get("doctypes", {})
-	return {d.get("parent")} | set(d.get("repeats", {}).values()) | set(d.get("lists", {}).values()) | set(
-		d.get("picks", {}).values()
+	return (
+		{d.get("parent")}
+		| set(d.get("repeats", {}).values())
+		| set(d.get("lists", {}).values())
+		| set(d.get("picks", {}).values())
 	)
 
 
@@ -125,7 +128,9 @@ def store(version: Document, result: Result, source_hash: str) -> None:
 	version.state = "Valid" if result.ok else "Invalid"
 	version.validation_report = json.dumps(result.report(), ensure_ascii=False)
 	version.report_html = render_report(result.issues, result.skipped)
-	version.change_summary = json.dumps(result.change_summary, ensure_ascii=False) if result.change_summary else None
+	version.change_summary = (
+		json.dumps(result.change_summary, ensure_ascii=False) if result.change_summary else None
+	)
 	version.change_html = render_changes(result.change_summary)
 	version.parsed_json = json.dumps(result.form.as_dict(), ensure_ascii=False) if result.form else None
 	if result.plan:
@@ -157,7 +162,9 @@ def render_report(issues: list[Issue], skipped: list[dict]) -> str:
 	parts = ['<div class="xf-report"><div class="xf-summary">']
 	for sev in (ERROR, WARNING, INFO):
 		if counts[sev]:
-			label = {ERROR: _("{0} errors"), WARNING: _("{0} warnings"), INFO: _("{0} advice")}[sev].format(counts[sev])
+			label = {ERROR: _("{0} errors"), WARNING: _("{0} warnings"), INFO: _("{0} advice")}[sev].format(
+				counts[sev]
+			)
 			parts.append(f'<span class="indicator-pill {SEVERITY_COLOR[sev]}">{esc(label)}</span> ')
 	parts.append("</div>")
 	groups: dict[str, list[Issue]] = {}
@@ -205,9 +212,7 @@ def render_changes(summary: dict | None) -> str:
 		items = summary.get(key) or []
 		if not items:
 			continue
-		text = ", ".join(
-			f"{i['from']} → {i['to']}" if isinstance(i, dict) else str(i) for i in items
-		)
+		text = ", ".join(f"{i['from']} → {i['to']}" if isinstance(i, dict) else str(i) for i in items)
 		rows.append(f"<tr><th>{esc(label)}</th><td>{esc(text)}</td></tr>")
 	if not rows:
 		return f'<p class="text-muted">{esc(_("No changes to questions."))}</p>'

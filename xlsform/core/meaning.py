@@ -36,7 +36,15 @@ from xlsform.core.suggest import closest, slug
 FORM_ID_RE = re.compile(r"^[a-z][a-z0-9_]{2,40}$")
 CHOICE_NAME_BAD = re.compile(r"[\s<>%\"#*?\\/]")
 
-EXPR_COLUMNS = ("relevant", "constraint", "calculation", "required", "read_only", "repeat_count", "choice_filter")
+EXPR_COLUMNS = (
+	"relevant",
+	"constraint",
+	"calculation",
+	"required",
+	"read_only",
+	"repeat_count",
+	"choice_filter",
+)
 LIVE_COLUMNS = ("relevant", "required", "read_only")
 STATIC_TRUE = {"yes", "true", "true()", "1"}
 STATIC_FALSE = {"no", "false", "false()", "0", ""}
@@ -132,7 +140,9 @@ def check(form: Form, opts: Options) -> tuple[Analysis, list[Issue]]:
 	if opts.allow_web:
 		for node in _questions(form):
 			if node.base_type in ("geopoint", "geotrace", "geoshape"):
-				issues.append(issue("W-WEB-FIELD", name=node.name, type=node.base_type, **_where(node, "type")))
+				issues.append(
+					issue("W-WEB-FIELD", name=node.name, type=node.base_type, **_where(node, "type"))
+				)
 	return analysis, issues
 
 
@@ -196,7 +206,11 @@ def _load_csv_lists(form: Form, opts: Options, issues: list[Issue]) -> None:
 			for key, value in record.items():
 				if key.startswith("label::") and value:
 					labels[key.split("::", 1)[1]] = value
-			extra = {k: v for k, v in record.items() if k not in ("name", "label") and not k.startswith("label::") and v}
+			extra = {
+				k: v
+				for k, v in record.items()
+				if k not in ("name", "label") and not k.startswith("label::") and v
+			}
 			row = Row(line_no, {"name": Cell(name, 1)})
 			lst.choices.append(Choice(name, labels, extra, row))
 		form.lists[file_name] = lst
@@ -225,7 +239,9 @@ def _check_lists(form: Form, opts: Options) -> list[Issue]:
 		if guess:
 			hint = tr(N_('Add it to the choices sheet, or fix the spelling (found: "{guess}").'), guess=guess)
 		else:
-			hint = tr(N_("Add it to the choices sheet, or fix the list name after {type}."), type=node.base_type)
+			hint = tr(
+				N_("Add it to the choices sheet, or fix the list name after {type}."), type=node.base_type
+			)
 		issues.append(issue("E-LIST-MISSING", list=name, hint=hint, **_where(node, "type")))
 	for name in sorted(used):
 		lst = form.lists[name]
@@ -249,16 +265,32 @@ def _check_lists(form: Form, opts: Options) -> list[Issue]:
 			col = choice.row.col("name")
 			where = dict(sheet=sheet, row=choice.row.number, column="name", col_index=col)
 			if not choice.name:
-				issues.append(issue("E-CHOICE-NAME", choice="", list=name, reason=tr(N_("is empty")), fixed="choice_1", **where))
+				issues.append(
+					issue(
+						"E-CHOICE-NAME",
+						choice="",
+						list=name,
+						reason=tr(N_("is empty")),
+						fixed="choice_1",
+						**where,
+					)
+				)
 				continue
 			if CHOICE_NAME_BAD.search(choice.name) or len(choice.name) > 140:
 				reason = (
 					tr(N_("contains a space"))
 					if any(ch.isspace() for ch in choice.name)
-					else tr(N_("is too long or contains one of < > % \" # * ? \\ /"))
+					else tr(N_('is too long or contains one of < > % " # * ? \\ /'))
 				)
 				issues.append(
-					issue("E-CHOICE-NAME", choice=choice.name, list=name, reason=reason, fixed=slug(choice.name)[:140], **where)
+					issue(
+						"E-CHOICE-NAME",
+						choice=choice.name,
+						list=name,
+						reason=reason,
+						fixed=slug(choice.name)[:140],
+						**where,
+					)
 				)
 				continue
 			seen.setdefault(choice.name, []).append(choice.row.number)
@@ -269,7 +301,7 @@ def _check_lists(form: Form, opts: Options) -> list[Issue]:
 						"E-CHOICE-DUPLICATE",
 						choice=choice_name,
 						list=name,
-						rows=" and ".join(map(str, rows)),
+						rows=" and ".join(str(r) for r in rows),
 						sheet=sheet,
 						row=rows[1],
 						column="name",
@@ -330,7 +362,9 @@ def _check_appearance_parameters(form: Form, analysis: Analysis) -> list[Issue]:
 				try:
 					parsed[key] = float(value)
 				except ValueError:
-					issues.append(issue("E-PARAMETER-INVALID", parameter=key, value=value, **_where(node, "parameters")))
+					issues.append(
+						issue("E-PARAMETER-INVALID", parameter=key, value=value, **_where(node, "parameters"))
+					)
 			else:
 				issues.append(issue("W-PARAMETER", parameter=key, **_where(node, "parameters")))
 		if node.base_type == "range":
@@ -378,7 +412,9 @@ def _check_settings(form: Form, opts: Options, analysis: Analysis) -> list[Issue
 			issues.append(issue("E-VERSION-PUBLISHED", version=version, **where("version")))
 		elif cmp < 0:
 			issues.append(
-				issue("E-VERSION-ORDER", version=version, published=opts.published_version, **where("version"))
+				issue(
+					"E-VERSION-ORDER", version=version, published=opts.published_version, **where("version")
+				)
 			)
 
 	instance_name = form.settings.get("instance_name")
@@ -412,7 +448,9 @@ def _instance_name_parts(text: str, form: Form) -> list[dict] | None:
 
 def version_key(value: str) -> tuple:
 	parts = re.findall(r"\d+|[^\d]+", value.strip())
-	return tuple((0, int(p), "") if p.isdigit() else (1, 0, p.lower()) for p in parts if p not in ("-", ".", "_", " "))
+	return tuple(
+		(0, int(p), "") if p.isdigit() else (1, 0, p.lower()) for p in parts if p not in ("-", ".", "_", " ")
+	)
 
 
 def compare_versions(a: str, b: str) -> int:
@@ -435,7 +473,9 @@ def _parse_all(form: Form, opts: Options, analysis: Analysis, issues: list[Issue
 				continue
 			where = _where(node, column)
 			if len(text) > opts.max_expression_length:
-				issues.append(issue("E-EXPR-TOO-LONG", length=len(text), limit=opts.max_expression_length, **where))
+				issues.append(
+					issue("E-EXPR-TOO-LONG", length=len(text), limit=opts.max_expression_length, **where)
+				)
 				continue
 			try:
 				ast = parse(text, allow_columns=(column == "choice_filter"))
@@ -467,7 +507,9 @@ def _parse_default(node: Node, analysis: Analysis, issues: list[Issue]) -> None:
 	analysis.defaults[node.path] = text
 
 
-def _resolve(ast: dict, node: Node, column: str, names: dict[str, Node], issues: list[Issue], where: dict) -> bool:
+def _resolve(
+	ast: dict, node: Node, column: str, names: dict[str, Node], issues: list[Issue], where: dict
+) -> bool:
 	ok = True
 	# A repeat's own relevant/repeat_count live on the Table field of the enclosing record.
 	scope_repeat = node.enclosing_repeat
@@ -484,7 +526,9 @@ def _resolve(ast: dict, node: Node, column: str, names: dict[str, Node], issues:
 				got = len(n["args"])
 				if got < spec.min_args or (spec.max_args is not None and got > spec.max_args):
 					expected = _arity_text(spec.min_args, spec.max_args)
-					issues.append(issue("E-FN-ARGS", fn=fn, expected=expected, got=got, example=spec.example, **where))
+					issues.append(
+						issue("E-FN-ARGS", fn=fn, expected=expected, got=got, example=spec.example, **where)
+					)
 					ok = False
 			for a in n["args"]:
 				visit(a, aggregate or fn in AGGREGATES)
@@ -508,9 +552,7 @@ def _resolve(ast: dict, node: Node, column: str, names: dict[str, Node], issues:
 			n["ref"] = target.path
 			target_repeat = target if target.kind == REPEAT else target.enclosing_repeat
 			if target_repeat is not None and target_repeat is not scope_repeat and not aggregate:
-				issues.append(
-					issue("E-REF-REPEAT", name=n["name"], repeat=target_repeat.name, **where)
-				)
+				issues.append(issue("E-REF-REPEAT", name=n["name"], repeat=target_repeat.name, **where))
 				ok = False
 			return
 		for a in n.get("args", ()):
@@ -642,7 +684,9 @@ def _check_filters(form: Form, opts: Options, analysis: Analysis, issues: list[I
 			issues.append(
 				issue(
 					"E-FILTER-UNSUPPORTED",
-					reason=tr(N_("only conditions of the form column = ${{question}} joined by and can be used")),
+					reason=tr(
+						N_("only conditions of the form column = ${{question}} joined by and can be used")
+					),
 					**where,
 				)
 			)

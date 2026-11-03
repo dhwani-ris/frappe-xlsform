@@ -25,14 +25,19 @@ def uid() -> str:
 
 
 def household(form_id: str, version: str = "1", survey=None, choices=None, title="Household Survey") -> bytes:
-	settings = [["form_title", "form_id", "version", "default_language"], [title, form_id, version, "English (en)"]]
-	return make_xlsx(survey=survey or HOUSEHOLD["survey"], choices=choices or HOUSEHOLD["choices"], settings=settings)
+	settings = [
+		["form_title", "form_id", "version", "default_language"],
+		[title, form_id, version, "English (en)"],
+	]
+	return make_xlsx(
+		survey=survey or HOUSEHOLD["survey"], choices=choices or HOUSEHOLD["choices"], settings=settings
+	)
 
 
 def upload(content: bytes, filename="form.xlsx", form=None) -> dict:
-	f = frappe.get_doc({"doctype": "File", "file_name": filename, "content": content, "is_private": 1}).insert(
-		ignore_permissions=True
-	)
+	f = frappe.get_doc(
+		{"doctype": "File", "file_name": filename, "content": content, "is_private": 1}
+	).insert(ignore_permissions=True)
 	return forms.upload(file_url=f.file_url, form=form)
 
 
@@ -48,13 +53,17 @@ def publish(content: bytes) -> dict:
 
 def make_user(email: str, roles: list[str]) -> str:
 	if not frappe.db.exists("User", email):
-		user = frappe.get_doc({"doctype": "User", "email": email, "first_name": email.split("@")[0], "send_welcome_email": 0})
+		user = frappe.get_doc(
+			{"doctype": "User", "email": email, "first_name": email.split("@")[0], "send_welcome_email": 0}
+		)
 		user.insert(ignore_permissions=True)
 	user = frappe.get_doc("User", email)
 	user.set("roles", [])
 	for r in roles:
 		if not frappe.db.exists("Role", r):
-			frappe.get_doc({"doctype": "Role", "role_name": r, "desk_access": 1}).insert(ignore_permissions=True)
+			frappe.get_doc({"doctype": "Role", "role_name": r, "desk_access": 1}).insert(
+				ignore_permissions=True
+			)
 		user.append("roles", {"role": r})
 	user.save(ignore_permissions=True)
 	return email
@@ -145,7 +154,9 @@ class TestPublishAndCollect(IntegrationTestCase):
 		new_head = next(f for f in meta.fields if f.fieldname.startswith("hh_head_v"))
 		self.assertEqual(new_head.fieldtype, "Int")
 		self.assertEqual(meta.get_field("hh_head").fieldtype, "Small Text")
-		lists = json.loads(frappe.db.get_value("XLSForm Version", res2["version"], "compiled_meta"))["doctypes"]["lists"]
+		lists = json.loads(frappe.db.get_value("XLSForm Version", res2["version"], "compiled_meta"))[
+			"doctypes"
+		]["lists"]
 		self.assertTrue(frappe.db.get_value(lists["village"], "v2", "xf_retired"))
 		self.assertTrue(frappe.db.exists(lists["village"], "v4"))
 
@@ -193,7 +204,9 @@ class TestPublishAndCollect(IntegrationTestCase):
 		res = publish(household(fid))
 		dt = frappe.db.get_value("XLSForm", fid, "data_doctype")
 		self.assertTrue(
-			frappe.db.exists("Translation", {"language": "hi", "source_text": "Household size", "context": dt})
+			frappe.db.exists(
+				"Translation", {"language": "hi", "source_text": "Household size", "context": dt}
+			)
 		)
 		self.assertTrue(frappe.db.exists("Translation", {"language": "hi", "source_text": "Yes"}))
 		wf = frappe.get_doc("Web Form", {"doc_type": dt})
@@ -278,7 +291,9 @@ class TestAccessAndSecurity(IntegrationTestCase):
 		self.assertFalse(frappe.has_permission(dt, "read", user=stranger))
 		self.assertFalse(frappe.has_permission(dt, "read", user=officer))  # nothing until granted
 
-		form.append("access", {"role": "Field Officer", "can_read": 1, "can_create": 1, "can_write": 1, "only_own": 1})
+		form.append(
+			"access", {"role": "Field Officer", "can_read": 1, "can_create": 1, "can_write": 1, "only_own": 1}
+		)
 		form.save()
 		self.assertTrue(frappe.has_permission(dt, "create", user=officer))
 		self.assertFalse(frappe.has_permission(dt, "read", user=stranger))
@@ -291,7 +306,9 @@ class TestAccessAndSecurity(IntegrationTestCase):
 		self.assertNotIn(mine.name, frappe.get_list(dt, pluck="name"))  # only own records
 		frappe.set_user("Administrator")
 
-		lists = json.loads(frappe.db.get_value("XLSForm Version", form.current_version, "compiled_meta"))["doctypes"]["lists"]
+		lists = json.loads(frappe.db.get_value("XLSForm Version", form.current_version, "compiled_meta"))[
+			"doctypes"
+		]["lists"]
 		self.assertTrue(frappe.has_permission(lists["district"], "read", user=officer))
 
 		form.access = []

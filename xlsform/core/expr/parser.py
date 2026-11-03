@@ -161,7 +161,9 @@ class Parser:
 		tok = self.peek()
 		if tok.kind != "end":
 			if tok.kind == "rparen":
-				raise ExprSyntaxError(f"a bracket closed at character {tok.pos + 1} was never opened", tok.pos + 1)
+				raise ExprSyntaxError(
+					f"a bracket closed at character {tok.pos + 1} was never opened", tok.pos + 1
+				)
 			raise ExprSyntaxError(f'unexpected "{tok.value}" at character {tok.pos + 1}', tok.pos + 1)
 		return node
 
@@ -209,13 +211,17 @@ class Parser:
 			inner = self.expression(0)
 			close = self.next()
 			if close.kind != "rparen":
-				raise ExprSyntaxError(f"a bracket opened at character {tok.pos + 1} is never closed", tok.pos + 1)
+				raise ExprSyntaxError(
+					f"a bracket opened at character {tok.pos + 1} is never closed", tok.pos + 1
+				)
 			return inner
 		if tok.kind == "name":
 			if self.peek().kind == "lparen":
 				return self.call(tok)
 			if tok.value in WORD_OPERATORS:
-				raise ExprSyntaxError(f'"{tok.value}" at character {tok.pos + 1} is missing a value before it', tok.pos + 1)
+				raise ExprSyntaxError(
+					f'"{tok.value}" at character {tok.pos + 1} is missing a value before it', tok.pos + 1
+				)
 			if self.allow_columns:
 				return {"col": tok.value}
 			raise ExprSyntaxError(
@@ -225,7 +231,9 @@ class Parser:
 		if tok.kind == "end":
 			raise ExprSyntaxError("the formula ends too early", tok.pos + 1)
 		if tok.kind == "rparen":
-			raise ExprSyntaxError(f"a bracket closed at character {tok.pos + 1} was never opened", tok.pos + 1)
+			raise ExprSyntaxError(
+				f"a bracket closed at character {tok.pos + 1} was never opened", tok.pos + 1
+			)
 		raise ExprSyntaxError(f'unexpected "{tok.value}" at character {tok.pos + 1}', tok.pos + 1)
 
 	def call(self, name_tok: Token) -> dict:
@@ -245,7 +253,9 @@ class Parser:
 				raise ExprSyntaxError(
 					f"a bracket opened at character {open_tok.pos + 1} is never closed", open_tok.pos + 1
 				)
-			raise ExprSyntaxError(f'expected , or ) at character {tok.pos + 1} but found "{tok.value}"', tok.pos + 1)
+			raise ExprSyntaxError(
+				f'expected , or ) at character {tok.pos + 1} but found "{tok.value}"', tok.pos + 1
+			)
 		return {"fn": name_tok.value, "args": args, "pos": name_tok.pos}
 
 

@@ -8,7 +8,12 @@ installs ``frappe._`` as the translator.
 
 from collections.abc import Callable
 
-_translator: Callable[[str], str] = lambda text: text
+
+def _identity(text: str) -> str:
+	return text
+
+
+_translator: Callable[[str], str] = _identity
 
 
 def N_(text: str) -> str:

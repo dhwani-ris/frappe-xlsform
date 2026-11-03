@@ -22,11 +22,13 @@
   "info_count",
   "warnings_accepted",
   "report_section_body",
-  "report_html",
+  "report_view",
   "changes_section",
-  "change_html",
+  "change_view",
   "data_section",
   "validation_report",
+  "report_html",
+  "change_html",
   "change_summary",
   "parsed_json",
   "compiled_meta",
@@ -137,7 +139,7 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "report_html",
+   "fieldname": "report_view",
    "fieldtype": "HTML",
    "label": "Report"
   },
@@ -148,7 +150,7 @@
    "collapsible": 1
   },
   {
-   "fieldname": "change_html",
+   "fieldname": "change_view",
    "fieldtype": "HTML",
    "label": "Changes"
   },
@@ -163,6 +165,18 @@
    "fieldname": "validation_report",
    "fieldtype": "JSON",
    "label": "Validation Report",
+   "read_only": 1
+  },
+  {
+   "fieldname": "report_html",
+   "fieldtype": "Long Text",
+   "label": "Report HTML",
+   "read_only": 1
+  },
+  {
+   "fieldname": "change_html",
+   "fieldtype": "Long Text",
+   "label": "Changes HTML",
    "read_only": 1
   },
   {
@@ -209,7 +223,7 @@
  "icon": "file-spreadsheet",
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-03 12:00:00.000000",
+ "modified": "2026-11-03 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "XLSForm",
  "name": "XLSForm Version",
@@ -245,6 +259,5 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "title_field": "name",
  "track_changes": 1
 }

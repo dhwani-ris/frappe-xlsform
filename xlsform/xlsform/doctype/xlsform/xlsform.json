@@ -93,7 +93,7 @@
    "fieldtype": "Check",
    "label": "Allow Web Form",
    "default": "1",
-   "description": "Logged-in users with access can fill the form at /xf/<form-id>"
+   "description": "Logged-in users with access fill it at /xf/your-form-id"
   },
   {
    "fieldname": "column_break_channels",

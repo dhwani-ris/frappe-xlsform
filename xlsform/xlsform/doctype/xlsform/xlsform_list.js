@@ -6,6 +6,8 @@ frappe.listview_settings["XLSForm"] = {
 	},
 	onload(list) {
 		list.page.add_inner_button(__("Upload a workbook"), () => xlsform.upload_dialog());
-		list.page.add_inner_button(__("Starter workbook"), () => window.open("/api/method/xlsform.api.forms.template"));
+		list.page.add_inner_button(__("Starter workbook"), () =>
+			window.open("/api/method/xlsform.api.forms.template")
+		);
 	},
 };

@@ -85,7 +85,8 @@ class MetaIndex:
 		for f in self.fields:
 			if f.get("list") in labels:
 				self.choice_labels[f["path"]] = {
-					name: (lbl.get(lang) or next(iter(lbl.values()), name)) for name, lbl in labels[f["list"]].items()
+					name: (lbl.get(lang) or next(iter(lbl.values()), name))
+					for name, lbl in labels[f["list"]].items()
 				}
 
 	def questions(self, repeat: str | None):
@@ -106,11 +107,15 @@ class MetaIndex:
 			rows = []
 			for row in doc.get(table["fieldname"]) or []:
 				row = row if isinstance(row, dict) else row.as_dict()
-				rows.append({f["path"]: answer(f["type"], row.get(f["fieldname"])) for f in self.questions(r)})
+				rows.append(
+					{f["path"]: answer(f["type"], row.get(f["fieldname"])) for f in self.questions(r)}
+				)
 			data[r] = rows
 		return data
 
-	def context(self, data: dict, scope_repeat: str | None = None, row: int | None = None, self_path=None, **kw):
+	def context(
+		self, data: dict, scope_repeat: str | None = None, row: int | None = None, self_path=None, **kw
+	):
 		return Context(
 			data=data,
 			repeat_of=self.repeat_of,

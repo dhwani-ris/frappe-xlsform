@@ -27,6 +27,7 @@ from xlsform.core.naming import MAX_FIELDNAME, child_label, doctype_name, parent
 
 META_VERSION = 2
 MODULE = "XLSForm Data"
+CHOICES_MODULE = "XLSForm Choices"
 RESERVED_PARENT_FIELDS = ("xf_form", "xf_version", "xf_channel")
 LABEL_MAX = 140
 TAB_THRESHOLD = 3
@@ -75,6 +76,7 @@ ROW_BYTES = {
 }
 NO_COLUMN = {"HTML", "Section Break", "Tab Break", "Column Break", "Table", "Table MultiSelect"}
 FIXED_ROW_BYTES = 3500
+SHORT_TEXT_HEIGHT = "4.5rem"
 
 # Web Form fields accept fewer types than DocFields (Frappe v16 WebFormField.fieldtype).
 # Table MultiSelect becomes a grid of the same pick rows; tabs become web form pages.
@@ -163,12 +165,15 @@ class _Compiler:
 			},
 			"static": self.a.static,
 			"filters": {
-				path: [[col, strip_positions(ast)] for col, ast in terms] for path, terms in self.a.filters.items()
+				path: [[col, strip_positions(ast)] for col, ast in terms]
+				for path, terms in self.a.filters.items()
 			},
 			"ranges": self.a.ranges,
 			"calc_order": self.a.calc_order,
 			"labels": {
-				n.path: n.localized("label", self.lang) for n in self.form.nodes() if n.localized("label", self.lang)
+				n.path: n.localized("label", self.lang)
+				for n in self.form.nodes()
+				if n.localized("label", self.lang)
 			},
 			"messages": {
 				n.path: {
@@ -278,12 +283,30 @@ class _Compiler:
 			length = max(20, -(-longest // 20) * 20, prev_lengths.get(list_name, 0))
 			self.list_lengths[list_name] = length
 			fields = [
-				{"fieldname": "choice_name", "label": "Choice Name", "fieldtype": "Data", "reqd": 1, "unique": 1,
-				 "in_list_view": 1, "length": length},
-				{"fieldname": "label", "label": "Label", "fieldtype": "Data", "in_list_view": 1, "length": LABEL_MAX,
-				 "in_standard_filter": 1},
+				{
+					"fieldname": "choice_name",
+					"label": "Choice Name",
+					"fieldtype": "Data",
+					"reqd": 1,
+					"unique": 1,
+					"in_list_view": 1,
+					"length": length,
+				},
+				{
+					"fieldname": "label",
+					"label": "Label",
+					"fieldtype": "Data",
+					"in_list_view": 1,
+					"length": LABEL_MAX,
+					"in_standard_filter": 1,
+				},
 				{"fieldname": "xf_order", "label": "Order", "fieldtype": "Int"},
-				{"fieldname": "xf_retired", "label": "Retired", "fieldtype": "Check", "in_standard_filter": 1},
+				{
+					"fieldname": "xf_retired",
+					"label": "Retired",
+					"fieldtype": "Check",
+					"in_standard_filter": 1,
+				},
 			] + [
 				{"fieldname": fn, "label": col, "fieldtype": "Data", "in_standard_filter": 1}
 				for col, fn in columns.items()
@@ -301,6 +324,7 @@ class _Compiler:
 					"sort_field": "xf_order",
 					"sort_order": "ASC",
 					"fields": fields,
+					"module": CHOICES_MODULE,
 					"xf_kind": "list",
 				}
 			)
@@ -309,7 +333,12 @@ class _Compiler:
 			if lst:
 				for order, c in enumerate(lst.choices, start=1):
 					label = c.labels.get(self.lang) or next(iter(c.labels.values()), "") or c.name
-					record = {"choice_name": c.name, "label": _plain(label)[:LABEL_MAX], "xf_order": order, "xf_retired": 0}
+					record = {
+						"choice_name": c.name,
+						"label": _plain(label)[:LABEL_MAX],
+						"xf_order": order,
+						"xf_retired": 0,
+					}
 					for col, value in c.extra.items():
 						record[columns[col]] = value
 					records.append(record)
@@ -328,9 +357,17 @@ class _Compiler:
 					"name": dt,
 					"istable": 1,
 					"fields": [
-						{"fieldname": "choice", "label": "Choice", "fieldtype": "Link", "options": self.lists[list_name],
-						 "reqd": 1, "in_list_view": 1, "length": self.list_lengths.get(list_name, 140)},
+						{
+							"fieldname": "choice",
+							"label": "Choice",
+							"fieldtype": "Link",
+							"options": self.lists[list_name],
+							"reqd": 1,
+							"in_list_view": 1,
+							"length": self.list_lengths.get(list_name, 140),
+						},
 					],
+					"module": MODULE,
 					"xf_kind": "pick",
 				}
 			)
@@ -340,12 +377,33 @@ class _Compiler:
 
 	def _parent_reserved(self) -> list[dict]:
 		return [
-			{"fieldname": "xf_form", "label": "Form", "fieldtype": "Link", "options": "XLSForm", "read_only": 1,
-			 "hidden": 1, "length": 64},
-			{"fieldname": "xf_version", "label": "Form Version", "fieldtype": "Link", "options": "XLSForm Version",
-			 "read_only": 1, "hidden": 1, "length": 120},
-			{"fieldname": "xf_channel", "label": "Channel", "fieldtype": "Select",
-			 "options": "\nDesk\nWeb\nmForm\nAPI", "read_only": 1, "hidden": 1, "length": 10},
+			{
+				"fieldname": "xf_form",
+				"label": "Form",
+				"fieldtype": "Link",
+				"options": "XLSForm",
+				"read_only": 1,
+				"hidden": 1,
+				"length": 64,
+			},
+			{
+				"fieldname": "xf_version",
+				"label": "Form Version",
+				"fieldtype": "Link",
+				"options": "XLSForm Version",
+				"read_only": 1,
+				"hidden": 1,
+				"length": 120,
+			},
+			{
+				"fieldname": "xf_channel",
+				"label": "Channel",
+				"fieldtype": "Select",
+				"options": "\nDesk\nWeb\nmForm\nAPI",
+				"read_only": 1,
+				"hidden": 1,
+				"length": 10,
+			},
 		]
 
 	def _fields(self, nodes: list[Node], repeat_scope: Node | None, top: bool = False) -> list[dict]:
@@ -400,7 +458,9 @@ class _Compiler:
 		if prev and prev.get("doctype") == doctype and prev["fieldname"] not in taken:
 			taken.add(prev["fieldname"])
 			return prev["fieldname"]
-		base = "xf_s_" + (re.sub(r"[^a-z0-9_]", "", node.name.lower().replace("-", "_").replace(".", "_")) or "group")
+		base = "xf_s_" + (
+			re.sub(r"[^a-z0-9_]", "", node.name.lower().replace("-", "_").replace(".", "_")) or "group"
+		)
 		base = base[:MAX_FIELDNAME]
 		name, n = base, 2
 		while name in taken:
@@ -497,8 +557,12 @@ class _Compiler:
 			field["options"] = self.picks[self._list_name(node)]
 		if qtype == "barcode":
 			field["length"] = 140
+		if qtype == "text" and "multiline" not in node.cell("appearance").split():
+			field["max_height"] = SHORT_TEXT_HEIGHT  # ODK shows one line unless appearance is multiline
 		if qtype in ("calculate", "start", "end", "today", "username"):
 			field["read_only"] = 1
+		if qtype in ("start", "end", "today", "username"):
+			field["hidden"] = 1  # filled by the server; ODK never shows metadata
 		if qtype == "calculate" and not label_text:
 			field["hidden"] = 1
 		if qtype == "hidden":
@@ -515,7 +579,13 @@ class _Compiler:
 
 		static = self.a.static.get(node.path, {})
 		required_ast = self.a.asts.get(node.path, {}).get("required")
-		if qtype not in ("acknowledge", "note", "calculate", "hidden", *("start", "end", "today", "username")):
+		if qtype not in (
+			"acknowledge",
+			"note",
+			"calculate",
+			"hidden",
+			*("start", "end", "today", "username"),
+		):
 			if static.get("required") and not conditions:
 				field["reqd"] = 1
 			elif static.get("required"):
@@ -579,7 +649,9 @@ class _Compiler:
 				entry = dict(prev)
 				entry["retired_in"] = prev.get("retired_in") or self.version
 				self.retired.append(entry)
-				self.taken_fieldnames.setdefault(prev["doctype"], set(RESERVED_PARENT_FIELDS)).add(prev["fieldname"])
+				self.taken_fieldnames.setdefault(prev["doctype"], set(RESERVED_PARENT_FIELDS)).add(
+					prev["fieldname"]
+				)
 		# also reserve columns of questions whose type changed (they get a new column)
 		for path, prev in self.prev_fields.items():
 			if path in current_paths and not prev.get("retired_in"):
@@ -620,7 +692,13 @@ class _Compiler:
 			self.fields_meta.append(entry)
 
 	def _doctype(self, name: str, istable: bool, fields: list[dict]) -> dict:
-		return {"name": name, "istable": 1 if istable else 0, "fields": fields, "xf_kind": "child" if istable else "parent"}
+		return {
+			"name": name,
+			"istable": 1 if istable else 0,
+			"fields": fields,
+			"module": MODULE,
+			"xf_kind": "child" if istable else "parent",
+		}
 
 	def _autoname(self) -> str:
 		parts = self.a.instance_name
@@ -646,7 +724,12 @@ class _Compiler:
 	def _translate(self, language: str, source: str, translated: str, context: str | None) -> None:
 		if source and translated and source != translated:
 			self.translations.append(
-				{"language": language, "source_text": source, "translated_text": translated, "context": context}
+				{
+					"language": language,
+					"source_text": source,
+					"translated_text": translated,
+					"context": context,
+				}
 			)
 
 	def _translate_label(self, node: Node, field: dict, doctype: str) -> None:
@@ -682,16 +765,37 @@ class _Compiler:
 			fieldtype = WEB_FIELDTYPES.get(f["fieldtype"], f["fieldtype"])
 			if fieldtype is None:
 				continue
-			wf = {k: f[k] for k in ("fieldname", "label", "options", "reqd", "depends_on",
-				"mandatory_depends_on", "read_only", "read_only_depends_on", "description", "default")
-				if k in f and f[k] not in (None, "")}
+			wf = {
+				k: f[k]
+				for k in (
+					"fieldname",
+					"label",
+					"options",
+					"reqd",
+					"depends_on",
+					"mandatory_depends_on",
+					"read_only",
+					"read_only_depends_on",
+					"description",
+					"default",
+				)
+				if k in f and f[k] not in (None, "")
+			}
 			wf["fieldtype"] = fieldtype
 			fields.append(wf)
+		short = [f["fieldname"] for f in parent["fields"] if f.get("max_height") and not f.get("hidden")]
+		css = (
+			", ".join(f'.web-form textarea[data-fieldname="{fn}"]' for fn in short)
+			+ f" {{ height: {SHORT_TEXT_HEIGHT}; min-height: {SHORT_TEXT_HEIGHT}; }}"
+			if short
+			else ""
+		)
 		return {
 			"title": _plain(self.form.title)[:LABEL_MAX],
 			"route": "xf/" + self.form.form_id.replace("_", "-"),
 			"doc_type": self.parent_dt,
 			"fields": fields,
+			"custom_css": css,
 		}
 
 

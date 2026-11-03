@@ -12,7 +12,7 @@ import frappe
 from frappe import _
 from frappe.utils.synchronization import filelock
 
-import xlsform.runtime  # noqa: F401
+import xlsform.runtime
 from xlsform.core.validate import validate
 from xlsform.runtime import apply as xf_apply
 from xlsform.runtime import settings as xf_settings
@@ -29,7 +29,9 @@ def check_can_publish(version) -> None:
 	if version.docstatus != 0:
 		frappe.throw(_("This version is already published."))
 	if version.state != "Valid":
-		frappe.throw(_("Only a version without errors can be published. Fix the workbook and upload it again."))
+		frappe.throw(
+			_("Only a version without errors can be published. Fix the workbook and upload it again.")
+		)
 	if version.warning_count and not version.warnings_accepted:
 		frappe.throw(_('This version has warnings. Tick "I understand the warnings" first.'))
 
@@ -54,23 +56,28 @@ def enqueue(version_name: str) -> str:
 
 
 def run(version_name: str, user: str | None = None) -> None:
-	if user:
-		frappe.set_user(user)
+	# frappe.enqueue runs the job as the user who queued it, so permission checks still apply.
 	version = frappe.get_doc("XLSForm Version", version_name)
 	try:
 		with filelock(LOCK, timeout=600):
 			_publish(version)
 	except Exception as exc:
 		frappe.db.rollback()
-		message = str(exc) if isinstance(exc, frappe.ValidationError) else _("Publishing failed: {0}").format(exc)
+		message = (
+			str(exc)
+			if isinstance(exc, frappe.ValidationError)
+			else _("Publishing failed: {0}").format(str(exc))
+		)
 		frappe.log_error(title=f"XLSForm publish {version_name}", message=traceback.format_exc())
-		frappe.db.set_value("XLSForm Version", version_name, {"publish_status": "failed", "publish_error": message})
-		frappe.db.commit()
+		frappe.db.set_value(
+			"XLSForm Version", version_name, {"publish_status": "failed", "publish_error": message}
+		)
+		# The job is failing, so the runner won't commit; keep the status the designer is polling.
+		frappe.db.commit()  # nosemgrep
 		if frappe.flags.in_test:
 			raise
 		return
-	frappe.db.commit()
-	frappe.publish_realtime("xlsform_published", {"version": version_name}, user=user)
+	frappe.publish_realtime("xlsform_published", {"version": version_name}, user=user, after_commit=True)
 
 
 def _status(version, status: str) -> None:
@@ -88,7 +95,9 @@ def _publish(version) -> None:
 	result = validate(content, filename, opts)
 	errors = [i for i in result.issues if i.severity == "error"]
 	if errors or result.plan is None:
-		frappe.throw(_("The form no longer passes its checks: {0}").format(errors[0].message if errors else ""))
+		frappe.throw(
+			_("The form no longer passes its checks: {0}").format(errors[0].message if errors else "")
+		)
 	plan = result.plan
 	parsed = result.form
 

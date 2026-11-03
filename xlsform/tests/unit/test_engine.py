@@ -76,7 +76,13 @@ class TestEngine(unittest.TestCase):
 
 	def test_nan_calculation_stored_blank(self):
 		meta = validate(
-			make_xlsx(survey=[["type", "name", "label", "calculation"], ["integer", "a", "A", None], ["calculate", "c", None, "${a} + 1"]]),
+			make_xlsx(
+				survey=[
+					["type", "name", "label", "calculation"],
+					["integer", "a", "A", None],
+					["calculate", "c", None, "${a} + 1"],
+				]
+			),
 			"f.xlsx",
 		).plan["compiled_meta"]
 		self.assertEqual(engine.run(meta, {"a": None}).parent_updates["c"], "")

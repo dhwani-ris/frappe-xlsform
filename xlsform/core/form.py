@@ -279,7 +279,10 @@ class Form:
 			"settings": self.settings,
 			"children": [c.as_dict(self.default_language) for c in self.root.children],
 			"choices": {
-				name: [{"name": c.name, "label": c.labels, **({"filters": c.extra} if c.extra else {})} for c in lst.choices]
+				name: [
+					{"name": c.name, "label": c.labels, **({"filters": c.extra} if c.extra else {})}
+					for c in lst.choices
+				]
 				for name, lst in self.lists.items()
 			},
 		}

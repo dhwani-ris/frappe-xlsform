@@ -15,6 +15,9 @@ DEFAULTS = {
 }
 
 DATA_MODULE = "XLSForm Data"
+# Choice lists live apart so a module's sidebar (which lists at most 15 DocTypes) shows forms only.
+CHOICES_MODULE = "XLSForm Choices"
+GENERATED_MODULES = (DATA_MODULE, CHOICES_MODULE)
 # Written into every generated DocType's description; identifies the form that owns it.
 GENERATED_MARK = "[xlsform:{0}]"
 DESIGNER = "XLSForm Designer"
@@ -25,7 +28,9 @@ def get() -> frappe._dict:
 	out = frappe._dict(DEFAULTS)
 	for key in DEFAULTS:
 		value = doc.get(key)
-		if value not in (None, "") and not (isinstance(value, int) and value == 0 and DEFAULTS[key] not in (0, 1)):
+		if value not in (None, "") and not (
+			isinstance(value, int) and value == 0 and DEFAULTS[key] not in (0, 1)
+		):
 			out[key] = value
 	return out
 

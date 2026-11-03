@@ -11,7 +11,7 @@ add_to_apps_screen = [
 		"name": "xlsform",
 		"logo": "/assets/xlsform/images/logo.svg",
 		"title": "XLSForm",
-		"route": "/app/xlsform",
+		"route": "/desk/excel-forms",
 		"has_permission": "xlsform.api.permission.has_app_permission",
 	}
 ]

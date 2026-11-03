@@ -4,9 +4,12 @@
 window.xlsform = window.xlsform || {};
 
 xlsform.show_status = function (frm) {
-	const colour = { Draft: "orange", Published: "green", Retired: "grey" }[frm.doc.status] || "blue";
+	const colour =
+		{ Draft: "orange", Published: "green", Retired: "grey" }[frm.doc.status] || "blue";
 	const msg = {
-		Draft: __("Not published yet. Upload a workbook, fix any problems, preview it, then publish."),
+		Draft: __(
+			"Not published yet. Upload a workbook, fix any problems, preview it, then publish."
+		),
 		Published: __("Published. Collectors can fill it on Desk, the web and mForm."),
 		Retired: __("Retired. New records are refused; publish a new version to re-open it."),
 	}[frm.doc.status];
@@ -20,7 +23,7 @@ xlsform.export = function (form, format) {
 	);
 };
 
-xlsform.upload_dialog = function (form) {
+xlsform.upload_dialog = function (form, frm) {
 	const d = new frappe.ui.Dialog({
 		title: __("Upload a workbook"),
 		fields: [
@@ -28,12 +31,23 @@ xlsform.upload_dialog = function (form) {
 				fieldtype: "HTML",
 				options: `<p class="text-muted">${__(
 					"Upload the .xlsx you edited in Excel. Every problem is listed with the sheet, row and cell, and you can download your workbook with the problems highlighted."
-				)} <a href="/api/method/xlsform.api.forms.template">${__("Download the starter workbook")}</a></p>`,
+				)} <a href="/api/method/xlsform.api.forms.template">${__(
+					"Download the starter workbook"
+				)}</a></p>`,
 			},
-			{ fieldtype: "Attach", fieldname: "file_url", label: __("Workbook (.xlsx)"), reqd: 1,
-				options: { restrictions: { allowed_file_types: [".xlsx"] } } },
-			{ fieldtype: "Attach", fieldname: "csv_url", label: __("Choice list CSV (only for select_one_from_file)"),
-				options: { restrictions: { allowed_file_types: [".csv"] } } },
+			{
+				fieldtype: "Attach",
+				fieldname: "file_url",
+				label: __("Workbook (.xlsx)"),
+				reqd: 1,
+				options: { restrictions: { allowed_file_types: [".xlsx"] } },
+			},
+			{
+				fieldtype: "Attach",
+				fieldname: "csv_url",
+				label: __("Choice list CSV (only for select_one_from_file)"),
+				options: { restrictions: { allowed_file_types: [".csv"] } },
+			},
 		],
 		primary_action_label: __("Upload and check"),
 		primary_action(values) {
@@ -53,7 +67,17 @@ xlsform.upload_dialog = function (form) {
 					d.hide();
 					const res = r.message;
 					if (res.version) {
-						frappe.set_route("Form", "XLSForm Version", res.version);
+						// a re-upload may replace the draft that is open right now: never show a stale copy
+						if (
+							frm &&
+							frm.doctype === "XLSForm Version" &&
+							frm.doc.name === res.version
+						) {
+							frm.reload_doc();
+						} else {
+							frappe.model.remove_from_locals("XLSForm Version", res.version);
+							frappe.set_route("Form", "XLSForm Version", res.version);
+						}
 					} else {
 						xlsform.show_transient(res);
 					}
@@ -66,16 +90,34 @@ xlsform.upload_dialog = function (form) {
 
 xlsform.show_transient = function (res) {
 	const rows = (res.issues || [])
-		.map((i) => `<tr><td class="text-nowrap">${frappe.utils.escape_html(i.cell ? i.sheet + "!" + i.cell : i.sheet || "")}</td>
-			<td>${frappe.utils.escape_html(i.message)}</td><td>${frappe.utils.escape_html(i.suggestion)}</td></tr>`)
+		.map(
+			(i) => `<tr><td class="text-nowrap">${frappe.utils.escape_html(
+				i.cell ? i.sheet + "!" + i.cell : i.sheet || ""
+			)}</td>
+			<td>${frappe.utils.escape_html(i.message)}</td><td>${frappe.utils.escape_html(
+				i.suggestion
+			)}</td></tr>`
+		)
 		.join("");
 	const d = new frappe.ui.Dialog({
 		title: __("This workbook can't be used yet"),
 		size: "extra-large",
-		fields: [{ fieldtype: "HTML", options: `<table class="table table-bordered"><thead><tr><th>${__("Cell")}</th><th>${__("Problem")}</th><th>${__("Suggested fix")}</th></tr></thead><tbody>${rows}</tbody></table>` }],
+		fields: [
+			{
+				fieldtype: "HTML",
+				options: `<table class="table table-bordered"><thead><tr><th>${__(
+					"Cell"
+				)}</th><th>${__("Problem")}</th><th>${__(
+					"Suggested fix"
+				)}</th></tr></thead><tbody>${rows}</tbody></table>`,
+			},
+		],
 		primary_action_label: __("Download highlighted workbook"),
 		primary_action() {
-			window.open("/api/method/xlsform.api.forms.validation_report?" + new URLSearchParams({ token: res.report_token, format: "xlsx" }));
+			window.open(
+				"/api/method/xlsform.api.forms.validation_report?" +
+					new URLSearchParams({ token: res.report_token, format: "xlsx" })
+			);
 		},
 	});
 	d.show();

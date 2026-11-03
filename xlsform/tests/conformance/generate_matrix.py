@@ -74,5 +74,7 @@ def _numeric(text: str) -> bool:
 if __name__ == "__main__":
 	path = os.path.join(os.path.dirname(__file__), "cases", "matrix.json")
 	with open(path, "w", encoding="utf-8") as f:
-		json.dump({"group": "Comparison matrix (generated)", "cases": cases()}, f, ensure_ascii=False, indent=1)
+		json.dump(
+			{"group": "Comparison matrix (generated)", "cases": cases()}, f, ensure_ascii=False, indent=1
+		)
 	print(len(cases()), "cases written to", path)

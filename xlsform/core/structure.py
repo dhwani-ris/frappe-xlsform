@@ -92,7 +92,9 @@ def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issu
 						column="type",
 						col_index=survey.column_index("type"),
 						type="",
-						hint=tr(N_("Add a question type for {name} in the type column."), name=row.get("name")),
+						hint=tr(
+							N_("Add a question type for {name} in the type column."), name=row.get("name")
+						),
 					)
 				)
 			continue
@@ -187,7 +189,9 @@ def _check_choice_columns(sheet: Sheet) -> list[Issue]:
 	issues = []
 	for required in ("list_name", "name"):
 		if not sheet.has_column(required):
-			issues.append(issue("E-COL-MISSING", sheet="choices", row=1, sheet_name="choices", column=required))
+			issues.append(
+				issue("E-COL-MISSING", sheet="choices", row=1, sheet_name="choices", column=required)
+			)
 	return issues
 
 
@@ -262,7 +266,9 @@ def _check_names(root: Node, sheet: Sheet) -> list[Issue]:
 			continue
 		if not NAME_RE.match(node.name) or node.name.lower().startswith("xml"):
 			reason = _name_problem(node.name)
-			issues.append(issue("E-NAME-INVALID", name=node.name, reason=reason, fixed=slug(node.name), **where))
+			issues.append(
+				issue("E-NAME-INVALID", name=node.name, reason=reason, fixed=slug(node.name), **where)
+			)
 			continue
 		seen.setdefault(node.name, []).append(node.row_number)
 	for name, rows in seen.items():

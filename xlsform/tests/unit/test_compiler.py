@@ -17,13 +17,17 @@ H = ["type", "name", "label"]
 
 def plan_for(survey, choices=None, settings=None, **opts):
 	settings = settings or [["form_title", "form_id", "version"], ["Test Form", "test_form", "1"]]
-	result = validate(make_xlsx(survey=survey, choices=choices, settings=settings), "f.xlsx", ValidateOptions(**opts))
+	result = validate(
+		make_xlsx(survey=survey, choices=choices, settings=settings), "f.xlsx", ValidateOptions(**opts)
+	)
 	assert result.plan, [(i.code, i.message) for i in result.issues if i.severity == "error"]
 	return result.plan
 
 
 def fields(plan, doctype=None):
-	dt = plan["doctypes"][-1] if doctype is None else next(d for d in plan["doctypes"] if d["name"] == doctype)
+	dt = (
+		plan["doctypes"][-1] if doctype is None else next(d for d in plan["doctypes"] if d["name"] == doctype)
+	)
 	return {f["fieldname"]: f for f in dt["fields"]}
 
 
@@ -91,9 +95,17 @@ class TestCompiler(unittest.TestCase):
 		)
 		self.assertEqual(plan["doctypes"][-1]["autoname"], "format:HH_SURVEY-{#####}")
 		village = plan["choices"]["XF hh_survey village"]
-		self.assertEqual(village[0], {"choice_name": "v1", "label": "Village A", "xf_order": 1, "xf_retired": 0, "district": "d1"})
+		self.assertEqual(
+			village[0],
+			{"choice_name": "v1", "label": "Village A", "xf_order": 1, "xf_retired": 0, "district": "d1"},
+		)
 		self.assertIn(
-			{"language": "Hindi (hi)", "source_text": "Household size", "translated_text": "परिवार का आकार", "context": "XF Household Survey"},
+			{
+				"language": "Hindi (hi)",
+				"source_text": "Household size",
+				"translated_text": "परिवार का आकार",
+				"context": "XF Household Survey",
+			},
 			plan["translations"],
 		)
 		meta = plan["compiled_meta"]
@@ -127,7 +139,12 @@ class TestCompiler(unittest.TestCase):
 		self.assertTrue(any(k.startswith("xf_sb_") for k in f))
 
 	def test_select_link_length_and_defaults(self):
-		survey = [[*H, "default"], ["select_one long", "s", "S", "x" * 25], ["date", "d", "D", "today()"], ["acknowledge", "k", "K", "OK"]]
+		survey = [
+			[*H, "default"],
+			["select_one long", "s", "S", "x" * 25],
+			["date", "d", "D", "today()"],
+			["acknowledge", "k", "K", "OK"],
+		]
 		choices = [["list_name", "name", "label"], ["long", "x" * 25, "X"]]
 		f = fields(plan_for(survey, choices))
 		self.assertEqual(f["s"]["length"], 40)
@@ -143,16 +160,27 @@ class TestCompiler(unittest.TestCase):
 		self.assertIn("Hint text", f["q"]["description"])
 
 	def test_metadata_and_hidden_types(self):
-		survey = [H, ["start", "start", None], ["username", "who", None], ["hidden", "h", None], ["calculate", "c", "Shown", ], ["text", "x", "X"]]
-		survey[4] = ["calculate", "c", "Shown"]
-		f = fields(plan_for([[*H, "calculation"], *[r + [None] for r in survey[1:4]], ["calculate", "c", "Shown", "1 + 1"], ["text", "x", "X", None]]))
-		self.assertEqual(f["start"]["read_only"], 1)
+		survey = [
+			[*H, "calculation"],
+			["start", "start", None, None],
+			["username", "who", None, None],
+			["hidden", "h", None, None],
+			["calculate", "c", "Shown", "1 + 1"],
+			["text", "x", "X", None],
+		]
+		f = fields(plan_for(survey))
+		self.assertEqual((f["start"]["read_only"], f["start"]["hidden"]), (1, 1))  # ODK never shows metadata
 		self.assertEqual(f["who"]["fieldtype"], "Data")
 		self.assertEqual(f["h"]["hidden"], 1)
 		self.assertNotIn("hidden", f["c"])  # a labelled calculate is shown read-only
+		self.assertEqual(f["x"]["max_height"], "4.5rem")  # one line unless appearance is multiline
 
 	def test_range_parameters(self):
-		f = fields(plan_for([[*H, "parameters"], ["range", "r", "R", "start=0 end=1 step=0.5"], ["range", "i", "I", None]]))
+		f = fields(
+			plan_for(
+				[[*H, "parameters"], ["range", "r", "R", "start=0 end=1 step=0.5"], ["range", "i", "I", None]]
+			)
+		)
 		self.assertEqual(f["r"]["fieldtype"], "Float")
 		self.assertEqual(f["i"]["fieldtype"], "Int")
 		self.assertEqual(f["r"]["non_negative"], 1)
@@ -171,8 +199,10 @@ class TestCompiler(unittest.TestCase):
 		self.assertEqual(total, FIXED_ROW_BYTES + 258 + 482 + 42 + 5 * 562)
 
 	def test_web_form_spec(self):
-		plan = plan_for([H, ["select_multiple yn", "m", "M"], ["geopoint", "g", "G"], ["text", "t", "T"]],
-			choices=[["list_name", "name", "label"], ["yn", "y", "Y"]])
+		plan = plan_for(
+			[H, ["select_multiple yn", "m", "M"], ["geopoint", "g", "G"], ["text", "t", "T"]],
+			choices=[["list_name", "name", "label"], ["yn", "y", "Y"]],
+		)
 		types = {f["fieldname"]: f["fieldtype"] for f in plan["web_form"]["fields"]}
 		self.assertEqual(types, {"m": "Table", "t": "Small Text"})
 		self.assertEqual(plan["web_form"]["route"], "xf/test-form")
@@ -184,7 +214,11 @@ class TestRepublish(unittest.TestCase):
 
 	def publish(self, survey, choices, version, prev=None):
 		settings = [["form_title", "form_id", "version"], ["Test Form", "test_form", version]]
-		r = validate(make_xlsx(survey=survey, choices=choices, settings=settings), "f.xlsx", ValidateOptions(previous_meta=prev))
+		r = validate(
+			make_xlsx(survey=survey, choices=choices, settings=settings),
+			"f.xlsx",
+			ValidateOptions(previous_meta=prev),
+		)
 		assert r.plan, [i.message for i in r.issues if i.severity == "error"]
 		return r
 
@@ -215,13 +249,19 @@ class TestRepublish(unittest.TestCase):
 	def test_doctype_names_frozen(self):
 		v1 = self.publish(self.SURVEY, self.CHOICES, "1").plan["compiled_meta"]
 		settings = [["form_title", "form_id", "version"], ["Renamed Title", "test_form", "2"]]
-		r = validate(make_xlsx(survey=self.SURVEY, choices=self.CHOICES, settings=settings), "f.xlsx", ValidateOptions(previous_meta=v1))
+		r = validate(
+			make_xlsx(survey=self.SURVEY, choices=self.CHOICES, settings=settings),
+			"f.xlsx",
+			ValidateOptions(previous_meta=v1),
+		)
 		self.assertEqual(r.plan["doctypes"][-1]["name"], "XF Test Form")
 
 
 class TestEmitterSafety(unittest.TestCase):
 	def scope(self):
-		return emit_js.Scope(fieldname=lambda p: p.strip("/"), type_of=lambda p: "text", repeat_of=lambda p: None)
+		return emit_js.Scope(
+			fieldname=lambda p: p.strip("/"), type_of=lambda p: "text", repeat_of=lambda p: None
+		)
 
 	def emit(self, text):
 		ast = parser.parse(text)
@@ -256,7 +296,12 @@ class TestArtifacts(unittest.TestCase):
 		self.assertEqual([(i.code, i.message) for i in r.issues], [])
 
 	def test_annotate_marks_cells_and_lists_issues(self):
-		survey = [[*H, "relevant"], ["integer", "a", "A", None], ["text", "b", "B", "${aa} > 1"], ["text", "c", None, None]]
+		survey = [
+			[*H, "relevant"],
+			["integer", "a", "A", None],
+			["text", "b", "B", "${aa} > 1"],
+			["text", "c", None, None],
+		]
 		content = make_xlsx(survey=survey)
 		r = validate(content, "f.xlsx")
 		out = load_workbook(io.BytesIO(annotate.annotate(content, r.issues, "2026110301")))
@@ -336,27 +381,50 @@ class TestCompilerRules(unittest.TestCase):
 		self.assertEqual(spacer["label"], "Outer")
 
 	def test_hint_and_note_translations(self):
-		survey = [[*H, "hint", "label::Hindi (hi)", "hint::Hindi (hi)"], ["text", "q", "Name", "Full name", "नाम", "पूरा नाम"], ["note", "n", "Hello", None, "नमस्ते", None]]
+		survey = [
+			[*H, "hint", "label::Hindi (hi)", "hint::Hindi (hi)"],
+			["text", "q", "Name", "Full name", "नाम", "पूरा नाम"],
+			["note", "n", "Hello", None, "नमस्ते", None],
+		]
 		plan = plan_for(survey)
 		texts = {(t["source_text"], t["translated_text"]) for t in plan["translations"]}
 		self.assertIn(("Full name", "पूरा नाम"), texts)
 		self.assertIn(("<p>Hello</p>", "<p>नमस्ते</p>"), texts)
 
 	def test_retired_select_and_repeat_keep_their_targets(self):
-		v1 = [H, ["select_one yn", "s", "S"], ["select_multiple yn", "m", "M"], ["begin_repeat", "r", "R"], ["text", "x", "X"], ["end_repeat"], ["begin_group", "g", "G"], ["text", "y", "Y"], ["end_group"]]
+		v1 = [
+			H,
+			["select_one yn", "s", "S"],
+			["select_multiple yn", "m", "M"],
+			["begin_repeat", "r", "R"],
+			["text", "x", "X"],
+			["end_repeat"],
+			["begin_group", "g", "G"],
+			["text", "y", "Y"],
+			["end_group"],
+		]
 		choices = [["list_name", "name", "label"], ["yn", "y", "Y"]]
 		settings = [["form_id", "version"], ["test_form", "1"]]
 		p1 = validate(make_xlsx(survey=v1, choices=choices, settings=settings), "f.xlsx").plan
 		v2 = [H, ["text", "t", "T"], ["begin_group", "g", "G"], ["text", "y", "Y"], ["end_group"]]
 		settings2 = [["form_id", "version"], ["test_form", "2"]]
-		p2 = validate(make_xlsx(survey=v2, settings=settings2), "f.xlsx", ValidateOptions(previous_meta=p1["compiled_meta"])).plan
+		p2 = validate(
+			make_xlsx(survey=v2, settings=settings2),
+			"f.xlsx",
+			ValidateOptions(previous_meta=p1["compiled_meta"]),
+		).plan
 		f = fields(p2)
-		self.assertEqual((f["s"]["fieldtype"], f["s"]["options"], f["s"]["hidden"]), ("Link", "XF test_form yn", 1))
+		self.assertEqual(
+			(f["s"]["fieldtype"], f["s"]["options"], f["s"]["hidden"]), ("Link", "XF test_form yn", 1)
+		)
 		self.assertEqual(f["m"]["options"], "XF test_form yn pick")
 		self.assertEqual(f["r"]["options"], "XF test_form r")
 		self.assertEqual(f["xf_s_g"]["fieldtype"], "Section Break")  # section name reused
 		self.assertIn("XF test_form yn", [d["name"] for d in p2["doctypes"]])  # list still synced
 
 	def test_instance_name_falls_back_for_unknown_parts(self):
-		plan = plan_for([H, ["text", "a", "A"]], settings=[["form_id", "instance_name"], ["abc_form", "concat(${a}, ${zz})"]])
+		plan = plan_for(
+			[H, ["text", "a", "A"]],
+			settings=[["form_id", "instance_name"], ["abc_form", "concat(${a}, ${zz})"]],
+		)
 		self.assertEqual(plan["doctypes"][-1]["autoname"], "format:ABC_FORM-{#####}")

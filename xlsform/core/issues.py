@@ -116,7 +116,9 @@ CATALOGUE: dict[str, Entry] = {
 		_e(
 			"E-GROUP-MISMATCH",
 			2,
-			N_("Row {row} closes a {closing}, but the open block is a {open_kind} started in row {open_row}."),
+			N_(
+				"Row {row} closes a {closing}, but the open block is a {open_kind} started in row {open_row}."
+			),
 			N_("Change row {row} to {expected}, or add the missing {closing_end}."),
 		),
 		_e(
@@ -205,7 +207,7 @@ CATALOGUE: dict[str, Entry] = {
 		_e(
 			"E-REF-SELF",
 			3,
-			N_("The {column} of {name} refers to its own name; use . for \"this answer\"."),
+			N_('The {column} of {name} refers to its own name; use . for "this answer".'),
 			N_("Replace ${{{name}}} with ."),
 		),
 		_e(
@@ -250,7 +252,9 @@ CATALOGUE: dict[str, Entry] = {
 			N_(
 				'{what} can\'t be used in "{column}": this rule is checked while the form is being filled, offline too.'
 			),
-			N_("Use a simpler condition here, or move the check into a constraint, which is checked on save."),
+			N_(
+				"Use a simpler condition here, or move the check into a constraint, which is checked on save."
+			),
 		),
 		_e(
 			"E-CALC-NOT-LIVE",
@@ -273,7 +277,9 @@ CATALOGUE: dict[str, Entry] = {
 		_e(
 			"E-FILTER-COLUMN",
 			3,
-			N_('choice_filter uses column "{choice_column}", which isn\'t on the choices sheet for list "{list}".'),
+			N_(
+				'choice_filter uses column "{choice_column}", which isn\'t on the choices sheet for list "{list}".'
+			),
 			N_('Add a "{choice_column}" column to the choices sheet.'),
 		),
 		_e(
@@ -286,7 +292,7 @@ CATALOGUE: dict[str, Entry] = {
 			"W-WEB-FILTER",
 			3,
 			N_(
-				"On the web form, {name} will list all choices of \"{list}\"; answers that don't match the filter are rejected when saved."
+				'On the web form, {name} will list all choices of "{list}"; answers that don\'t match the filter are rejected when saved.'
 			),
 			N_("No change needed; the filter works on Desk and mForm."),
 		),
@@ -375,7 +381,9 @@ CATALOGUE: dict[str, Entry] = {
 		_e(
 			"W-RENAME",
 			5,
-			N_("{old} was removed and {new} added; existing answers to {old} won't move to the new question."),
+			N_(
+				"{old} was removed and {new} added; existing answers to {old} won't move to the new question."
+			),
 			N_("Keep the old name if it's the same question."),
 		),
 		_e(

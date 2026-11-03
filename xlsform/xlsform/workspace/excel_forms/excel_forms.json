@@ -11,7 +11,7 @@
  "idx": 0,
  "indicator_color": "blue",
  "is_hidden": 0,
- "label": "XLSForm",
+ "label": "Excel Forms",
  "link_type": "DocType",
  "links": [
   {
@@ -74,7 +74,7 @@
  "modified": "2026-11-03 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "XLSForm",
- "name": "XLSForm",
+ "name": "Excel Forms",
  "number_cards": [],
  "owner": "Administrator",
  "public": 1,
@@ -117,6 +117,6 @@
   }
  ],
  "standard": 1,
- "title": "XLSForm",
+ "title": "Excel Forms",
  "type": "Workspace"
 }
