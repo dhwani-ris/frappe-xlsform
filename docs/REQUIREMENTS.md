@@ -348,7 +348,9 @@ The target grammar is the intersection of JavaScript and the SDK interpreter: li
 
 - An unanswered question is `""`. Frappe stores a blank Int/Float as 0 after save; the conformance suite covers both states and the docs say so.
 - If either side of a comparison is numeric, both are converted to numbers; `""` becomes NaN. Every comparison with NaN is false except `!=`, which is true (IEEE 754, as JavaRosa).
-- Booleans: `""` and `0` are false; any other string is true.
+- Booleans: `""` and `0` are false; any other string is true. NaN is false: a number is emitted as `!!(x)`, which is false for 0 and NaN in JavaScript and in the SDK (`0 div 0` and `x mod 0` are false).
+- Text is a number only when it is decimal notation, `^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$` after trimming. `infinity`, `NaN`, `1_000` and `0x10` are NaN on the server; the emitted JavaScript guards `flt(x) == cstr(x)` and rejects text containing `Infinity`, so both sides agree.
+- Number literals are emitted in fixed-point notation (`0.0000001`, `100000000000000000000`), never with an exponent, because the SDK tokenizer reads only digits and `.`.
 - Dates are days since 1970-01-01 (server only).
 - `select_multiple` values are space-separated strings on the server and pick rows in meta.
 - `int()` truncates toward zero; `round(x, n)` rounds half away from zero.

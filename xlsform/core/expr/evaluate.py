@@ -22,6 +22,7 @@ EPOCH = datetime.date(1970, 1, 1)
 MAX_ROUND_DIGITS = 15
 MAX_UUID_LENGTH = 64
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+NUMBER_TEXT_RE = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$")
 DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?")
 
 
@@ -207,10 +208,9 @@ def to_number(v) -> float:
 				return _days(datetime.datetime.fromisoformat(s.replace(" ", "T")))
 			except ValueError:
 				return math.nan
-		try:
-			return float(s)
-		except ValueError:
+		if not NUMBER_TEXT_RE.match(s):
 			return math.nan
+		return float(s)
 	if isinstance(v, dict):
 		return math.nan
 	return math.nan

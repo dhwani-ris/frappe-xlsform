@@ -281,6 +281,11 @@ class TestEmitterSafety(unittest.TestCase):
 		with self.assertRaises(emit_js.NotLive):
 			emit_js.js_string("tab\there")
 
+	def test_number_literals_are_fixed_point(self):
+		self.assertTrue(self.emit("${a} > 0.0000001").endswith("flt(doc.a) > 0.0000001)"))
+		self.assertIn(" < 100000000000000000000)", self.emit("${a} < 100000000000000000000"))
+		self.assertIn("(-0.000001)", self.emit("${a} > -0.000001"))
+
 	def test_unicode_is_raw(self):
 		self.assertEqual(self.emit("${a} = 'हाँ'"), '(cstr(doc.a) === "हाँ")')
 

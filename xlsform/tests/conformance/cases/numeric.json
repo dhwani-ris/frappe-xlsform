@@ -430,6 +430,122 @@
     "n": 0
    },
    "expected": true
+  },
+  {
+   "id": "num-tiny-literal-gt",
+   "expr": "${d} > 0.0000001",
+   "doc": {
+    "d": 0.5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-tiny-literal-lt",
+   "expr": "${d} < 0.0000001",
+   "doc": {
+    "d": 0.5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-huge-literal",
+   "expr": "${d} < 100000000000000000000",
+   "doc": {
+    "d": 2.5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-huge-literal-eq",
+   "expr": "${n} = 100000000000000000000",
+   "doc": {
+    "n": 5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-zero-div-zero",
+   "expr": "${n} div ${n2}",
+   "doc": {
+    "n": 0,
+    "n2": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "num-one-div-zero",
+   "expr": "${n} div ${n2}",
+   "doc": {
+    "n": 1,
+    "n2": 0
+   },
+   "expected": true
+  },
+  {
+   "id": "num-mod-zero-literal",
+   "expr": "${n} mod 0",
+   "doc": {
+    "n": 5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-mod-zero-ref",
+   "expr": "${n} mod ${n2}",
+   "doc": {
+    "n": 5,
+    "n2": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "num-nan-not",
+   "expr": "not(${n} div ${n2})",
+   "doc": {
+    "n": 0,
+    "n2": 0
+   },
+   "expected": true
+  },
+  {
+   "id": "num-text-infinity",
+   "expr": "${t} > 5",
+   "doc": {
+    "t": "Infinity"
+   },
+   "expected": false
+  },
+  {
+   "id": "num-text-infinity-lower",
+   "expr": "${t} > 5",
+   "doc": {
+    "t": "infinity"
+   },
+   "expected": false
+  },
+  {
+   "id": "num-text-underscore",
+   "expr": "${t} = 1000",
+   "doc": {
+    "t": "1_000"
+   },
+   "expected": false
+  },
+  {
+   "id": "num-text-nan",
+   "expr": "${t} != 5",
+   "doc": {
+    "t": "nan"
+   },
+   "expected": true
+  },
+  {
+   "id": "num-text-nan-eq",
+   "expr": "${t} = 5",
+   "doc": {
+    "t": "nan"
+   },
+   "expected": false
   }
  ]
 }

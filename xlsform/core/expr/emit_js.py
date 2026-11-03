@@ -25,8 +25,9 @@ import math
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from decimal import Decimal
 
-from xlsform.core.expr.evaluate import format_number
+from xlsform.core.expr.evaluate import NUMBER_TEXT_RE, format_number
 
 NUMERIC_TYPES = {"integer", "decimal", "range"}
 DATE_TYPES = {"date", "datetime", "time", "start", "end", "today"}
@@ -127,10 +128,15 @@ def filter_value(ast: dict, scope: "Scope") -> str:
 
 
 def _num_literal(value: float) -> str:
-	text = format_number(value)
-	if text in ("NaN", "Infinity", "-Infinity"):
+	"""A fixed-point literal: the mForm SDK tokenizer reads only digits and ".", never 1e-07."""
+	if math.isnan(value) or math.isinf(value):
 		raise NotLive("this number")
-	return f"({text})" if value < 0 else text
+	text = format(Decimal(repr(value)), "f")
+	if "." in text:
+		text = text.rstrip("0").rstrip(".")
+	if text in ("-0", ""):
+		text = "0"
+	return f"({text})" if value < 0 and text != "0" else text
 
 
 # ── conversions ────────────────────────────────────────────────────────────────
@@ -140,8 +146,7 @@ def _as_bool(e: Js) -> str:
 	if e.kind == "bool":
 		return e.code
 	if e.kind == "num":
-		comparison = f"({e.code} !== 0)"
-		return _guarded(e.guards, comparison)
+		return _guarded(e.guards, f"!!({e.code})")
 	return f"!!({e.code})"
 
 
@@ -160,11 +165,8 @@ def _as_num(e: Js) -> tuple[str, tuple[str, ...]]:
 	if e.kind == "bool":
 		return f"({e.code} ? 1 : 0)", ()
 	if e.literal:
-		text = e.text or ""
-		try:
-			value = float(text) if text.strip() else math.nan
-		except ValueError:
-			value = math.nan
+		text = (e.text or "").strip()
+		value = float(text) if NUMBER_TEXT_RE.match(text) else math.nan
 		if math.isnan(value):
 			return "0", ("false",)
 		return _num_literal(value), ()
@@ -172,7 +174,11 @@ def _as_num(e: Js) -> tuple[str, tuple[str, ...]]:
 		return f"flt({e.code})", (f'cstr({e.code}) !== ""',)
 	# Text: flt("red") is 0 in Frappe but NaN in ODK. Loose == between the number and the
 	# original text is true only when the whole text is a number ("5", " 5", "5.0").
-	return f"flt({e.code})", (f'cstr({e.code}) !== ""', f"flt({e.code}) == cstr({e.code})")
+	return f"flt({e.code})", (
+		f'cstr({e.code}) !== ""',
+		f"flt({e.code}) == cstr({e.code})",
+		f'!cstr({e.code}).includes("Infinity")',
+	)
 
 
 def _guarded(guards: tuple[str, ...], expr: str) -> str:
