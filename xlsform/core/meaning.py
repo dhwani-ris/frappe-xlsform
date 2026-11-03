@@ -36,6 +36,7 @@ from xlsform.core.structure import CHOICE_COLUMN_RE, choice_column_issue, is_ext
 from xlsform.core.suggest import closest, slug
 
 FORM_ID_RE = re.compile(r"^[a-z][a-z0-9_]{2,40}$")
+VERSION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$")
 CHOICE_NAME_BAD = re.compile(r"[\s<>%\"#*?\\/]")
 
 EXPR_COLUMNS = (
@@ -430,7 +431,22 @@ def _check_settings(form: Form, opts: Options, analysis: Analysis) -> list[Issue
 		issues.append(issue("W-SETTING-IGNORED", setting=key, **where(key)))
 
 	version = form.version
-	if version and opts.published_version:
+	if version and not VERSION_RE.match(version):
+		issues.append(
+			issue(
+				"E-SETTING-INVALID",
+				setting="version",
+				value=version,
+				reason=tr(N_("it becomes part of the version's document name")),
+				hint=tr(
+					N_(
+						"Use up to 40 letters, numbers, dots, dashes and _, starting with a letter or number, e.g. 2026110301."
+					)
+				),
+				**where("version"),
+			)
+		)
+	elif version and opts.published_version:
 		cmp = compare_versions(version, opts.published_version)
 		if cmp == 0:
 			issues.append(issue("E-VERSION-PUBLISHED", version=version, **where("version")))

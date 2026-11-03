@@ -449,7 +449,7 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | E-DEFAULT-DYNAMIC | E | Default `${x}` can't be used; defaults must be fixed values, today() or now(). |
 | W-APPEARANCE | W | Appearance "quick-compact" isn't supported and will be ignored. |
 | W-PARAMETER | W | Parameter "max-pixels" isn't supported and will be ignored. |
-| E-SETTING-INVALID | E | form_id "???" has no letters or numbers to build a form ID from. |
+| E-SETTING-INVALID | E | form_id "???" has no letters or numbers to build a form ID from. Also fired for a `version` that doesn't match `^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$`, because the version becomes part of the version's document name (`1/../2` is rejected). |
 | W-FORM-ID | W | The form ID "Household Survey" will be used as household_survey. |
 | W-SHEET-UNKNOWN | W | The sheet "stettings" isn't used. Did you mean "settings"? |
 | E-SHEET-UNSUPPORTED | E | The "entities" sheet isn't supported yet. |

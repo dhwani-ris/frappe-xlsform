@@ -977,6 +977,21 @@ class TestIssueCatalogue(unittest.TestCase):
 				self.assertIn(f'"{other}"', hits[0].message)
 				self.assertIn("2 and 4", hits[0].message)
 
+	def test_version_must_be_safe_for_a_document_name(self):
+		for version, ok in (
+			("1/../2", False),
+			("v 2", False),
+			("-1", False),
+			("x" * 41, False),
+			("2026.11-03_b", True),
+		):
+			with self.subTest(version=version):
+				content = wb(
+					[H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", version]]
+				)
+				hits = [i for i in validate(content, "f.xlsx").issues if i.code == "E-SETTING-INVALID"]
+				self.assertEqual([(i.sheet, i.cell) for i in hits], [] if ok else [("settings", "B2")])
+
 	def test_version_ordering(self):
 		self.assertEqual(compare_versions("2026110301", "2026110201"), 1)
 		self.assertEqual(compare_versions("2025-03", "2024-12"), 1)
