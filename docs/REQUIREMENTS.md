@@ -245,9 +245,9 @@ Reserved fields on every parent (questions may not use the `xf_` prefix):
 
 | Fieldname | Fieldtype | Notes |
 | --- | --- | --- |
-| xf_form | Link XLSForm | Set on insert |
-| xf_version | Link XLSForm Version | Version the record was collected on; defaults to the current version |
-| xf_channel | Select: Desk, Web, mForm, API | Best-effort, set on insert |
+| xf_form | Link XLSForm | Set by the server on insert from the DocType, never from the client; `set_only_once` |
+| xf_version | Link XLSForm Version | Version the record was collected on; defaults to the current version; a client may name an older **published** version of the same form (mForm offline); `set_only_once`, indexed |
+| xf_channel | Select: Desk, Web, mForm, API | Best-effort, set by the server on insert |
 
 Offline idempotency uses `mobile_uuid`, which `mobile_control` adds (unique) to every DocType in Mobile Configuration.
 
@@ -256,8 +256,10 @@ Offline idempotency uses `mobile_uuid`, which `mobile_control` adds (unique) to 
 | Role | XLSForm | XLSForm Version | Settings | Generated data and choice lists |
 | --- | --- | --- | --- | --- |
 | System Manager | All | All | All | All |
-| XLSForm Designer | Create, read, write | Create, read, write, submit | Read | Read |
+| XLSForm Designer | Create, read, write | Create, read, write, submit | Read | None, unless the form's Access table lists the role |
 | Roles in a form's Access table | — | — | — | As ticked (choice lists and child tables: read for every listed role) |
+
+System fields are at permlevel 1: on XLSForm `status`, `current_version`, `data_doctype`, `retired_on`, `generated_doctypes`; on XLSForm Version `form`, `version`, `state`, `source_file`, `source_hash`, the publish fields, the counts, the reports, `parsed_json`, `compiled_meta`, `preview_json` and `test_results`. Designers read them; only the app writes them (System Manager can too). Frappe resets a write to these fields from any other channel.
 
 ## 5. Compiler rules
 
@@ -449,7 +451,7 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 - **Desk**: nothing beyond the generated meta and Translation records. The XLSForm page has an **Open records** button, and a site-level **Form Data** workspace lists every published form (rebuilt on publish, retire and rename; titles shared by two forms get the form ID added).
 - **Web**: when `allow_web` is on, a login-required Web Form named `xf-<form-id>` at `/xf/<form-id>` is generated from the parent DocType with the same `depends_on` / `mandatory_depends_on` / `read_only_depends_on`. Web Form fields accept fewer types than DocFields: Table MultiSelect becomes a grid of the same pick rows (rules still work), Tab Breaks become Page Breaks, Geolocation is left out (`W-WEB-FIELD`); short text boxes come from generated `custom_css`.
 - **mForm**: when `allow_mobile` is on and `mobile_control` is installed, the parent DocType is added to Mobile Configuration; `mobile_control` provisions `mobile_uuid` and the SDK renders the form from meta. Choice DocTypes sync as Link targets.
-- **Server** (`doc_events["*"]["validate"]`, returns at once unless the DocType has `xf_form`), using the record's `xf_version` meta: reject inserts on a retired form; fill metadata questions; recompute calculations in order; clear non-relevant values; enforce required (including acknowledge); enforce constraints, ranges, `repeat_count` and choice filters. All failures are reported in one `ValidationError`, by question label.
+- **Server** (`doc_events["*"]["validate"]`, returns at once unless the DocType has `xf_form`), using the record's `xf_version` meta: take the form from the DocType; accept only a published version of that form; refuse a change of `xf_form` or `xf_version` after insert; reject inserts on a retired form; fill metadata questions; recompute calculations in order; clear non-relevant values; enforce required (including acknowledge); enforce constraints, ranges, `repeat_count` and choice filters. All failures are reported in one `ValidationError`, by question label.
 
 ## 9. Versioning lifecycle
 
@@ -458,12 +460,15 @@ Uploaded → Valid / Invalid (validation runs in a background job for files over
 ## 10. Permissions and security
 
 - **Privilege boundary**: `apply(plan)` and access sync run with `ignore_permissions` only after checking the caller is a Designer or System Manager, and only on the DocTypes the form owns (section 4.5), in the `XLSForm Data` / `XLSForm Choices` modules, with the configured prefix.
-- **Per-form access**: role permission rows written from the Access table into the generated DocTypes' own permission table (they are custom DocTypes, so no Custom DocPerm is involved). A role with no row sees nothing. No `has_permission` or `permission_query_conditions` hooks.
+- **Per-form access**: role permission rows written from the Access table into the generated DocTypes' own permission table. Custom DocPerm rows (from Role Permission Manager) on a generated DocType are removed on sync, because Frappe would read them instead: the Access table is the single source of truth. A role with no row sees nothing; designers included. Roles every user has (`Guest`, `All`, `Desk User`, `Administrator`) are refused. No `has_permission` or `permission_query_conditions` hooks.
+- **System fields**: permlevel 1 (section 4); the API writes them with `ignore_permissions` after its own role and document checks.
+- **Files**: a file URL given by the caller (`upload`'s `file_url` and `csv_urls`) is read only when the caller may download it (Frappe's `find_file_by_url`).
 - **Untrusted spreadsheets**: openpyxl with formulas as cached values, macros/external links ignored; labels and notes HTML-escaped; only escaped string literals from user text enter `eval:` strings.
 - **No code from users**: expressions are parsed into an AST; never `eval`, `exec`, `safe_eval` or `render_template`.
 - **Limits** (Settings): upload size, questions, choices per list, expression length; parsing in a background job with a 120 s timeout.
 - **Multi-tenancy**: each site is a tenant; nothing is shared across sites.
-- **Uninstall**: generated DocTypes and data are removed only when `allow_data_removal_on_uninstall` is ticked; otherwise uninstall stops with a message.
+- **Uninstall**: generated DocTypes and data are removed only when `allow_data_removal_on_uninstall` is ticked; otherwise uninstall stops with a message. Frappe keeps the table of a deleted DocType, so the app drops the tables of the DocTypes it deletes.
+- **Publishing**: one publish at a time per site (Redis lock). Frappe's DocType field and permission checks run on the whole plan inside a savepoint before the first schema change.
 
 ## 11. API surface
 
@@ -479,7 +484,7 @@ Whitelisted, permission-checked, rate-limited methods under `xlsform.api.forms` 
 | GET | `forms.publish_status` | Designer | `queued`, `compiling`, `migrating`, `done`, `failed` |
 | POST | `forms.retire` | Designer | Close to new submissions |
 | GET | `forms.template` | Logged in | Starter XLSForm |
-| GET | `data.export` | Reader of the data | CSV/XLSX with original names, a sheet per repeat |
+| POST | `data.export` | Export permission on the data | CSV/XLSX with original names, a sheet per repeat, saved as a private File on the XLSForm and recorded in the Access Log. Returns `{file_url}`; above 5,000 records `{queued: true}` and the `xlsform_export_ready` realtime event. Export files are deleted after a day |
 
 Issue object:
 
@@ -542,3 +547,8 @@ All ten were built on 3 Nov 2026 and are in PR #4: scaffold, CI, DocTypes and ro
 | 2026-11-03 | Accept every pyxform spelling; normalise form_id with a warning | Real workbooks (pyxform's own examples) use them |
 | 2026-11-03 | Form ownership recorded on the XLSForm, not in DocType descriptions; Form Data workspace and Open records button | A tag in the description showed in empty list views; published forms were hard to find |
 | 2026-11-03 | Template workflows pinned to commit SHAs; Kotwal pattern no longer matches itself | Org policy refuses unpinned actions; the guard always failed on its own file |
+| 2026-11-03 | Designers get no data access by default | Designers build forms; collected data, often PII, is granted per form in the Access table |
+| 2026-11-03 | System fields at permlevel 1; caller file URLs checked with `find_file_by_url` | Frappe does not enforce read-only on REST writes; a designer could rewrite form state or read private files (security review) |
+| 2026-11-03 | Form and version of a record come from the server | A client-sent `xf_form`/`xf_version` skipped constraints and the retired check (security review) |
+| 2026-11-03 | Exports are private Files with an Access Log entry; large ones run in the background | Exports held every row in memory inside a web request; exports of PII need an audit trail |
+| 2026-11-03 | `after_migrate` only ensures modules; settings are seeded on install | Re-seeding on every migrate turned "Designers can publish" back on |

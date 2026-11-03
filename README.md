@@ -21,7 +21,9 @@ Then give your form designers the **XLSForm Designer** role and open **Excel For
 
 > **Frappe v16 only.** The app uses v16 Desk routes and field properties. It does not install on v15.
 
-> **Uninstall keeps your data.** Uninstall stops while generated DocTypes exist, unless a System Manager ticks **Allow uninstall to delete form data** in XLSForm Settings. The data tables stay in the database until you run `bench trim-database`. See [Setup](docs/setup.md#uninstall).
+> **Uninstall keeps your data.** Uninstall stops while generated DocTypes exist, unless a System Manager ticks **Allow uninstall to delete form data** in XLSForm Settings. See [Setup](docs/setup.md#uninstall).
+
+> **MariaDB only.** PostgreSQL is not supported.
 
 ### Documentation
 

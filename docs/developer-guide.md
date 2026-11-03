@@ -25,7 +25,7 @@ All methods are under `/api/method/`.
 | GET | `xlsform.api.forms.publish_status` | Designer | `queued`, `compiling`, `migrating`, `done` or `failed` |
 | POST | `xlsform.api.forms.retire` | Designer | New status |
 | GET | `xlsform.api.forms.template` | Any logged-in user | The starter workbook |
-| GET | `xlsform.api.data.export` | Users with Export on the form's data | CSV, ZIP or XLSX with the original column names |
+| POST | `xlsform.api.data.export` | Users with Export on the form's data | `{file_url}` of a private CSV, ZIP or XLSX with the original column names, or `{queued: true}` above 5,000 records (then the `xlsform_export_ready` realtime event) |
 
 An issue looks like this:
 

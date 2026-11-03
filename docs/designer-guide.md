@@ -71,4 +71,6 @@ Click **Export Excel** on the XLSForm. The export uses your workbook's column na
 - `select_multiple` answers are choice names separated by spaces.
 - Columns of retired questions are marked "(retired *version*)".
 
-Users need the Export permission on the form's data.
+Users need the Export permission on the form's data. Designers too: add the XLSForm Designer role to the form's Access table to read or export its data.
+
+Up to 5,000 records, the file downloads at once. A larger export runs in the background, and a link appears when it is ready. Export files are deleted after one day.

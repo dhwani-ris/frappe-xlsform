@@ -23,7 +23,7 @@ Then do these steps once per site:
 | Role | Can do |
 |---|---|
 | System Manager | Everything, including XLSForm Settings |
-| XLSForm Designer | Upload, preview, publish and retire forms. Choose which roles use each form's data. Read the data of every form |
+| XLSForm Designer | Upload, preview, publish and retire forms. Choose which roles use each form's data. No access to the data itself unless a form's Access table lists the role |
 | Roles in a form's Access table | What the table allows on that form's data |
 
 The XLSForm Designer role never gets DocType, Customize Form or script permissions.
@@ -41,7 +41,9 @@ Each XLSForm has a table called **Who can use the data**. Add one row for each r
 
 A role without a row sees nothing, because Frappe denies by default. Choice lists get read access for every listed role. The table writes standard role permissions on the generated DocType. The app has no permission hooks and does not use User Permissions.
 
-You cannot give access to Guest, All or Administrator.
+The Access table is the only source of permissions for form data. Changes made in Role Permission Manager on a generated DocType are removed when the table syncs.
+
+You cannot give access to Guest, All, Desk User or Administrator, because every user has those roles.
 
 ## Settings
 
@@ -73,12 +75,10 @@ A channel change takes effect when you publish the next version.
 
 Uninstall deletes every generated DocType. To protect the data, `before_uninstall` stops while generated DocTypes exist.
 
-Frappe does not drop the database table of a deleted DocType. The `tabXF …` tables and their records stay in the database after uninstall.
+Uninstall also drops the `tabXF …` tables, because Frappe keeps the table of a deleted DocType.
 
 To uninstall:
 
 1. Export the data you want to keep.
 2. Tick **Allow uninstall to delete form data** in XLSForm Settings.
 3. Run `bench --site <site> uninstall-app xlsform`.
-4. Run `bench --site <site> trim-database --dry-run` and check the list of tables.
-5. Run `bench --site <site> trim-database` to remove the tables of deleted DocTypes. It takes a backup first.
