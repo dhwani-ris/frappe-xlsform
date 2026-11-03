@@ -24,13 +24,13 @@ MACRO_CONTENT_TYPE = b"macroEnabled"
 @dataclass
 class Cell:
 	value: str
-	col: int  # 1-based column index
+	col: int
 
 
 @dataclass
 class Row:
-	number: int  # Excel row number
-	cells: dict[str, Cell]  # normalised header -> cell
+	number: int
+	cells: dict[str, Cell]
 
 	def get(self, key: str) -> str:
 		cell = self.cells.get(key)
@@ -43,8 +43,8 @@ class Row:
 
 @dataclass
 class Sheet:
-	name: str  # name as written in the workbook
-	headers: list[tuple[int, str, str]]  # (col index, raw header, normalised header)
+	name: str
+	headers: list[tuple[int, str, str]]
 	rows: list[Row] = field(default_factory=list)
 
 	def has_column(self, key: str) -> bool:
@@ -59,7 +59,7 @@ class Sheet:
 
 @dataclass
 class Workbook:
-	sheets: dict[str, Sheet]  # keyed by lower-case sheet name
+	sheets: dict[str, Sheet]
 
 	def sheet(self, name: str) -> Sheet | None:
 		return self.sheets.get(name)
@@ -79,7 +79,6 @@ def read_workbook(
 	lower = (filename or "").lower()
 
 	if content.startswith(OLE_MAGIC):
-		# Either a legacy .xls or an encrypted (password-protected) .xlsx container.
 		if b"E\x00n\x00c\x00r\x00y\x00p\x00t\x00e\x00d\x00P\x00a\x00c\x00k\x00a\x00g\x00e" in content:
 			return None, [issue("E-FILE-PROTECTED")]
 		return None, [issue("E-FILE-TYPE")]
@@ -199,7 +198,6 @@ def _to_text(value) -> str:
 	return str(value).strip()
 
 
-# Header aliases accepted by pyxform, mapped to the canonical name.
 HEADER_ALIASES = {
 	"list name": "list_name",
 	"listname": "list_name",
@@ -247,7 +245,6 @@ def normalise_header(raw: str) -> str:
 	"""Lower-case the column name but keep the language part of ``label::Hindi (hi)``."""
 	text = " ".join(raw.strip().split())
 	if "::" not in text and ":" in text:
-		# old pyxform spelling: label:English, hint:Hindi, bind:jr:constraintMsg
 		base, _, rest = text.partition(":")
 		if base.strip().lower() in SINGLE_COLON_BASES:
 			text = f"{base}::{rest}"

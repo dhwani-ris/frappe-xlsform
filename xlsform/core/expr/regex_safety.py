@@ -158,9 +158,6 @@ def _first_chars(items: list) -> set[str] | None:
 	return None
 
 
-# ── matcher ───────────────────────────────────────────────────────────────────
-
-
 def _is_word(ch: str) -> bool:
 	return ch.isalnum() or ch == "_"
 

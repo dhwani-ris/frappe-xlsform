@@ -108,7 +108,7 @@ class Options:
 	max_choices_per_list: int = 20000
 	max_expression_length: int = 2000
 	published_version: str | None = None
-	files: dict[str, bytes] = field(default_factory=dict)  # uploaded CSVs by file name
+	files: dict[str, bytes] = field(default_factory=dict)
 	allow_web: bool = True
 
 
@@ -117,9 +117,9 @@ class Analysis:
 	"""Resolved formulas, keyed by question path then column."""
 
 	asts: dict[str, dict[str, dict]] = field(default_factory=dict)
-	static: dict[str, dict[str, bool]] = field(default_factory=dict)  # required/read_only yes/no
-	defaults: dict[str, str] = field(default_factory=dict)  # literal, "Today" or "now"
-	filters: dict[str, list[tuple[str, dict]]] = field(default_factory=dict)  # path -> [(column, value ast)]
+	static: dict[str, dict[str, bool]] = field(default_factory=dict)
+	defaults: dict[str, str] = field(default_factory=dict)
+	filters: dict[str, list[tuple[str, dict]]] = field(default_factory=dict)
 	calc_order: list[str] = field(default_factory=list)
 	live_calcs: set[str] = field(default_factory=set)
 	ranges: dict[str, dict[str, float]] = field(default_factory=dict)
@@ -149,18 +149,12 @@ def check(form: Form, opts: Options) -> tuple[Analysis, list[Issue]]:
 	return analysis, issues
 
 
-# ── helpers ────────────────────────────────────────────────────────────────────
-
-
 def _where(node: Node, column: str) -> dict:
 	return dict(sheet="survey", row=node.row_number, column=column, col_index=node.col(column))
 
 
 def _questions(form: Form) -> list[Node]:
 	return [n for n in form.nodes() if n.kind == QUESTION]
-
-
-# ── types and lists ────────────────────────────────────────────────────────────
 
 
 def _check_types(form: Form) -> list[Issue]:
@@ -521,9 +515,6 @@ def compare_versions(a: str, b: str) -> int:
 	return (ka > kb) - (ka < kb)
 
 
-# ── formulas ───────────────────────────────────────────────────────────────────
-
-
 def _parse_all(form: Form, opts: Options, analysis: Analysis, issues: list[Issue]) -> None:
 	names = form.by_name()
 	for node in form.nodes():
@@ -574,7 +565,6 @@ def _resolve(
 	ast: dict, node: Node, column: str, names: dict[str, Node], issues: list[Issue], where: dict
 ) -> bool:
 	ok = True
-	# A repeat's own relevant/repeat_count live on the Table field of the enclosing record.
 	scope_repeat = node.enclosing_repeat
 
 	def visit(n: dict, aggregate: bool) -> None:
@@ -773,7 +763,7 @@ def _check_filters(form: Form, opts: Options, analysis: Analysis, issues: list[I
 		node = by_path[path]
 		where = _where(node, "choice_filter")
 		if node.base_type not in SUPPORTED_TYPES:
-			continue  # already reported as an unsupported type
+			continue
 		if node.base_type not in ("select_one", "select_one_from_file"):
 			issues.append(issue("E-FILTER-MULTI", **where))
 			continue

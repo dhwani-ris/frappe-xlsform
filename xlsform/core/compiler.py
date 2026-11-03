@@ -79,8 +79,6 @@ NO_COLUMN = {"HTML", "Section Break", "Tab Break", "Column Break", "Table", "Tab
 FIXED_ROW_BYTES = 3500
 SHORT_TEXT_HEIGHT = "4.5rem"
 
-# Web Form fields accept fewer types than DocFields (Frappe v16 WebFormField.fieldtype).
-# Table MultiSelect becomes a grid of the same pick rows; tabs become web form pages.
 WEB_FIELDTYPES = {"Table MultiSelect": "Table", "Tab Break": "Page Break", "Geolocation": None}
 WEB_UNSUPPORTED_TYPES = {"geopoint", "geotrace", "geoshape"}
 
@@ -91,8 +89,8 @@ class CompileSettings:
 	row_budget_bytes: int = 60000
 	max_questions: int = 400
 	site_language: str = "en"
-	taken_doctypes: set[str] = field(default_factory=set)  # DocType names used by anything else
-	reserved_fieldnames: set[str] = field(default_factory=set)  # e.g. Document attributes
+	taken_doctypes: set[str] = field(default_factory=set)
+	reserved_fieldnames: set[str] = field(default_factory=set)
 
 
 def compile_form(
@@ -115,8 +113,6 @@ class _Compiler:
 		self.translations: list[dict] = []
 		self.issues: list[Issue] = []
 		self.lang = form.default_language
-
-	# ── naming ──────────────────────────────────────────────────────────────────
 
 	def run(self) -> dict:
 		self._name_doctypes()
@@ -243,7 +239,6 @@ class _Compiler:
 		prev = self.prev_fields.get(node.path)
 		if prev and prev.get("doctype") == doctype and not prev.get("retired_in"):
 			if not self._compatible(prev, node):
-				# never cast data in place: a changed question gets a new column (section 5)
 				name = f"{node.name}_v{_version_slug(self.version)}"
 				return sanitize(name, node.path + "@" + self.version, taken, self.s.reserved_fieldnames)
 			if prev["fieldname"] not in taken:
@@ -261,8 +256,6 @@ class _Compiler:
 
 	def _fieldtype(self, node: Node) -> str:
 		return fieldtype_for(node, self.a.ranges)
-
-	# ── choice lists ────────────────────────────────────────────────────────────
 
 	def _build_lists(self) -> list[dict]:
 		self.choice_records: dict[str, list[dict]] = {}
@@ -378,8 +371,6 @@ class _Compiler:
 				}
 			)
 		return out
-
-	# ── fields ──────────────────────────────────────────────────────────────────
 
 	def _parent_reserved(self) -> list[dict]:
 		return [
@@ -567,11 +558,11 @@ class _Compiler:
 		if qtype == "barcode":
 			field["length"] = 140
 		if qtype == "text" and "multiline" not in node.cell("appearance").split():
-			field["max_height"] = SHORT_TEXT_HEIGHT  # ODK shows one line unless appearance is multiline
+			field["max_height"] = SHORT_TEXT_HEIGHT
 		if qtype in ("calculate", "start", "end", "today", "username"):
 			field["read_only"] = 1
 		if qtype in ("start", "end", "today", "username"):
-			field["hidden"] = 1  # filled by the server; ODK never shows metadata
+			field["hidden"] = 1
 		if qtype == "calculate" and not label_text:
 			field["hidden"] = 1
 		if qtype == "hidden":
@@ -680,7 +671,6 @@ class _Compiler:
 				self.taken_fieldnames.setdefault(prev["doctype"], set(RESERVED_PARENT_FIELDS)).add(
 					prev["fieldname"]
 				)
-		# also reserve columns of questions whose type changed (they get a new column)
 		for path, prev in self.prev_fields.items():
 			if path in current_paths and not prev.get("retired_in"):
 				node = self.by_path[path]
@@ -694,6 +684,8 @@ class _Compiler:
 					)
 
 	def _append_retired_docfields(self, doctypes: list[dict]) -> None:
+		"""Keep retired questions as hidden columns. Their list, pick and repeat DocTypes carry over
+		from the previous meta, so a retired column keeps pointing at the same DocType."""
 		by_name = {d["name"]: d for d in doctypes}
 		for entry in self.retired:
 			dt = by_name.get(entry["doctype"])
@@ -707,8 +699,6 @@ class _Compiler:
 				"hidden": 1,
 				"read_only": 1,
 			}
-			# Targets are never dropped: list, pick and repeat DocTypes carry over from the
-			# previous meta, so a retired column keeps pointing at the same DocType.
 			if entry["fieldtype"] == "Link":
 				field["options"] = self.lists[entry["list"]]
 				field["length"] = self.list_lengths[entry["list"]]
@@ -746,8 +736,6 @@ class _Compiler:
 
 	def _default_autoname(self) -> str:
 		return "format:" + self.form.form_id.upper() + "-{#####}"
-
-	# ── translations, limits, web form ──────────────────────────────────────────
 
 	def _translate(self, language: str, source: str, translated: str, context: str | None) -> None:
 		if source and translated and source != translated:

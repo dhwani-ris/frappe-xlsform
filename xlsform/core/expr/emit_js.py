@@ -45,7 +45,7 @@ class NotLive(Exception):
 	def __init__(self, what: str, calc: str | None = None):
 		super().__init__(what)
 		self.what = what
-		self.calc = calc  # set when the culprit is a server-only calculate question
+		self.calc = calc
 
 
 class TooComplex(NotLive):
@@ -66,11 +66,11 @@ class Budget:
 class Scope:
 	"""Facts about the form that the emitter needs, supplied by the compiler."""
 
-	fieldname: Callable[[str], str]  # path -> Frappe fieldname
-	type_of: Callable[[str], str]  # path -> XLSForm base type ("repeat" / "group" for containers)
-	repeat_of: Callable[[str], str | None]  # path -> enclosing repeat path
-	calc_ast: Callable[[str], dict | None] = lambda path: None  # calculate path -> resolved AST
-	scope_repeat: str | None = None  # repeat that owns the formula (rows evaluate with doc = row)
+	fieldname: Callable[[str], str]
+	type_of: Callable[[str], str]
+	repeat_of: Callable[[str], str | None]
+	calc_ast: Callable[[str], dict | None] = lambda path: None
+	scope_repeat: str | None = None
 	inlining: tuple[str, ...] = field(default_factory=tuple)
 	budget: Budget = field(default_factory=Budget)
 
@@ -78,11 +78,11 @@ class Scope:
 @dataclass
 class Js:
 	code: str
-	kind: str  # bool / num / numref / str
+	kind: str
 	guards: tuple[str, ...] = ()
-	literal: bool = False  # a string literal: already a string, never blank-guarded
-	text: str | None = None  # the literal's own text, when literal
-	date: bool = False  # a date/time answer: ODK compares these as dates, Frappe's flt can't
+	literal: bool = False
+	text: str | None = None
+	date: bool = False
 
 
 def emit(ast: dict, scope: Scope) -> str:
@@ -145,9 +145,6 @@ def _num_literal(value: float) -> str:
 	return f"({text})" if value < 0 and text != "0" else text
 
 
-# ── conversions ────────────────────────────────────────────────────────────────
-
-
 def _as_bool(e: Js) -> str:
 	if e.kind == "bool":
 		return e.code
@@ -165,7 +162,11 @@ def _as_str(e: Js) -> str:
 
 
 def _as_num(e: Js) -> tuple[str, tuple[str, ...]]:
-	"""Numeric code plus the guards under which it is a real number (not ODK's NaN)."""
+	"""Numeric code plus the guards under which it is a real number (not ODK's NaN).
+
+	For text, ``flt("red")`` is 0 in Frappe but NaN in ODK. A loose ``==`` between the number and the
+	original text is true only when the whole text is a number ("5", " 5", "5.0").
+	"""
 	if e.kind == "num":
 		return e.code, e.guards
 	if e.kind == "bool":
@@ -178,8 +179,6 @@ def _as_num(e: Js) -> tuple[str, tuple[str, ...]]:
 		return _num_literal(value), ()
 	if e.kind == "numref":
 		return f"flt({e.code})", (f'cstr({e.code}) !== ""',)
-	# Text: flt("red") is 0 in Frappe but NaN in ODK. Loose == between the number and the
-	# original text is true only when the whole text is a number ("5", " 5", "5.0").
 	return f"flt({e.code})", (
 		f'cstr({e.code}) !== ""',
 		f"flt({e.code}) == cstr({e.code})",
@@ -192,9 +191,6 @@ def _guarded(guards: tuple[str, ...], expr: str) -> str:
 	if not unique:
 		return expr
 	return "(" + " && ".join((*unique, expr)) + ")"
-
-
-# ── emission ───────────────────────────────────────────────────────────────────
 
 
 def _emit(node: dict, scope: Scope) -> Js:
@@ -416,6 +412,6 @@ def _count_rows(node: dict, scope: Scope) -> str:
 	if repeat is None:
 		raise NotLive("count() of a question outside a repeat")
 	if repeat == scope.scope_repeat and scope.type_of(path) != "repeat":
-		return "[1]"  # ODK resolves ${q} to the current row's node: always one node
+		return "[1]"
 	owner = "parent" if scope.scope_repeat else "doc"
 	return f"({owner}.{scope.fieldname(repeat)} || [])"

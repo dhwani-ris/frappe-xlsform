@@ -1,10 +1,3 @@
-// Evaluate emitted XLSForm expressions exactly as Frappe Desk does.
-//
-// Loads Frappe's own cstr/cint/flt/in_list source (from the bench) instead of copies, then
-// runs each expression through the same wrapper as frappe.utils.eval:
-//     new Function("doc", "parent", "let out = <code>; return out")
-//
-// usage: node run_js.js <frappe app path> <cases.json>  -> prints [{id, result|error}] as JSON
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");

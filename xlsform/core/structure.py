@@ -61,7 +61,7 @@ def build_form(
 	issues: list[Issue] = []
 	survey = wb.sheet("survey")
 	if survey is None and len(wb.sheets) == 1:
-		survey = next(iter(wb.sheets.values()))  # pyxform: a workbook's only sheet is the survey
+		survey = next(iter(wb.sheets.values()))
 	if survey is None:
 		return None, [issue("E-SHEET-MISSING", sheet_name="survey", sheet="survey", purpose="questions")]
 	issues += _check_sheet_names(wb, survey)
@@ -71,14 +71,13 @@ def build_form(
 
 	settings, settings_cols = _read_settings(wb.sheet("settings"))
 	if not settings.get("form_id"):
-		# pyxform's rule: no form_id means the file name. Keep it a valid form ID.
 		default = slug(_stem(filename))[:41] or "form"
 		settings["form_id"] = default if len(default) >= 3 else f"{default}_form"
 	default_language = language_name(settings.get("default_language", "")) or DEFAULT_LANGUAGE
 
 	choices_sheet = wb.sheet("choices")
 	if choices_sheet is not None and not choices_sheet.headers:
-		choices_sheet = None  # an empty choices sheet is the same as none
+		choices_sheet = None
 	lists: dict[str, ChoiceList] = {}
 	choice_columns: set[str] = set()
 	if choices_sheet is not None:
@@ -113,7 +112,7 @@ def build_form(
 			continue
 		name = row.get("name")
 		if not name and info.base == "note":
-			name = f"note_r{row.number}"  # pyxform accepts notes without a name
+			name = f"note_r{row.number}"
 		kind = {"begin_group": GROUP, "begin_repeat": REPEAT, "begin_loop": GROUP}.get(info.base, QUESTION)
 		node = Node(kind, name, info, row, parent=stack[-1])
 		stack[-1].children.append(node)
@@ -195,7 +194,7 @@ def _check_sheet_names(wb: Workbook, survey: Sheet) -> list[Issue]:
 			continue
 		guess = closest(key, KNOWN_SHEETS)
 		if not guess:
-			continue  # unrelated extra sheets are ignored, as in pyxform
+			continue
 		known = wb.sheet(guess)
 		if known is None or (not known.rows and sheet.rows) or not sheet.rows:
 			issues.append(issue("W-SHEET-UNKNOWN", sheet_name=sheet.name, guess=guess))

@@ -121,7 +121,6 @@ def prev_meta():
 	return PREV_META
 
 
-# code: (bad (content, filename, options), good (content, filename, options), expected location)
 def cases():
 	big = ValidateOptions(max_upload_mb=0.001)
 	return {
@@ -923,7 +922,6 @@ class TestIssueCatalogue(unittest.TestCase):
 		self.assertTrue(data["docs_url"].endswith("#E-REF-UNKNOWN"))
 
 	def test_pyxform_compatibility(self):
-		# legacy spellings, single-colon languages, a lone sheet, an unnamed note, curly quotes in text
 		survey = [
 			["TYPE", "NAME", "label:English", "relevant"],
 			["phone number", "phone", "Phone", None],

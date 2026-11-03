@@ -62,7 +62,7 @@ Run these from the bench folder:
 
 | What | Command |
 |---|---|
-| Unit and conformance (no site) | `cd apps/xlsform && ../../env/bin/python -m pytest xlsform/tests/unit xlsform/tests/conformance` |
+| Unit and conformance (no site) | `cd apps/xlsform && FRAPPE_APP_PATH=../frappe ../../env/bin/python -m pytest xlsform/tests/unit xlsform/tests/conformance` |
 | Server integration | `bench --site <site> run-tests --app xlsform` |
 | pyxform cross-check | `python scripts/pyxform_crosscheck.py <pyxform-venv>/bin/python xlsform/tests/fixtures/corpus` |
 | Lint | `pre-commit run --all-files` |
@@ -72,7 +72,8 @@ CI also runs the Frappe Semgrep rules.
 ## Rules for changes
 
 - Write the test first. Every issue code needs a failing and a passing workbook in `xlsform/tests/unit/test_validator.py`. A test enforces this.
-- A change to formula behavior needs a case in `xlsform/tests/conformance/cases/`. The case must pass in Python, Frappe's JavaScript and the mForm SDK.
+- A change to formula behavior needs a case in `xlsform/tests/conformance/cases/`. The case must pass in Python and in Frappe's JavaScript (Node, with `FRAPPE_APP_PATH` set).
+- Every emitted rule must stay inside the expression subset the mForm SDK interpreter supports. `core/expr/profile.py` checks this at upload. `xlsform/tests/conformance/export.py` writes the cases for the SDK repository's own test run.
 - JavaScript in DocFields comes only from `core/expr/emit_js.py`. User text appears only as an escaped string literal.
 - Never drop a column or table. Never convert data in place.
 - After you change the issue catalogue, run `python scripts/gen_error_docs.py`.

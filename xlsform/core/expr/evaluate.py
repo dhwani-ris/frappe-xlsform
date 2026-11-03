@@ -33,7 +33,7 @@ class NodeSet(list):
 @dataclass
 class FnSpec:
 	min_args: int
-	max_args: int | None  # None = unlimited
+	max_args: int | None
 	live: bool
 	example: str
 
@@ -80,7 +80,6 @@ FUNCTIONS: dict[str, FnSpec] = {
 	"uuid": FnSpec(0, 1, False, "uuid()"),
 }
 
-# Named so the error can say "isn't supported yet" rather than "unknown".
 REJECTED_FUNCTIONS = {
 	"pulldata",
 	"indexed-repeat",
@@ -145,8 +144,8 @@ class Context:
 	scope_repeat: str | None = None
 	row: int | None = None
 	self_path: str | None = None
-	columns: dict[str, str] | None = None  # choice row for choice_filter
-	choice_labels: dict[str, dict[str, str]] = field(default_factory=dict)  # path -> {name: label}
+	columns: dict[str, str] | None = None
+	choice_labels: dict[str, dict[str, str]] = field(default_factory=dict)
 	today: Callable[[], datetime.date] = datetime.date.today
 	now: Callable[[], datetime.datetime] = datetime.datetime.now
 
@@ -155,7 +154,6 @@ class Context:
 
 	def lookup(self, path: str):
 		if path in self.repeats:
-			# the repeat itself: one node per row
 			return NodeSet(self.rows(path))
 		repeat = self.repeat_of.get(path)
 		if repeat is None:
@@ -178,9 +176,6 @@ def _answer(value):
 	if isinstance(value, datetime.date):
 		return value.isoformat()
 	return value
-
-
-# ── conversions ────────────────────────────────────────────────────────────────
 
 
 def to_number(v) -> float:
@@ -281,7 +276,7 @@ def equals(a, b) -> bool:
 		return to_bool(a) == to_bool(b)
 	if _is_number(a) or _is_number(b) or _is_date(a) or _is_date(b):
 		x, y = to_number(a), to_number(b)
-		return x == y  # NaN == anything is False
+		return x == y
 	return to_string(a) == to_string(b)
 
 
@@ -294,9 +289,6 @@ def compare(op: str, a, b) -> bool:
 	if math.isnan(x) or math.isnan(y):
 		return False
 	return {"<": x < y, "<=": x <= y, ">": x > y, ">=": x >= y}[op]
-
-
-# ── evaluation ─────────────────────────────────────────────────────────────────
 
 
 def evaluate(node: dict, ctx: Context):
@@ -344,7 +336,6 @@ def _op(op: str, args: list, ctx: Context):
 	if op == "+":
 		return x + y
 	if op == "-":
-		# date - date gives days; date - number gives a number of days too
 		return x - y
 	if op == "*":
 		return x * y
@@ -574,7 +565,7 @@ def _call(fn: str, args: list, ctx: Context):
 		v = arg(0)
 		if isinstance(v, NodeSet):
 			return float(len(v))
-		return 1.0  # one node (e.g. a question in the current repeat row), answered or not
+		return 1.0
 	if fn == "sum":
 		v = arg(0)
 		items = v if isinstance(v, NodeSet) else [v]

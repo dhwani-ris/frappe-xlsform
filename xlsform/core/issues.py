@@ -33,7 +33,6 @@ def _e(code: str, stage: int, message: str, suggestion: str) -> Entry:
 CATALOGUE: dict[str, Entry] = {
 	e.code: e
 	for e in [
-		# Stage 1: file
 		_e(
 			"E-FILE-TYPE",
 			1,
@@ -90,7 +89,6 @@ CATALOGUE: dict[str, Entry] = {
 			N_('The "{sheet_name}" sheet (entities) isn\'t supported yet.'),
 			N_("Remove the sheet; Frappe DocTypes already store each record."),
 		),
-		# Stage 2: structure
 		_e(
 			"E-COL-MISSING",
 			2,
@@ -165,7 +163,6 @@ CATALOGUE: dict[str, Entry] = {
 			N_("The form couldn't be checked completely: it is nested too deeply for the {stage} checks."),
 			N_("Use fewer groups inside groups and shorter formulas, then upload again."),
 		),
-		# Stage 3: meaning
 		_e(
 			"E-TYPE-UNKNOWN",
 			3,
@@ -428,7 +425,6 @@ CATALOGUE: dict[str, Entry] = {
 			N_('Version "{version}" of this form is already published.'),
 			N_("Set a new, higher version in the settings sheet."),
 		),
-		# Stage 4: Frappe limits
 		_e(
 			"E-LIMIT-QUESTIONS",
 			4,
@@ -443,7 +439,6 @@ CATALOGUE: dict[str, Entry] = {
 			),
 			N_("Move some into a repeat, or shorten long choice names."),
 		),
-		# Stage 5: version diff
 		_e(
 			"W-RENAME",
 			5,
@@ -470,7 +465,6 @@ CATALOGUE: dict[str, Entry] = {
 			N_("{name} was removed; its earlier answers are kept but no longer shown on the form."),
 			N_("Confirm this is intended."),
 		),
-		# Info
 		_e(
 			"I-NO-LABEL",
 			3,

@@ -37,14 +37,14 @@ class TestNaming(unittest.TestCase):
 		self.assertEqual(naming.sanitize("Hh-Size.v2", "/a", taken), "hh_size_v2")
 		self.assertEqual(naming.sanitize("2nd", "/b", taken), "f_2nd")
 		self.assertEqual(naming.sanitize("name", "/c", taken), "name_q")
-		self.assertEqual(naming.sanitize("select", "/d", taken), "select_q")  # MariaDB
-		self.assertEqual(naming.sanitize("class", "/e", taken), "class_q")  # JavaScript
-		self.assertEqual(naming.sanitize("xf_form", "/f", taken), "xf_form_q")  # reserved prefix
+		self.assertEqual(naming.sanitize("select", "/d", taken), "select_q")
+		self.assertEqual(naming.sanitize("class", "/e", taken), "class_q")
+		self.assertEqual(naming.sanitize("xf_form", "/f", taken), "xf_form_q")
 		long = naming.sanitize("a" * 70, "/g", taken)
 		self.assertEqual(len(long), 58)
 		self.assertTrue(long.startswith("a" * 51 + "_"))
 		self.assertEqual(naming.sanitize("hh_size", "/h", taken), "hh_size")
-		self.assertEqual(naming.sanitize("hh_size", "/i", taken), "hh_size_2")  # collision
+		self.assertEqual(naming.sanitize("hh_size", "/i", taken), "hh_size_2")
 
 	def test_reserved_extra(self):
 		self.assertEqual(naming.sanitize("save", "/a", set(), {"save"}), "save_q")
@@ -169,11 +169,11 @@ class TestCompiler(unittest.TestCase):
 			["text", "x", "X", None],
 		]
 		f = fields(plan_for(survey))
-		self.assertEqual((f["start"]["read_only"], f["start"]["hidden"]), (1, 1))  # ODK never shows metadata
+		self.assertEqual((f["start"]["read_only"], f["start"]["hidden"]), (1, 1))
 		self.assertEqual(f["who"]["fieldtype"], "Data")
 		self.assertEqual(f["h"]["hidden"], 1)
-		self.assertNotIn("hidden", f["c"])  # a labelled calculate is shown read-only
-		self.assertEqual(f["x"]["max_height"], "4.5rem")  # one line unless appearance is multiline
+		self.assertNotIn("hidden", f["c"])
+		self.assertEqual(f["x"]["max_height"], "4.5rem")
 
 	def test_range_parameters(self):
 		f = fields(
@@ -257,10 +257,10 @@ class TestRepublish(unittest.TestCase):
 		choices = [*self.CHOICES, ["yn", "maybe_not_sure_long_name_xx", "Maybe"]]
 		r2 = self.publish(survey, choices, "2", v1)
 		f = fields(r2.plan)
-		self.assertEqual(f["a"]["fieldtype"], "Small Text")  # old column kept
+		self.assertEqual(f["a"]["fieldtype"], "Small Text")
 		self.assertEqual(f["a"]["hidden"], 1)
-		self.assertEqual(f["a_v2"]["fieldtype"], "Int")  # new column for the new type
-		self.assertEqual(f["b"]["hidden"], 1)  # removed question kept hidden
+		self.assertEqual(f["a_v2"]["fieldtype"], "Int")
+		self.assertEqual(f["b"]["hidden"], 1)
 		self.assertEqual(f["c"]["length"], 63)
 		self.assertIn("d", f)
 		self.assertEqual(r2.change_summary["removed"], ["b"])
@@ -270,7 +270,6 @@ class TestRepublish(unittest.TestCase):
 		self.assertEqual(b["retired_in"], "2")
 		self.assertEqual(meta2["doctypes"], {**v1["doctypes"], "lists": v1["doctypes"]["lists"]})
 
-		# version 3 keeps names stable and never resurrects retired columns under a new name
 		r3 = self.publish(survey, choices, "3", meta2)
 		self.assertEqual(fields(r3.plan)["a_v2"]["fieldtype"], "Int")
 		self.assertEqual(sum(1 for x in r3.plan["compiled_meta"]["fields"] if x["path"] == "/b"), 1)
@@ -462,8 +461,8 @@ class TestCompilerRules(unittest.TestCase):
 		)
 		self.assertEqual(f["m"]["options"], "XF test_form yn pick")
 		self.assertEqual(f["r"]["options"], "XF test_form r")
-		self.assertEqual(f["xf_s_g"]["fieldtype"], "Section Break")  # section name reused
-		self.assertIn("XF test_form yn", [d["name"] for d in p2["doctypes"]])  # list still synced
+		self.assertEqual(f["xf_s_g"]["fieldtype"], "Section Break")
+		self.assertIn("XF test_form yn", [d["name"] for d in p2["doctypes"]])
 
 	def test_instance_name_falls_back_for_unknown_parts(self):
 		plan = plan_for(

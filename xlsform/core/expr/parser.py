@@ -22,7 +22,6 @@ AST_VERSION = 1
 CURLY_QUOTES = "‘’“”‚‛„‟"
 NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_\-]*(?::[A-Za-z_][A-Za-z0-9_\-]*)?")
 REF_RE = re.compile(r"\$\{([^}]*)\}")
-# a choices-sheet column with a language, as used in choice_filter: label::English
 COLUMN_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_\-]*::[A-Za-z_][A-Za-z0-9_\- ()]*?(?=\s*(?:[=!<>)]|$))")
 NUMBER_RE = re.compile(r"(?:\d+(?:\.\d*)?|\.\d+)")
 MAX_DEPTH = 100
@@ -42,7 +41,7 @@ class CurlyQuoteError(ExprSyntaxError):
 
 @dataclass
 class Token:
-	kind: str  # num str ref name op lparen rparen comma self parent end
+	kind: str
 	value: str
 	pos: int
 
@@ -51,14 +50,14 @@ OPERATORS = ("!=", "<=", ">=", "=", "<", ">", "+", "-", "*")
 
 
 def tokenize(text: str) -> list[Token]:
+	"""Split a formula into tokens. A curly quote outside a straight-quoted string was meant as a
+	quote mark, which formulas do not accept, so it raises ``CurlyQuoteError``."""
 	tokens: list[Token] = []
 	i = 0
 	n = len(text)
 	while i < n:
 		ch = text[i]
 		if ch in CURLY_QUOTES:
-			# inside a 'straight-quoted' string a curly quote is just text (don’t); here it was
-			# meant as a quote mark, which formulas don't accept
 			raise CurlyQuoteError("curly quotes", i + 1)
 		if ch.isspace():
 			i += 1
@@ -125,7 +124,6 @@ def tokenize(text: str) -> list[Token]:
 	return tokens
 
 
-# Binding powers, lowest first (XPath 1.0 precedence).
 BINARY = {
 	"or": 10,
 	"and": 20,
@@ -261,7 +259,7 @@ class Parser:
 		raise ExprSyntaxError(f'unexpected "{tok.value}" at character {tok.pos + 1}', tok.pos + 1)
 
 	def call(self, name_tok: Token) -> dict:
-		open_tok = self.next()  # (
+		open_tok = self.next()
 		args = []
 		if self.peek().kind == "rparen":
 			self.next()

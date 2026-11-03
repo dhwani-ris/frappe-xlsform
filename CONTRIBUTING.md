@@ -27,7 +27,7 @@ pre-commit run --all-files
 bench --site <site> run-tests --app xlsform
 ```
 
-A change to formula behavior also needs `scripts/conformance-dart.sh`. See [Rules for changes](docs/developer-guide.md#rules-for-changes).
+Set `FRAPPE_APP_PATH=<bench>/apps/frappe` so the conformance tests also run the emitted rules with Frappe's own JavaScript. See [Rules for changes](docs/developer-guide.md#rules-for-changes).
 
 ## Pull requests
 
