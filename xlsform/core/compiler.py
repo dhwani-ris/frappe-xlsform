@@ -18,7 +18,7 @@ import html
 import re
 from dataclasses import dataclass, field
 
-from xlsform.core.expr import emit_js
+from xlsform.core.expr import emit_js, profile
 from xlsform.core.expr.parser import AST_VERSION, strip_positions
 from xlsform.core.form import GROUP, QUESTION, REPEAT, SELECT_TYPES, SUPPORTED_TYPES, Form, Node
 from xlsform.core.issues import Issue, issue
@@ -30,6 +30,7 @@ MODULE = "XLSForm Data"
 CHOICES_MODULE = "XLSForm Choices"
 RESERVED_PARENT_FIELDS = ("xf_form", "xf_version", "xf_channel")
 LABEL_MAX = 140
+LINK_LENGTH = 140
 TAB_THRESHOLD = 3
 
 FIELDTYPES = {
@@ -280,7 +281,7 @@ class _Compiler:
 						columns[col] = sanitize(col, f"{list_name}::{col}", taken, self.s.reserved_fieldnames)
 			self.list_columns[list_name] = columns
 			longest = max((len(c.name) for c in lst.choices), default=1) if lst else 1
-			length = max(20, -(-longest // 20) * 20, prev_lengths.get(list_name, 0))
+			length = max(LINK_LENGTH, longest, prev_lengths.get(list_name, 0))
 			self.list_lengths[list_name] = length
 			fields = [
 				{
@@ -308,7 +309,12 @@ class _Compiler:
 					"in_standard_filter": 1,
 				},
 			] + [
-				{"fieldname": fn, "label": col, "fieldtype": "Data", "in_standard_filter": 1}
+				{
+					"fieldname": fn,
+					"label": _plain(col)[:LABEL_MAX],
+					"fieldtype": "Data",
+					"in_standard_filter": 1,
+				}
 				for col, fn in columns.items()
 			]
 			out.append(
@@ -364,7 +370,7 @@ class _Compiler:
 							"options": self.lists[list_name],
 							"reqd": 1,
 							"in_list_view": 1,
-							"length": self.list_lengths.get(list_name, 140),
+							"length": self.list_lengths.get(list_name, LINK_LENGTH),
 						},
 					],
 					"module": MODULE,
@@ -384,6 +390,7 @@ class _Compiler:
 				"options": "XLSForm",
 				"read_only": 1,
 				"hidden": 1,
+				"set_only_once": 1,
 				"length": 64,
 			},
 			{
@@ -393,6 +400,8 @@ class _Compiler:
 				"options": "XLSForm Version",
 				"read_only": 1,
 				"hidden": 1,
+				"set_only_once": 1,
+				"search_index": 1,
 				"length": 120,
 			},
 			{
@@ -430,7 +439,7 @@ class _Compiler:
 					"fieldtype": "Tab Break" if is_tab else "Section Break",
 				}
 				if conditions:
-					brk["depends_on"] = _eval_and(conditions)
+					self._set_live(brk, "depends_on", _eval_and(conditions), node, "relevant")
 				out.append(brk)
 				self._record_field(node, doctype, brk)
 				self._translate_label(node, brk, doctype)
@@ -444,7 +453,7 @@ class _Compiler:
 					"label": (_plain(self.form.title)[:LABEL_MAX] if use_tabs else (section_prefix or "")),
 				}
 				if inherited:
-					spacer["depends_on"] = _eval_and(inherited)
+					self._set_live(spacer, "depends_on", _eval_and(inherited), None, "relevant")
 				out.append(spacer)
 				after_group = False
 			if node.kind == REPEAT:
@@ -517,7 +526,7 @@ class _Compiler:
 			"options": self.repeats[node.path],
 		}
 		if conditions:
-			field["depends_on"] = _eval_and(conditions)
+			self._set_live(field, "depends_on", _eval_and(conditions), node, "relevant")
 		self._record_field(node, doctype, field)
 		self._translate_label(node, field, doctype)
 		return field
@@ -575,7 +584,7 @@ class _Compiler:
 		own = self._relevant_js(node)
 		conditions = [*inherited, *([own] if own else [])]
 		if conditions:
-			field["depends_on"] = _eval_and(conditions)
+			self._set_live(field, "depends_on", _eval_and(conditions), node, "relevant")
 
 		static = self.a.static.get(node.path, {})
 		required_ast = self.a.asts.get(node.path, {}).get("required")
@@ -589,16 +598,26 @@ class _Compiler:
 			if static.get("required") and not conditions:
 				field["reqd"] = 1
 			elif static.get("required"):
-				field["mandatory_depends_on"] = _eval_and(conditions)
+				self._set_live(field, "mandatory_depends_on", _eval_and(conditions), node, "required")
 			elif required_ast:
-				field["mandatory_depends_on"] = _eval_and(
-					[*conditions, emit_js.emit(required_ast, self._scope(node))]
+				self._set_live(
+					field,
+					"mandatory_depends_on",
+					_eval_and([*conditions, emit_js.emit(required_ast, self._scope(node))]),
+					node,
+					"required",
 				)
 		read_only_ast = self.a.asts.get(node.path, {}).get("read_only")
 		if static.get("read_only"):
 			field["read_only"] = 1
 		elif read_only_ast:
-			field["read_only_depends_on"] = "eval:" + emit_js.emit(read_only_ast, self._scope(node))
+			self._set_live(
+				field,
+				"read_only_depends_on",
+				"eval:" + emit_js.emit(read_only_ast, self._scope(node)),
+				node,
+				"read_only",
+			)
 
 		default = self.a.defaults.get(node.path)
 		if default is not None and qtype not in ("select_multiple", "select_multiple_from_file", "note"):
@@ -613,12 +632,21 @@ class _Compiler:
 		self._translate_label(node, field, doctype)
 		return field
 
+	def _set_live(self, field: dict, key: str, value: str, node: Node | None, column: str) -> None:
+		"""Ship an ``eval:`` property only when it is in the JavaScript profile.
+
+		Each part was checked when emitted; this catches what joining parts can add (nesting).
+		"""
+		if profile.is_valid(value.removeprefix("eval:")):
+			field[key] = value
+			return
+		where = {}
+		if node is not None and node.row:
+			where = dict(sheet="survey", row=node.row_number, column=column, col_index=node.col(column))
+		self.issues.append(issue("E-EXPR-TOO-COMPLEX", limit=emit_js.MAX_JS_LENGTH, **where))
+
 	def _filter_value(self, ast: dict, node: Node) -> str:
-		if "lit" in ast:
-			value = ast["lit"]
-			return emit_js.format_number(value) if isinstance(value, float) else value
-		js = emit_js.emit_value(ast, self._scope(node))
-		return "eval:" + (f"cstr({js.code})" if js.kind != "bool" else f'({js.code} ? "true" : "false")')
+		return emit_js.filter_value(ast, self._scope(node))
 
 	def _record_field(self, node: Node, doctype: str, field: dict) -> None:
 		entry = {
@@ -749,7 +777,7 @@ class _Compiler:
 					self._translate(language, field["options"], _note_html(text), context=doctype)
 
 	def _check_limits(self, doctypes: list[dict]) -> None:
-		count = sum(1 for n in self.form.nodes() if n.kind == QUESTION and n.base_type in SUPPORTED_TYPES)
+		count = question_count(self.form)
 		if count > self.s.max_questions:
 			self.issues.append(issue("E-LIMIT-QUESTIONS", count=count, limit=self.s.max_questions))
 		for dt in doctypes:
@@ -797,6 +825,11 @@ class _Compiler:
 			"fields": fields,
 			"custom_css": css,
 		}
+
+
+def question_count(form: Form) -> int:
+	"""Questions that become fields, as counted for E-LIMIT-QUESTIONS."""
+	return sum(1 for n in form.nodes() if n.kind == QUESTION and n.base_type in SUPPORTED_TYPES)
 
 
 def fieldtype_for(node: Node, ranges: dict) -> str:

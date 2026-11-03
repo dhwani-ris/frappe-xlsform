@@ -5,9 +5,11 @@ REQUIREMENTS.md section 13: one failing and one passing fixture per code in sect
 
 import io
 import re
+import time
 import unittest
 import zipfile
 
+from xlsform.core.expr.parser import ExprSyntaxError, parse
 from xlsform.core.issues import CATALOGUE
 from xlsform.core.meaning import compare_versions
 from xlsform.core.validate import ValidateOptions, validate
@@ -60,6 +62,45 @@ def macro_workbook() -> bytes:
 	return out.getvalue()
 
 
+FAR_CELL_SHEET = (
+	b'<?xml version="1.0" encoding="UTF-8"?>'
+	b'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+	b'<dimension ref="A1:XFD1048576"/><sheetData><row r="1048576">'
+	b'<c r="A1048576" t="inlineStr"><is><t>type</t></is></c></row></sheetData></worksheet>'
+)
+
+
+def _replace_part(content: bytes, part: str, data: bytes) -> bytes:
+	out = io.BytesIO()
+	with zipfile.ZipFile(io.BytesIO(content)) as src, zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as dst:
+		for item in src.infolist():
+			dst.writestr(item.filename, data if item.filename == part else src.read(item.filename))
+	return out.getvalue()
+
+
+def far_cell_workbook(sheet: str = "survey") -> bytes:
+	"""~5 KB: a sheet that declares the whole grid and has one cell in the last Excel row."""
+	extra = {"notes": [["x"], ["y"]]} if sheet == "notes" else None
+	content = make_xlsx(
+		survey=[H, ["text", "a", "A"]], settings=[["form_id"], ["xx_form"]], extra_sheets=extra
+	)
+	part = "xl/worksheets/sheet3.xml" if sheet == "notes" else "xl/worksheets/sheet1.xml"
+	return _replace_part(content, part, FAR_CELL_SHEET)
+
+
+def padded_workbook(size: int) -> bytes:
+	content = simple(["text", "a", "A"])
+	with zipfile.ZipFile(io.BytesIO(content)) as zf:
+		sheet = zf.read("xl/worksheets/sheet1.xml")
+	return _replace_part(content, "xl/worksheets/sheet1.xml", sheet + b" " * size)
+
+
+def wide_survey(columns: int) -> bytes:
+	return simple(
+		["text", "a", "A", *["x"] * (columns - 3)], header=[*H, *[f"c{i}" for i in range(columns - 3)]]
+	)
+
+
 PREV_SURVEY = [
 	["type", "name", "label"],
 	["text", "village", "Village name"],
@@ -103,6 +144,16 @@ def cases():
 			(broken_zip(), "f.xlsx", None),
 			(simple(["text", "a", "A"]), "f.xlsx", None),
 			{},
+		),
+		"E-FILE-UNPACKED": (
+			(padded_workbook(100000), "f.xlsx", ValidateOptions(max_unpacked_mb=0.05)),
+			(simple(["text", "a", "A"]), "f.xlsx", ValidateOptions(max_unpacked_mb=0.05)),
+			{},
+		),
+		"E-FILE-SHEET-SIZE": (
+			(wide_survey(201), "f.xlsx", None),
+			(wide_survey(200), "f.xlsx", None),
+			{"sheet": "survey", "row": 1, "cell": "GS1"},
 		),
 		"E-SHEET-MISSING": (
 			(
@@ -166,6 +217,21 @@ def cases():
 			(simple(["text", "a", "A"], ["end_group"]), "f.xlsx", None),
 			(simple(["text", "a", "A"]), "f.xlsx", None),
 			{"row": 3},
+		),
+		"E-GROUP-TOO-DEEP": (
+			(nested_groups(31), "f.xlsx", None),
+			(nested_groups(30), "f.xlsx", None),
+			{"sheet": "survey", "row": 32, "cell": "A32"},
+		),
+		"E-FORM-TOO-COMPLEX": (
+			(nested_groups(1100), "f.xlsx", ValidateOptions(max_group_depth=10**6)),
+			(nested_groups(30), "f.xlsx", ValidateOptions(max_group_depth=10**6)),
+			{"sheet": "survey"},
+		),
+		"E-EXPR-TOO-COMPLEX": (
+			(calc_chain(18, "{prev} + {prev}", "{last} > 0"), "f.xlsx", None),
+			(calc_chain(3, "{prev} + {prev}", "{last} > 0"), "f.xlsx", None),
+			{"row": 21, "column": "relevant"},
 		),
 		"E-TYPE-UNKNOWN": (
 			(simple(["selec_one yn", "a", "A"]), "f.xlsx", None),
@@ -351,6 +417,19 @@ def cases():
 				ValidateOptions(max_expression_length=20),
 			),
 			{"row": 3},
+		),
+		"E-REGEX-UNSAFE": (
+			(
+				simple(["text", "a", "A", "regex(., '^([a-zA-Z0-9]+\\s?)*$')"], header=[*H, "constraint"]),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(["text", "a", "A", "regex(., '^[a-zA-Z0-9 ]+$')"], header=[*H, "constraint"]),
+				"f.xlsx",
+				None,
+			),
+			{"row": 2, "cell": "D2"},
 		),
 		"E-FN-UNSUPPORTED": (
 			(
@@ -871,9 +950,144 @@ class TestIssueCatalogue(unittest.TestCase):
 		)
 		self.assertEqual([i.code for i in validate(content, "f.xlsx").issues if i.severity == "error"], [])
 
+	def test_choice_column_headers_must_be_identifiers(self):
+		bad = "<img src=x onerror=alert(1)>"
+		content = simple(
+			["select_one yn", "a", "A"],
+			choices=[["list_name", "name", "label", bad], ["yn", "yes", "Yes", "x"]],
+		)
+		hits = [i for i in validate(content, "f.xlsx").issues if i.code == "E-NAME-INVALID"]
+		self.assertEqual([(i.sheet, i.cell) for i in hits], [("choices", "D1")])
+		csv = b"name,label,state name\nx,X,s\n"
+		content = simple(["select_one_from_file v.csv", "a", "A"])
+		hits = [
+			i
+			for i in validate(content, "f.xlsx", ValidateOptions(files={"v.csv": csv})).issues
+			if i.code == "E-NAME-INVALID"
+		]
+		self.assertEqual([(i.sheet, i.column) for i in hits], [("v.csv", "state name")])
+
+	def test_choice_names_equal_in_mariadb_are_duplicates(self):
+		for other in ("Yes", "YES", "yés"):
+			with self.subTest(other=other):
+				content = simple(["select_one yn", "a", "A"], choices=[*YN, ["yn", other, "Yes again"]])
+				hits = [i for i in validate(content, "f.xlsx").issues if i.code == "E-CHOICE-DUPLICATE"]
+				self.assertEqual([(i.sheet, i.row) for i in hits], [("choices", 4)])
+				self.assertIn('"yes"', hits[0].message)
+				self.assertIn(f'"{other}"', hits[0].message)
+				self.assertIn("2 and 4", hits[0].message)
+
+	def test_version_must_be_safe_for_a_document_name(self):
+		for version, ok in (
+			("1/../2", False),
+			("v 2", False),
+			("-1", False),
+			("x" * 41, False),
+			("2026.11-03_b", True),
+		):
+			with self.subTest(version=version):
+				content = wb(
+					[H, ["text", "a", "A"]], settings=[["form_id", "version"], ["abc_form", version]]
+				)
+				hits = [i for i in validate(content, "f.xlsx").issues if i.code == "E-SETTING-INVALID"]
+				self.assertEqual([(i.sheet, i.cell) for i in hits], [] if ok else [("settings", "B2")])
+
 	def test_version_ordering(self):
 		self.assertEqual(compare_versions("2026110301", "2026110201"), 1)
 		self.assertEqual(compare_versions("2025-03", "2024-12"), 1)
 		self.assertEqual(compare_versions("1.10", "1.9"), 1)
 		self.assertEqual(compare_versions("2", "2"), 0)
 		self.assertEqual(compare_versions("v2", "v10"), -1)
+
+
+def nested_groups(depth: int) -> bytes:
+	rows = [["begin_group", f"g{i}", "G"] for i in range(depth)]
+	return simple(*rows, ["text", "a", "A"], *[["end_group"]] * depth)
+
+
+def calc_chain(links: int, step: str, relevant: str) -> bytes:
+	rows = [["integer", "c0", "C", None, None]]
+	for k in range(1, links + 1):
+		rows.append(["calculate", f"c{k}", None, step.format(prev=f"${{c{k - 1}}}"), None])
+	rows.append(["text", "t", "T", None, relevant.format(last=f"${{c{links}}}")])
+	return simple(*rows, header=[*H, "calculation", "relevant"])
+
+
+class TestHostileInput(unittest.TestCase):
+	"""Uploads built to exhaust time or the stack get a located issue, never an exception."""
+
+	def codes(self, content, opts=None):
+		return {i.code for i in validate(content, "f.xlsx", opts).issues}
+
+	def test_deep_formulas_are_syntax_errors(self):
+		for text in (
+			"(" * 700 + "1" + ")" * 700,
+			"-" * 1990 + "1",
+			"not(" * 300 + "1" + ")" * 300,
+			"1" + " + 1" * 400,
+		):
+			with self.subTest(text=text[:20]):
+				with self.assertRaises(ExprSyntaxError):
+					parse(text)
+				content = simple(["integer", "a", "A"], ["text", "b", "B", text], header=[*H, "relevant"])
+				self.assertIn("E-EXPR-SYNTAX", self.codes(content))
+
+	def test_deep_instance_name(self):
+		for text, code in (
+			("(" * 150 + "'x'" + ")" * 150, "W-INSTANCE-NAME"),
+			("concat('" + "x" * 3000 + "')", "E-EXPR-TOO-LONG"),
+		):
+			with self.subTest(code=code):
+				content = wb(
+					[H, ["text", "a", "A"]], settings=[["form_id", "instance_name"], ["abc_form", text]]
+				)
+				self.assertIn(code, self.codes(content))
+
+	def test_long_calculation_chain(self):
+		content = calc_chain(1500, "{prev} + 1", "{last} > 0")
+		result = validate(content, "f.xlsx", ValidateOptions(max_questions=5000))
+		self.assertEqual(len(result.analysis.calc_order), 1500)
+		self.assertIn("E-EXPR-TOO-COMPLEX", {i.code for i in result.issues})
+
+	def test_exponential_inlining_stops_early(self):
+		start = time.monotonic()
+		codes = self.codes(calc_chain(18, "{prev} + {prev}", "{last} > 0"))
+		self.assertLess(time.monotonic() - start, 2)
+		self.assertIn("E-EXPR-TOO-COMPLEX", codes)
+		self.assertNotIn("E-EXPR-TOO-COMPLEX", self.codes(calc_chain(3, "{prev} + {prev}", "{last} > 0")))
+
+	def test_declared_dimension_does_not_hang_the_reader(self):
+		start = time.monotonic()
+		result = validate(far_cell_workbook(), "f.xlsx")
+		self.assertLess(time.monotonic() - start, 5)
+		hits = [i for i in result.issues if i.code == "E-FILE-SHEET-SIZE"]
+		self.assertEqual([(i.sheet, i.row) for i in hits], [("survey", 1048576)])
+
+	def test_unused_sheets_are_not_read_in_full(self):
+		start = time.monotonic()
+		result = validate(far_cell_workbook(sheet="notes"), "f.xlsx")
+		self.assertLess(time.monotonic() - start, 5)
+		self.assertTrue(result.ok, [i.message for i in result.issues])
+
+	def test_unpacked_size_is_checked_before_parsing(self):
+		self.assertEqual(self.codes(padded_workbook(60 * 1024 * 1024)), {"E-FILE-UNPACKED"})
+
+	def test_question_limit_runs_before_formulas(self):
+		rows = [["integer", "q0", "Q", None]]
+		rows += [["integer", f"q{i}", "Q", f"${{q{i - 1}}} > 0"] for i in range(1, 3000)]
+		content = simple(*rows, header=[*H, "relevant"])
+		start = time.monotonic()
+		result = validate(content, "f.xlsx")
+		self.assertLess(time.monotonic() - start, 1.5)
+		self.assertEqual({i.code for i in result.issues}, {"E-LIMIT-QUESTIONS"})
+		self.assertIsNone(result.analysis)
+		start = time.monotonic()
+		result = validate(content, "f.xlsx", ValidateOptions(max_questions=5000, row_budget_bytes=10**7))
+		self.assertLess(time.monotonic() - start, 3)
+		self.assertTrue(result.ok)
+
+	def test_deep_groups(self):
+		self.assertIn("E-GROUP-TOO-DEEP", self.codes(nested_groups(40)))
+		self.assertIn(
+			"E-FORM-TOO-COMPLEX", self.codes(nested_groups(1100), ValidateOptions(max_group_depth=10**6))
+		)

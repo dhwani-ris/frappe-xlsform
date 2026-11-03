@@ -8,9 +8,10 @@ reused by the compiler, so nothing is parsed twice.
 import csv
 import io
 import re
+import unicodedata
 from dataclasses import dataclass, field
 
-from xlsform.core.expr import emit_js
+from xlsform.core.expr import emit_js, regex_safety
 from xlsform.core.expr.evaluate import FUNCTIONS, REJECTED_FUNCTIONS
 from xlsform.core.expr.parser import CurlyQuoteError, ExprSyntaxError, parse, walk
 from xlsform.core.form import (
@@ -31,9 +32,11 @@ from xlsform.core.form import (
 from xlsform.core.i18n import N_, tr
 from xlsform.core.issues import Issue, issue
 from xlsform.core.reader import Cell, Row
+from xlsform.core.structure import CHOICE_COLUMN_RE, choice_column_issue, is_extra_choice_column
 from xlsform.core.suggest import closest, slug
 
 FORM_ID_RE = re.compile(r"^[a-z][a-z0-9_]{2,40}$")
+VERSION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$")
 CHOICE_NAME_BAD = re.compile(r"[\s<>%\"#*?\\/]")
 
 EXPR_COLUMNS = (
@@ -198,6 +201,15 @@ def _load_csv_lists(form: Form, opts: Options, issues: list[Issue]) -> None:
 		lst = ChoiceList(file_name, row=0, from_file=file_name)
 		text = content.decode("utf-8-sig", errors="replace")
 		reader = csv.DictReader(io.StringIO(text))
+		bad_columns = [
+			raw
+			for raw in reader.fieldnames or []
+			if is_extra_choice_column((raw or "").strip().lower())
+			and not CHOICE_COLUMN_RE.match((raw or "").strip().lower())
+		]
+		if bad_columns:
+			issues += [choice_column_issue(raw, sheet=file_name) for raw in bad_columns]
+			continue
 		for line_no, record in enumerate(reader, start=2):
 			record = {(k or "").strip().lower(): (v or "").strip() for k, v in record.items()}
 			name = record.get("name", "")
@@ -294,21 +306,32 @@ def _check_lists(form: Form, opts: Options) -> list[Issue]:
 					)
 				)
 				continue
-			seen.setdefault(choice.name, []).append(choice.row.number)
-		for choice_name, rows in seen.items():
-			if len(rows) > 1:
+			seen.setdefault(choice_key(choice.name), []).append(choice)
+		for same in seen.values():
+			if len(same) > 1:
+				spellings = list(dict.fromkeys(c.name for c in same))
 				issues.append(
 					issue(
 						"E-CHOICE-DUPLICATE",
-						choice=choice_name,
+						choices=" / ".join(f'"{s}"' for s in spellings),
 						list=name,
-						rows=" and ".join(str(r) for r in rows),
+						rows=" and ".join(str(c.row.number) for c in same),
 						sheet=sheet,
-						row=rows[1],
+						row=same[1].row.number,
 						column="name",
+						col_index=same[1].row.col("name"),
 					)
 				)
 	return issues
+
+
+def choice_key(name: str) -> str:
+	"""How MariaDB's default collation (utf8mb4_unicode_ci, PAD SPACE) compares choice names.
+
+	Choice names are the primary key of the list DocType, so names equal under it collide.
+	"""
+	decomposed = unicodedata.normalize("NFKD", name.rstrip(" "))
+	return "".join(ch for ch in decomposed if not unicodedata.combining(ch)).casefold()
 
 
 def _check_repeats(form: Form) -> list[Issue]:
@@ -408,7 +431,22 @@ def _check_settings(form: Form, opts: Options, analysis: Analysis) -> list[Issue
 		issues.append(issue("W-SETTING-IGNORED", setting=key, **where(key)))
 
 	version = form.version
-	if version and opts.published_version:
+	if version and not VERSION_RE.match(version):
+		issues.append(
+			issue(
+				"E-SETTING-INVALID",
+				setting="version",
+				value=version,
+				reason=tr(N_("it becomes part of the version's document name")),
+				hint=tr(
+					N_(
+						"Use up to 40 letters, numbers, dots, dashes and _, starting with a letter or number, e.g. 2026110301."
+					)
+				),
+				**where("version"),
+			)
+		)
+	elif version and opts.published_version:
 		cmp = compare_versions(version, opts.published_version)
 		if cmp == 0:
 			issues.append(issue("E-VERSION-PUBLISHED", version=version, **where("version")))
@@ -420,7 +458,16 @@ def _check_settings(form: Form, opts: Options, analysis: Analysis) -> list[Issue
 			)
 
 	instance_name = form.settings.get("instance_name")
-	if instance_name:
+	if instance_name and len(instance_name) > opts.max_expression_length:
+		issues.append(
+			issue(
+				"E-EXPR-TOO-LONG",
+				length=len(instance_name),
+				limit=opts.max_expression_length,
+				**where("instance_name"),
+			)
+		)
+	elif instance_name:
 		analysis.instance_name = _instance_name_parts(instance_name, form)
 		if analysis.instance_name is None:
 			issues.append(issue("W-INSTANCE-NAME", **where("instance_name")))
@@ -501,7 +548,7 @@ def _parse_all(form: Form, opts: Options, analysis: Analysis, issues: list[Issue
 			except ExprSyntaxError as exc:
 				issues.append(issue("E-EXPR-SYNTAX", reason=exc.reason, expr=text, **where))
 				continue
-			if _resolve(ast, node, column, names, issues, where):
+			if _resolve(ast, node, column, names, issues, where) and _check_regex(ast, issues, where):
 				analysis.asts.setdefault(node.path, {})[column] = ast
 		_parse_default(node, analysis, issues)
 
@@ -578,6 +625,30 @@ def _resolve(
 	return ok
 
 
+def _check_regex(ast: dict, issues: list[Issue], where: dict) -> bool:
+	"""Every regex() pattern is fixed text in the safe set (see expr/regex_safety.py)."""
+	ok = True
+	for n in walk(ast):
+		if n.get("fn") != "regex" or len(n["args"]) != 2:
+			continue
+		pattern = n["args"][1]
+		if "lit" in pattern and isinstance(pattern["lit"], str):
+			reason = regex_safety.unsafe_reason(pattern["lit"])
+		else:
+			reason = regex_safety.REASON_DYNAMIC
+		if reason is not None:
+			issues.append(
+				issue(
+					"E-REGEX-UNSAFE",
+					reason=tr(reason, limit=regex_safety.MAX_PATTERN_LENGTH),
+					input_limit=regex_safety.MAX_INPUT_LENGTH,
+					**where,
+				)
+			)
+			ok = False
+	return ok
+
+
 def _arity_text(lo: int, hi: int | None) -> str:
 	if hi is None:
 		return tr(N_("at least {n} values"), n=lo)
@@ -604,33 +675,40 @@ def _check_cycles(form: Form, analysis: Analysis, issues: list[Issue]) -> None:
 	reported: set[frozenset] = set()
 	by_path = form.by_path()
 
-	def visit(p: str, stack: list[str]) -> None:
-		state[p] = 1
-		stack.append(p)
-		for d in sorted(graph.get(p, ())):
-			if state.get(d) == 1:
-				cycle = [*stack[stack.index(d) :], d]
-				key = frozenset(cycle)
-				if key not in reported:
-					reported.add(key)
-					node = by_path[cycle[0]]
-					column = "calculation" if "calculation" in analysis.asts.get(cycle[0], {}) else "relevant"
-					issues.append(
-						issue(
-							"E-CALC-CYCLE",
-							cycle=" → ".join(c.rsplit("/", 1)[-1] for c in cycle),
-							**_where(node, column),
-						)
-					)
-			elif state.get(d) is None:
-				visit(d, stack)
-		stack.pop()
-		state[p] = 2
-		order.append(p)
+	def report(cycle: list[str]) -> None:
+		key = frozenset(cycle)
+		if key in reported:
+			return
+		reported.add(key)
+		node = by_path[cycle[0]]
+		column = "calculation" if "calculation" in analysis.asts.get(cycle[0], {}) else "relevant"
+		issues.append(
+			issue(
+				"E-CALC-CYCLE",
+				cycle=" → ".join(c.rsplit("/", 1)[-1] for c in cycle),
+				**_where(node, column),
+			)
+		)
 
-	for p in sorted(graph):
-		if state.get(p) is None:
-			visit(p, [])
+	for start in sorted(graph):
+		if state.get(start) is not None:
+			continue
+		state[start] = 1
+		stack = [start]
+		pending = [iter(sorted(graph.get(start, ())))]
+		while pending:
+			d = next(pending[-1], None)
+			if d is None:
+				done = stack.pop()
+				pending.pop()
+				state[done] = 2
+				order.append(done)
+			elif state.get(d) == 1:
+				report([*stack[stack.index(d) :], d])
+			elif state.get(d) is None:
+				state[d] = 1
+				stack.append(d)
+				pending.append(iter(sorted(graph.get(d, ()))))
 	calcs = {p for p, cols in analysis.asts.items() if "calculation" in cols}
 	analysis.calc_order = [p for p in order if p in calcs]
 
@@ -669,11 +747,7 @@ def _check_live(form: Form, analysis: Analysis, issues: list[Issue]) -> None:
 			try:
 				emit_js.emit(cols[column], make_scope(form, analysis, node))
 			except emit_js.NotLive as exc:
-				where = _where(node, column)
-				if exc.calc:
-					issues.append(issue("E-CALC-NOT-LIVE", name=exc.calc, **where))
-				else:
-					issues.append(issue("E-EXPR-NOT-LIVE", what=exc.what, **where))
+				issues.append(_not_live_issue(exc, _where(node, column)))
 	for path, cols in analysis.asts.items():
 		if "calculation" in cols:
 			try:
@@ -681,6 +755,14 @@ def _check_live(form: Form, analysis: Analysis, issues: list[Issue]) -> None:
 				analysis.live_calcs.add(path)
 			except emit_js.NotLive:
 				pass
+
+
+def _not_live_issue(exc: emit_js.NotLive, where: dict) -> Issue:
+	if isinstance(exc, emit_js.TooComplex):
+		return issue("E-EXPR-TOO-COMPLEX", limit=emit_js.MAX_JS_LENGTH, **where)
+	if exc.calc:
+		return issue("E-CALC-NOT-LIVE", name=exc.calc, **where)
+	return issue("E-EXPR-NOT-LIVE", what=exc.what, **where)
 
 
 def _check_filters(form: Form, opts: Options, analysis: Analysis, issues: list[Issue]) -> None:
@@ -717,12 +799,9 @@ def _check_filters(form: Form, opts: Options, analysis: Analysis, issues: list[I
 				bad = True
 				continue
 			try:
-				emit_js.emit_value(value, make_scope(form, analysis, node))
+				emit_js.filter_value(value, make_scope(form, analysis, node))
 			except emit_js.NotLive as exc:
-				if exc.calc:
-					issues.append(issue("E-CALC-NOT-LIVE", name=exc.calc, **where))
-				else:
-					issues.append(issue("E-EXPR-NOT-LIVE", what=exc.what, **where))
+				issues.append(_not_live_issue(exc, where))
 				bad = True
 		if not bad:
 			analysis.filters[path] = terms

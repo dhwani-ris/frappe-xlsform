@@ -282,9 +282,11 @@ Exports always use the original XLSForm names.
 
 **Layout**: top-level groups → Section Breaks (Tab Breaks when there are more than 3); nested groups → Section Breaks labelled "Outer › Inner"; group `relevant` is ANDed into every descendant's `depends_on` and set on its section.
 
-**Selects**: `select_one` → Link with `length` = longest choice name rounded up to 20 (min 20), `link_filters` = the compiled `choice_filter` plus `xf_retired = 0`. `select_multiple` → Table MultiSelect to the list's pick table. A choice list is loaded into its DocType as records; removed choices get `xf_retired = 1` and stay valid for old records.
+**Selects**: `select_one` → Link with `length` 140 (Frappe's default; choice names are at most 140 characters, and a length published earlier is never narrowed), the same length for the list's `choice_name` and the pick table's Link, `link_filters` = the compiled `choice_filter` plus `xf_retired = 0`. Every non-numeric filter value is emitted as `eval:` code; a text value is a JavaScript string literal, never raw text, because Frappe's `link.js` evaluates any value that starts with `eval:`. Text containing `eval:` is written as `"ev" + "al:…"`, because `link.js` reads only the part between the first and the second `eval:`. `select_multiple` → Table MultiSelect to the list's pick table. Extra columns on the choices sheet or in a choices CSV (the columns a `choice_filter` uses) become Data fields of the list DocType, so their headers must match `^[A-Za-z_][A-Za-z0-9_]*$` (`E-NAME-INVALID` otherwise) and their labels are escaped like every other label. A choice list is loaded into its DocType as records; removed choices get `xf_retired = 1` and stay valid for old records.
 
 **Live expressions**: `depends_on`, `mandatory_depends_on`, `read_only_depends_on` are `eval:` strings produced by the emitter (section 6). User text appears in them only as JSON-escaped string literals.
+
+**Reserved parent fields**: `xf_form` (Link to XLSForm) and `xf_version` (Link to XLSForm Version) are hidden, read-only and `set_only_once`; `xf_version` also has `search_index`. `xf_channel` records where the record was entered.
 
 **Row-size budget** (fails with `E-ROW-BUDGET` over `row_budget_bytes`)
 
@@ -305,7 +307,7 @@ Exports always use the original XLSForm names.
 | Question added | New column |
 | Question removed | Column kept, field hidden, not required, read-only; `retired_in` set |
 | Label, hint, relevance, constraint, choices changed | Metadata and choice records only |
-| Longer choice names | Link `length` widened (never narrowed) |
+| Longer choice names | None needed: Link `length` is 140, the longest a choice name can be; a shorter length from an older version is widened to 140 (never narrowed) |
 | Type or choice list changed | New column `<name>_v<n>`; old one retired; data never cast in place (`W-TYPE-CHANGE`) |
 | Name changed / moved in or out of a repeat | Remove + add (`W-RENAME`, `W-MOVE-REPEAT`) |
 
@@ -333,7 +335,7 @@ AST shape (`astVersion: 1`):
 
 ### 6.2 JavaScript emitter (Live subset)
 
-The target grammar is the intersection of JavaScript and the SDK interpreter: literals, `doc.x`, `parent.x`, `! && || ?:`, `=== !== < <= > >= + - * / %`, `.length`, `.includes`, `.startsWith`, `.endsWith`, `.some`, `.map`, `.join`, `.split`, arrow functions, and the Frappe globals `cint`, `flt`, `cstr`.
+The target grammar is the intersection of JavaScript and the SDK interpreter: literals, `doc.x`, `parent.x`, `! && || ?:`, `=== !== < <= > >= + - * / %`, `.length`, `.includes`, `.startsWith`, `.endsWith`, `.some`, `.map`, `.join`, `.split`, `.filter`, one-parameter arrow functions, array literals, and the Frappe globals `cint`, `flt`, `cstr`. `core/expr/profile.py` enforces it on every emitted string (section 6.4). A formula whose emitted string, with its calculations written out, is over 4,000 characters is not Live (`E-EXPR-TOO-COMPLEX`).
 
 | XLSForm | Emitted (inside a row, own-row refs use `doc`, outer refs use `parent`) |
 | --- | --- |
@@ -345,21 +347,35 @@ The target grammar is the intersection of JavaScript and the SDK interpreter: li
 | `count(${rep})` | `(doc.rep \|\| []).length` |
 | `if(c, a, b)` | `(c ? a : b)` |
 | `int(x)` / `number(x)` | `cint(x)` / `flt(x)` |
+| a number used as a condition | `!!(x)` (false for 0 and NaN) |
+| `region = 'd1'` in `choice_filter` | link filter value `eval:"d1"` |
 
 ### 6.3 Semantics (each is a conformance fixture group)
 
 - An unanswered question is `""`. Frappe stores a blank Int/Float as 0 after save; the conformance suite covers both states and the docs say so.
 - If either side of a comparison is numeric, both are converted to numbers; `""` becomes NaN. Every comparison with NaN is false except `!=`, which is true (IEEE 754, as JavaRosa).
-- Booleans: `""` and `0` are false; any other string is true.
+- Booleans: `""` and `0` are false; any other string is true. NaN is false: a number is emitted as `!!(x)`, which is false for 0 and NaN in JavaScript and in the SDK (`0 div 0` and `x mod 0` are false).
+- Text is a number only when it is decimal notation, `^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$` after trimming. `infinity`, `NaN`, `1_000` and `0x10` are NaN on the server; the emitted JavaScript guards `flt(x) == cstr(x)` and rejects text containing `Infinity`, so both sides agree.
+- Number literals are emitted in fixed-point notation (`0.0000001`, `100000000000000000000`), never with an exponent, because the SDK tokenizer reads only digits and `.`.
 - Dates are days since 1970-01-01 (server only).
 - `select_multiple` values are space-separated strings on the server and pick rows in meta.
 - `int()` truncates toward zero; `round(x, n)` rounds half away from zero.
 - `sum()` and `count()` over an empty repeat return 0.
 - Values of non-relevant questions are `""` in other expressions and cleared on save.
+- Answers are untrusted, so no function can be made slow by them (`core/expr/evaluate.py`, `core/expr/regex_safety.py`):
+  - `regex(x, pattern)`: the pattern must be fixed text of at most 200 characters, without back-references, look-arounds, flags, conditionals, atomic or possessive parts, a repeat inside a repeat (`(x+)*`), or a repeated choice whose alternatives start with the same character (`E-REGEX-UNSAFE` at upload). The server matches it with its own linear-time NFA (built from Python's regex parser), not with backtracking `re`; text over 1,000 characters, or a pattern outside that set, never matches.
+  - `round(x, n)` clamps `n` to 0–15; `uuid(n)` clamps `n` to 1–64; `substr()` clamps its indexes to the text (NaN start is 0, NaN end is the length, ±Infinity is clamped); `pow()` overflows to ±Infinity; `date()` and `format-date()` of an impossible date (`2026-13-45`, Infinity, beyond year 9999) are `""`.
+  - A `repeat_count` that is Infinity (for example `${a} div 0`) fails the record with a named message instead of an error.
 
 ### 6.4 Conformance
 
-`xlsform/tests/conformance/cases/*.json` holds cases of `{expr, doc, expected}`: 305 written by hand plus 882 generated from an independent ODK oracle (`generate_matrix.py`), 1,187 in all. Each case goes through the real pipeline (workbook → validator → compiler) and is checked three ways: the Python evaluator; the emitted JavaScript run in Node with Frappe's own `cint`/`flt`/`cstr` source (as Desk runs it); and, for Live cases, the same JavaScript through the SDK's `js_expression.dart` at a pinned commit (`scripts/conformance-dart.sh`). All three agree on every case.
+`xlsform/tests/conformance/cases/*.json` holds cases of `{expr, doc, expected}`: 319 written by hand plus 882 generated from an independent ODK oracle (`generate_matrix.py`), 1,201 in all. Each case goes through the real pipeline (workbook → validator → compiler) and is checked three ways:
+
+1. the Python evaluator;
+2. the emitted JavaScript, run in Node with Frappe's own `cint`/`flt`/`cstr` source (as Desk runs it), including the `eval:` values of `link_filters` as `link.js` evaluates them;
+3. the **SDK profile**: every emitted string must parse in `xlsform/core/expr/profile.py`, a small tokenizer and parser for the part of the subset documented in the header of the SDK's `js_expression.dart` that is also unambiguous JavaScript: numbers with digits and one `.` only (no exponent, no leading zero), double-quoted strings with only `\\` and `\"` escapes, `doc`/`parent`/arrow parameters, member access by name, the SDK's whitelisted methods, `cint`/`flt`/`cstr`/`in_list`/`Boolean`, one-parameter single-expression arrows as the argument of `some`/`every`/`filter`/`map`/`find`, unary `! - +`, `=== !== == != < <= > >= && || + - * / %`, `?:`, brackets and array literals. Statements, assignment, `new`, template and regex literals, comments, `++`/`--`, other identifiers (`window`, `frappe`) and a second `eval:` are rejected.
+
+The compiler runs every emitted string (`depends_on`, `mandatory_depends_on`, `read_only_depends_on` and the `eval:` parts of `link_filters`) through the profile. A string outside it is an emitter bug: the formula is reported as not Live (`E-EXPR-NOT-LIVE`, or `E-EXPR-TOO-COMPLEX` when joining a group's conditions nests it too deeply) and the string is never shipped. The SDK repository runs the same cases in Dart from `python -m xlsform.tests.conformance.export <out.json>`; this repository no longer clones the SDK.
 
 ## 7. Validation and user-friendly errors
 
@@ -370,14 +386,28 @@ Rules for every issue: located (sheet, Excel row, column, cell), plain language,
 | 1. File | `.xlsx` only, size, readable, not password-protected, required sheets | Yes |
 | 2. Structure | Columns, names, duplicates, `begin_`/`end_` matching | Yes |
 | 3. Meaning | Types, choice lists, expressions, references, cycles, Live-ability, settings | No |
-| 4. Frappe limits | Question count, row budget, name length | No |
+| 4. Frappe limits | Question count, row budget, name length. The question count is also checked right after stage 2: a form over `max_questions` stops there, before any formula is parsed. | No |
 | 5. Version diff | Renames, removals, type changes vs the published version | No (warnings) |
+
+**Limits against hostile workbooks.** A workbook is untrusted input, so every stage has a fixed bound. Going over a bound gives a located issue, never an exception or a timeout.
+
+| Limit | Value | Where | Issue |
+| --- | --- | --- | --- |
+| Unpacked size of the workbook (sum of the zip entries, checked before any XML is parsed) | 50 MB (`max_unpacked_mb`) | `core/reader.py` `MAX_UNPACKED_MB` | `E-FILE-UNPACKED` |
+| Rows and columns read per sheet (the sheet's declared dimension is ignored; survey, choices and settings are read in full, other sheets only for their first 50 rows) | 30,000 rows, 200 columns | `core/reader.py` `MAX_ROWS`, `MAX_COLUMNS` | `E-FILE-SHEET-SIZE` (data in row 30,001+ or column 201). Cells after column 201 are not seen. |
+| Nesting inside one formula (brackets, functions, operators) | 100 levels | `core/expr/parser.py` `MAX_DEPTH` | `E-EXPR-SYNTAX` |
+| Groups and repeats inside each other | 30 levels | `core/structure.py` `MAX_GROUP_DEPTH` | `E-GROUP-TOO-DEEP` |
+| Emitted JavaScript for one Live formula, with its calculations written out | 4,000 characters, 200 levels, 20 inlined calculations in a chain | `core/expr/emit_js.py` `MAX_JS_LENGTH`, `MAX_EMIT_DEPTH`, `MAX_INLINE_DEPTH` | `E-EXPR-TOO-COMPLEX` |
+| `instance_name` length | `max_expression_length` | `core/meaning.py` | `E-EXPR-TOO-LONG` |
+| Anything else too deep for the checks (last line of defence: a `RecursionError` in `validate()`) | — | `core/validate.py` | `E-FORM-TOO-COMPLEX` |
+
+Lookups of questions by path and name are built once per form, so the checks stay linear in the number of questions. Calculation cycles are found with an iterative search, so a long chain of calculations can't exhaust the stack.
 
 pyxform is **not** run on sites: every pyxform release pins `xlrd==2.0.1`, which conflicts with Frappe v16's `xlrd~=2.0.2`, so it can't be an app dependency (`E-PYXFORM` is dropped). Instead CI runs `scripts/pyxform_crosscheck.py`: every workbook in `xlsform/tests/fixtures/corpus` is checked by our validator and by pyxform (own virtualenv); a disagreement that isn't a documented v1 limitation, or reviewed in `corpus/expected.json` with a reason, fails the build.
 
 Designers see issues on the XLSForm Version form (summary bar + table grouped by sheet), as a downloadable **annotated copy of their workbook** (cells filled red/amber with the message as a comment), and in the API.
 
-**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (62 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
+**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (68 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
 
 | Code | Sev | Example message |
 | --- | --- | --- |
@@ -385,6 +415,8 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | E-FILE-SIZE | E | The file is 9 MB; the limit is 5 MB. |
 | E-FILE-PROTECTED | E | The workbook is password-protected, so it can't be read. |
 | E-FILE-UNREADABLE | E | The workbook can't be opened; it may be damaged. |
+| E-FILE-UNPACKED | E | The workbook unpacks to 60 MB of data; the limit is 50 MB. |
+| E-FILE-SHEET-SIZE | E | The "survey" sheet has data outside the first 30000 rows and 200 columns (A to GR). |
 | E-SHEET-MISSING | E | The workbook has no "survey" sheet. |
 | E-COL-MISSING | E | The survey sheet has no "type" column. |
 | W-COL-UNKNOWN | W | Column "lable" isn't recognised and will be ignored. Did you mean "label"? |
@@ -398,13 +430,15 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | W-META-IGNORED | W | "deviceid" can't be collected and will be ignored. |
 | E-LIST-MISSING | E | Row 18 uses choice list "districts", which isn't on the choices sheet. |
 | E-LIST-EMPTY | E | Choice list "districts" has no choices. |
-| E-CHOICE-DUPLICATE | E | Choice "yes" appears twice in list "yes_no". |
+| E-CHOICE-DUPLICATE | E | List "yes_no" has the choice name "yes" / "Yes" more than once (choices rows 2 and 4). Names are compared as MariaDB's default collation does (case, accents and trailing spaces ignored), because they are the list DocType's primary key. |
 | E-CHOICE-NAME | E | Choice name "not sure" contains a space. |
 | E-LIST-TOO-LARGE | E | Choice list "villages" has 25,000 choices; the limit is 20,000. |
 | E-FILE-CSV-MISSING | E | Row 7 uses villages.csv, which wasn't uploaded with the form. |
 | E-GROUP-UNCLOSED | E | The group started in row 12 is never closed. |
 | E-GROUP-MISMATCH | E | Row 40 closes a repeat, but the open block is a group. |
 | E-GROUP-EXTRA-END | E | Row 40 closes a group that was never opened. |
+| E-GROUP-TOO-DEEP | E | Row 32 opens a group inside 30 other groups or repeats; the limit is 30. |
+| E-FORM-TOO-COMPLEX | E | The form couldn't be checked completely: it is nested too deeply for the structure checks. |
 | E-REPEAT-NESTED | E | Repeat `member` is inside repeat `household`. |
 | E-REPEAT-EMPTY | E | Repeat `member` has no questions. |
 | E-REF-UNKNOWN | E | `${hh_sise}` isn't a question. Did you mean `${hh_size}`? |
@@ -413,9 +447,11 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | E-EXPR-SYNTAX | E | The formula can't be read: a bracket is never closed. |
 | E-EXPR-QUOTE | E | The formula uses curly quotes (‘ ’). |
 | E-EXPR-TOO-LONG | E | The formula is 2,400 characters; the limit is 2,000. |
+| E-REGEX-UNSAFE | E | The pattern in regex() can't be used: a repeated part contains another repeat, as in (a+)*. |
 | E-FN-UNSUPPORTED | E | `pulldata()` isn't supported. |
 | E-FN-ARGS | E | `selected()` needs 2 values but got 1. |
 | E-EXPR-NOT-LIVE | E | `today()` can't be used in "relevant": forms check that while being filled, offline too. |
+| E-EXPR-TOO-COMPLEX | E | The formula in "relevant" is too complex to check while the form is being filled (over 4,000 characters once its calculations are written out). |
 | E-CALC-NOT-LIVE | E | "relevant" uses `age_years`, whose calculation can only run on the server. |
 | E-CALC-CYCLE | E | These calculations depend on each other in a loop: `total` → `share` → `total`. |
 | E-FILTER-UNSUPPORTED | E | This choice_filter can't be applied; use `column = ${question}` joined by `and`. |
@@ -425,7 +461,7 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | E-DEFAULT-DYNAMIC | E | Default `${x}` can't be used; defaults must be fixed values, today() or now(). |
 | W-APPEARANCE | W | Appearance "quick-compact" isn't supported and will be ignored. |
 | W-PARAMETER | W | Parameter "max-pixels" isn't supported and will be ignored. |
-| E-SETTING-INVALID | E | form_id "???" has no letters or numbers to build a form ID from. |
+| E-SETTING-INVALID | E | form_id "???" has no letters or numbers to build a form ID from. Also fired for a `version` that doesn't match `^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$`, because the version becomes part of the version's document name (`1/../2` is rejected). |
 | W-FORM-ID | W | The form ID "Household Survey" will be used as household_survey. |
 | W-SHEET-UNKNOWN | W | The sheet "stettings" isn't used. Did you mean "settings"? |
 | E-SHEET-UNSUPPORTED | E | The "entities" sheet isn't supported yet. |
@@ -509,12 +545,12 @@ Issue object:
 | Layer | Tool | Proves |
 | --- | --- | --- |
 | Validator fixtures | pytest (no site) | Each code fires on a minimal bad workbook with the right location; good workbooks give zero issues |
-| Expression conformance | pytest + Node + Dart (SDK interpreter) | Python, JavaScript and the SDK agree on every case |
+| Expression conformance | pytest + Node | Python and Frappe's JavaScript agree with ODK on every case, and every emitted string is in the SDK profile (`core/expr/profile.py`) |
 | Compiler unit | pytest (no site) | Type mapping, sanitising, layout, selects, budget, diffs (snapshots) |
 | Server integration | `bench run-tests --app xlsform` | Upload → publish → DocTypes → valid/invalid records → republish → old records still valid → access per role → retire |
 | Corpus | `scripts/pyxform_crosscheck.py` (nightly) | Agreement with pyxform on real workbooks |
 
-Security tests: `<script>` in labels is inert; quotes and backslashes in literals can't break out of `eval:` strings; a non-designer gets 403 on upload/publish; `apply()` refuses a DocType outside `XLSForm Data`.
+Security tests: `<script>` in labels is inert; quotes and backslashes in literals can't break out of `eval:` strings; a `choice_filter` literal never reaches `link_filters` as raw text; strings outside the JavaScript profile are rejected (`xlsform/tests/unit/test_profile.py`); hostile workbooks (deep nesting, exponential calculations, huge declared dimensions, zip bombs, slow regexes, huge function arguments) get located issues within bounded time (`TestHostileInput`, `TestCollectorDataCantSlowASave`); a non-designer gets 403 on upload/publish; `apply()` refuses a DocType outside `XLSForm Data`.
 
 ## 14. Milestones
 

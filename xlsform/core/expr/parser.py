@@ -25,6 +25,8 @@ REF_RE = re.compile(r"\$\{([^}]*)\}")
 # a choices-sheet column with a language, as used in choice_filter: label::English
 COLUMN_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_\-]*::[A-Za-z_][A-Za-z0-9_\- ()]*?(?=\s*(?:[=!<>)]|$))")
 NUMBER_RE = re.compile(r"(?:\d+(?:\.\d*)?|\.\d+)")
+MAX_DEPTH = 100
+DEPTH_REASON = f"it has more than {MAX_DEPTH} levels of brackets, functions or operators inside each other"
 
 
 class ExprSyntaxError(Exception):
@@ -148,6 +150,7 @@ class Parser:
 		self.tokens = tokenize(text)
 		self.i = 0
 		self.allow_columns = allow_columns
+		self.depth = 0
 
 	def peek(self) -> Token:
 		return self.tokens[self.i]
@@ -161,6 +164,8 @@ class Parser:
 		if self.peek().kind == "end":
 			raise ExprSyntaxError("the formula is empty", 1)
 		node = self.expression(0)
+		if depth(node) > MAX_DEPTH:
+			raise ExprSyntaxError(DEPTH_REASON)
 		tok = self.peek()
 		if tok.kind != "end":
 			if tok.kind == "rparen":
@@ -177,7 +182,19 @@ class Parser:
 			return tok.value
 		return None
 
+	def _enter(self) -> None:
+		self.depth += 1
+		if self.depth > MAX_DEPTH:
+			raise ExprSyntaxError(DEPTH_REASON)
+
 	def expression(self, min_bp: int) -> dict:
+		self._enter()
+		try:
+			return self._expression(min_bp)
+		finally:
+			self.depth -= 1
+
+	def _expression(self, min_bp: int) -> dict:
 		left = self.unary()
 		while True:
 			op = self._binary_op(self.peek())
@@ -192,7 +209,11 @@ class Parser:
 		tok = self.peek()
 		if tok.kind == "op" and tok.value == "-":
 			self.next()
-			operand = self.unary()
+			self._enter()
+			try:
+				operand = self.unary()
+			finally:
+				self.depth -= 1
 			if "lit" in operand and isinstance(operand["lit"], float):
 				return {"lit": -operand["lit"]}
 			return {"op": "neg", "args": [operand]}
@@ -264,6 +285,17 @@ class Parser:
 
 def parse(text: str, allow_columns: bool = False) -> dict:
 	return Parser(text, allow_columns=allow_columns).parse()
+
+
+def depth(node: dict) -> int:
+	"""Nesting depth of an AST, computed without recursion."""
+	deepest = 0
+	stack = [(node, 1)]
+	while stack:
+		current, level = stack.pop()
+		deepest = max(deepest, level)
+		stack.extend((arg, level + 1) for arg in current.get("args", ()))
+	return deepest
 
 
 def walk(node: dict):
