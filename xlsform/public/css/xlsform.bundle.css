@@ -1,0 +1,9 @@
+/* XLSForm Desk styles: validation report and preview. Uses Desk CSS variables, so light and dark themes both work. */
+.xf-report .xf-summary { margin-bottom: var(--margin-md); display: flex; gap: var(--margin-sm); flex-wrap: wrap; }
+.xf-report .xf-summary.xf-ok { color: var(--green-600); font-weight: 500; }
+.xf-report .xf-sheet { margin-top: var(--margin-lg); text-transform: lowercase; color: var(--text-muted); }
+.xf-report table.xf-issues td { vertical-align: top; }
+.xf-report table.xf-issues .indicator { margin-right: 6px; }
+.xf-report a.xf-copy { cursor: copy; font-family: var(--font-family-monospace, monospace); }
+.xf-preview-failures li { margin-bottom: 4px; }
+.xf-preview-note { color: var(--text-muted); font-size: var(--text-sm); margin-bottom: var(--margin-md); }

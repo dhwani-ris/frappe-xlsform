@@ -1,0 +1,250 @@
+{
+ "actions": [],
+ "autoname": "format:{form}-v{version}",
+ "creation": "2026-11-03 12:00:00.000000",
+ "description": "One uploaded workbook. Publishing (submitting) it is final; upload a new version to change the form.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "form",
+  "version",
+  "state",
+  "column_break_main",
+  "source_file",
+  "source_hash",
+  "publish_status",
+  "publish_error",
+  "report_section",
+  "error_count",
+  "column_break_counts",
+  "warning_count",
+  "column_break_counts_2",
+  "info_count",
+  "warnings_accepted",
+  "report_section_body",
+  "report_html",
+  "changes_section",
+  "change_html",
+  "data_section",
+  "validation_report",
+  "change_summary",
+  "parsed_json",
+  "compiled_meta",
+  "preview_json",
+  "test_results",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "form",
+   "fieldtype": "Link",
+   "label": "Form",
+   "options": "XLSForm",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Data",
+   "label": "Version",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Select",
+   "label": "State",
+   "options": "Uploaded\nInvalid\nValid\nPublished\nSuperseded",
+   "default": "Uploaded",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_file",
+   "fieldtype": "Attach",
+   "label": "Workbook",
+   "reqd": 1,
+   "read_only_depends_on": "eval:doc.docstatus!=0"
+  },
+  {
+   "fieldname": "source_hash",
+   "fieldtype": "Data",
+   "label": "Source Hash",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "publish_status",
+   "fieldtype": "Select",
+   "label": "Publish Status",
+   "options": "\nqueued\ncompiling\nmigrating\ndone\nfailed",
+   "read_only": 1,
+   "depends_on": "eval:doc.publish_status"
+  },
+  {
+   "fieldname": "publish_error",
+   "fieldtype": "Small Text",
+   "label": "Publish Error",
+   "read_only": 1,
+   "depends_on": "eval:doc.publish_status=='failed'"
+  },
+  {
+   "fieldname": "report_section",
+   "fieldtype": "Section Break",
+   "label": "Check results"
+  },
+  {
+   "fieldname": "error_count",
+   "fieldtype": "Int",
+   "label": "Errors",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_counts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "warning_count",
+   "fieldtype": "Int",
+   "label": "Warnings",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_counts_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "info_count",
+   "fieldtype": "Int",
+   "label": "Advice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warnings_accepted",
+   "fieldtype": "Check",
+   "label": "I understand the warnings",
+   "depends_on": "eval:doc.warning_count>0 && doc.docstatus==0",
+   "description": "Needed before publishing a version that has warnings"
+  },
+  {
+   "fieldname": "report_section_body",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "report_html",
+   "fieldtype": "HTML",
+   "label": "Report"
+  },
+  {
+   "fieldname": "changes_section",
+   "fieldtype": "Section Break",
+   "label": "Changes from the published version",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "change_html",
+   "fieldtype": "HTML",
+   "label": "Changes"
+  },
+  {
+   "fieldname": "data_section",
+   "fieldtype": "Section Break",
+   "label": "Internal",
+   "collapsible": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "validation_report",
+   "fieldtype": "JSON",
+   "label": "Validation Report",
+   "read_only": 1
+  },
+  {
+   "fieldname": "change_summary",
+   "fieldtype": "JSON",
+   "label": "Change Summary",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parsed_json",
+   "fieldtype": "JSON",
+   "label": "Parsed Form",
+   "read_only": 1
+  },
+  {
+   "fieldname": "compiled_meta",
+   "fieldtype": "JSON",
+   "label": "Compiled Meta",
+   "read_only": 1
+  },
+  {
+   "fieldname": "preview_json",
+   "fieldtype": "JSON",
+   "label": "Preview",
+   "read_only": 1
+  },
+  {
+   "fieldname": "test_results",
+   "fieldtype": "JSON",
+   "label": "Test Results",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "XLSForm Version",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1,
+   "search_index": 1
+  }
+ ],
+ "icon": "file-spreadsheet",
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-03 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "XLSForm",
+ "name": "XLSForm Version",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1
+  },
+  {
+   "role": "XLSForm Designer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "form,version,state",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "name",
+ "track_changes": 1
+}

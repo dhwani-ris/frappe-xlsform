@@ -291,6 +291,12 @@ CATALOGUE: dict[str, Entry] = {
 			N_("No change needed; the filter works on Desk and mForm."),
 		),
 		_e(
+			"W-WEB-FIELD",
+			3,
+			N_("{name} ({type}) can't be shown on the web form; it can be answered on Desk and mForm."),
+			N_("No change needed, or untick Allow Web Form on the form."),
+		),
+		_e(
 			"E-DEFAULT-DYNAMIC",
 			3,
 			N_('The default "{value}" can\'t be used; defaults must be fixed values, today() or now().'),

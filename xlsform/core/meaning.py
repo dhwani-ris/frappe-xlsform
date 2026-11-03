@@ -129,6 +129,10 @@ def check(form: Form, opts: Options) -> tuple[Analysis, list[Issue]]:
 	_check_cycles(form, analysis, issues)
 	_check_live(form, analysis, issues)
 	_check_filters(form, opts, analysis, issues)
+	if opts.allow_web:
+		for node in _questions(form):
+			if node.base_type in ("geopoint", "geotrace", "geoshape"):
+				issues.append(issue("W-WEB-FIELD", name=node.name, type=node.base_type, **_where(node, "type")))
 	return analysis, issues
 
 

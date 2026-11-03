@@ -1,0 +1,99 @@
+{
+ "actions": [],
+ "creation": "2026-11-03 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "role",
+  "can_read",
+  "can_create",
+  "can_write",
+  "can_delete",
+  "can_export",
+  "can_report",
+  "can_print",
+  "only_own"
+ ],
+ "fields": [
+  {
+   "fieldname": "role",
+   "fieldtype": "Link",
+   "label": "Role",
+   "options": "Role",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "can_read",
+   "fieldtype": "Check",
+   "label": "Read",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "can_create",
+   "fieldtype": "Check",
+   "label": "Create",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "can_write",
+   "fieldtype": "Check",
+   "label": "Edit",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "can_delete",
+   "fieldtype": "Check",
+   "label": "Delete",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "can_export",
+   "fieldtype": "Check",
+   "label": "Export",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "can_report",
+   "fieldtype": "Check",
+   "label": "Report",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "can_print",
+   "fieldtype": "Check",
+   "label": "Print",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "only_own",
+   "fieldtype": "Check",
+   "label": "Only their own records",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Users see only records they created"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-03 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "XLSForm",
+ "name": "XLSForm Access",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

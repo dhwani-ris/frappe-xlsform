@@ -240,6 +240,11 @@ def cases():
 			(simple(["select_one d", "d", "D", None], ["select_one v", "v", "V", "district = ${d}"], header=[*H, "choice_filter"], choices=[["list_name", "name", "label", "district"], ["d", "d1", "D1", None], ["v", "v1", "V1", "d1"]]), "f.xlsx", ValidateOptions(allow_web=False)),
 			{"row": 3},
 		),
+		"W-WEB-FIELD": (
+			(simple(["geopoint", "gps", "Location"]), "f.xlsx", None),
+			(simple(["geopoint", "gps", "Location"]), "f.xlsx", ValidateOptions(allow_web=False)),
+			{"row": 2},
+		),
 		"E-DEFAULT-DYNAMIC": (
 			(simple(["integer", "a", "A", None], ["integer", "b", "B", "${a}"], header=[*H, "default"]), "f.xlsx", None),
 			(simple(["integer", "a", "A", None], ["date", "b", "B", "today()"], header=[*H, "default"]), "f.xlsx", None),

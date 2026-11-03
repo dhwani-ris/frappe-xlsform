@@ -64,7 +64,9 @@ def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issu
 
 	settings, settings_cols = _read_settings(wb.sheet("settings"))
 	if not settings.get("form_id"):
-		settings["form_id"] = slug(_stem(filename)) or "form"
+		# pyxform's rule: no form_id means the file name. Keep it a valid form ID.
+		default = slug(_stem(filename))[:41] or "form"
+		settings["form_id"] = default if len(default) >= 3 else f"{default}_form"
 	default_language = language_name(settings.get("default_language", "")) or DEFAULT_LANGUAGE
 
 	choices_sheet = wb.sheet("choices")

@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:form_id",
+ "creation": "2026-11-03 12:00:00.000000",
+ "description": "An XLSForm: the stable identity of a form across all of its versions.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "form_id",
+  "title",
+  "status",
+  "column_break_main",
+  "current_version",
+  "data_doctype",
+  "default_language",
+  "retired_on",
+  "channels_section",
+  "allow_web",
+  "column_break_channels",
+  "allow_mobile",
+  "access_section",
+  "access"
+ ],
+ "fields": [
+  {
+   "fieldname": "form_id",
+   "fieldtype": "Data",
+   "label": "Form ID",
+   "reqd": 1,
+   "unique": 1,
+   "set_only_once": 1,
+   "in_list_view": 0,
+   "description": "From the settings sheet; lower-case letters, numbers and _"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nPublished\nRetired",
+   "default": "Draft",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "current_version",
+   "fieldtype": "Link",
+   "label": "Current Version",
+   "options": "XLSForm Version",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "data_doctype",
+   "fieldtype": "Link",
+   "label": "Data DocType",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "default_language",
+   "fieldtype": "Link",
+   "label": "Default Language",
+   "options": "Language"
+  },
+  {
+   "fieldname": "retired_on",
+   "fieldtype": "Datetime",
+   "label": "Retired On",
+   "read_only": 1,
+   "depends_on": "eval:doc.status=='Retired'"
+  },
+  {
+   "fieldname": "channels_section",
+   "fieldtype": "Section Break",
+   "label": "Channels"
+  },
+  {
+   "fieldname": "allow_web",
+   "fieldtype": "Check",
+   "label": "Allow Web Form",
+   "default": "1",
+   "description": "Logged-in users with access can fill the form at /xf/<form-id>"
+  },
+  {
+   "fieldname": "column_break_channels",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "allow_mobile",
+   "fieldtype": "Check",
+   "label": "Allow mForm",
+   "default": "1",
+   "description": "Listed in the mForm app when Mobile Control is installed"
+  },
+  {
+   "fieldname": "access_section",
+   "fieldtype": "Section Break",
+   "label": "Who can use the data",
+   "description": "Pick roles and what they may do. Users get roles from your administrator. Changes apply as soon as you save."
+  },
+  {
+   "fieldname": "access",
+   "fieldtype": "Table",
+   "label": "Access",
+   "options": "XLSForm Access"
+  }
+ ],
+ "icon": "table",
+ "links": [],
+ "modified": "2026-11-03 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "XLSForm",
+ "name": "XLSForm",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "XLSForm Designer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "title,status",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

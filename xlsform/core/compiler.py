@@ -76,6 +76,11 @@ ROW_BYTES = {
 NO_COLUMN = {"HTML", "Section Break", "Tab Break", "Column Break", "Table", "Table MultiSelect"}
 FIXED_ROW_BYTES = 3500
 
+# Web Form fields accept fewer types than DocFields (Frappe v16 WebFormField.fieldtype).
+# Table MultiSelect becomes a grid of the same pick rows; tabs become web form pages.
+WEB_FIELDTYPES = {"Table MultiSelect": "Table", "Tab Break": "Page Break", "Geolocation": None}
+WEB_UNSUPPORTED_TYPES = {"geopoint", "geotrace", "geoshape"}
+
 
 @dataclass
 class CompileSettings:
@@ -144,6 +149,7 @@ class _Compiler:
 			"form_id": self.form.form_id,
 			"version": self.version,
 			"default_language": self.lang,
+			"languages": self.form.languages,
 			"doctypes": {
 				"parent": self.parent_dt,
 				"repeats": dict(self.repeats),
@@ -229,12 +235,14 @@ class _Compiler:
 	def _fieldname(self, doctype: str, node: Node) -> str:
 		taken = self.taken_fieldnames.setdefault(doctype, set(RESERVED_PARENT_FIELDS))
 		prev = self.prev_fields.get(node.path)
-		if prev and prev.get("doctype") == doctype and prev["fieldname"] not in taken:
-			if self._compatible(prev, node):
+		if prev and prev.get("doctype") == doctype and not prev.get("retired_in"):
+			if not self._compatible(prev, node):
+				# never cast data in place: a changed question gets a new column (section 5)
+				name = f"{node.name}_v{_version_slug(self.version)}"
+				return sanitize(name, node.path + "@" + self.version, taken, self.s.reserved_fieldnames)
+			if prev["fieldname"] not in taken:
 				taken.add(prev["fieldname"])
 				return prev["fieldname"]
-			name = f"{node.name}_v{_version_slug(self.version)}"
-			return sanitize(name, node.path + "@" + self.version, taken, self.s.reserved_fieldnames)
 		return sanitize(node.name, node.path, taken, self.s.reserved_fieldnames)
 
 	def _compatible(self, prev: dict, node: Node) -> bool:
@@ -599,20 +607,15 @@ class _Compiler:
 				"hidden": 1,
 				"read_only": 1,
 			}
+			# Targets are never dropped: list, pick and repeat DocTypes carry over from the
+			# previous meta, so a retired column keeps pointing at the same DocType.
 			if entry["fieldtype"] == "Link":
-				field["options"] = self.lists.get(entry.get("list", ""), "")
-				field["length"] = self.list_lengths.get(entry.get("list", ""), 140)
-			if entry["fieldtype"] == "Table MultiSelect":
-				field["options"] = self.picks.get(entry.get("list", ""), "")
-			if entry["fieldtype"] == "Table":
-				field["options"] = self.repeats.get(entry["path"], "")
-			if field.get("options") == "" and entry["fieldtype"] in ("Link", "Table MultiSelect", "Table"):
-				field["options"] = entry.get("options", "")
-			if not field.get("options") and entry["fieldtype"] in ("Link", "Table MultiSelect", "Table"):
-				# the target no longer exists in this plan; keep the column as plain text
-				field["fieldtype"] = "Small Text" if entry["fieldtype"] == "Link" else entry["fieldtype"]
-				if field["fieldtype"] != "Small Text":
-					continue
+				field["options"] = self.lists[entry["list"]]
+				field["length"] = self.list_lengths[entry["list"]]
+			elif entry["fieldtype"] == "Table MultiSelect":
+				field["options"] = self.picks[entry["list"]]
+			elif entry["fieldtype"] == "Table":
+				field["options"] = self.repeats[entry["path"].split("@")[0]]
 			dt["fields"].append(field)
 			self.fields_meta.append(entry)
 
@@ -676,9 +679,13 @@ class _Compiler:
 		for f in parent["fields"]:
 			if f["fieldname"] in RESERVED_PARENT_FIELDS or f.get("hidden"):
 				continue
-			wf = {k: f[k] for k in ("fieldname", "fieldtype", "label", "options", "reqd", "depends_on",
+			fieldtype = WEB_FIELDTYPES.get(f["fieldtype"], f["fieldtype"])
+			if fieldtype is None:
+				continue
+			wf = {k: f[k] for k in ("fieldname", "label", "options", "reqd", "depends_on",
 				"mandatory_depends_on", "read_only", "read_only_depends_on", "description", "default")
 				if k in f and f[k] not in (None, "")}
+			wf["fieldtype"] = fieldtype
 			fields.append(wf)
 		return {
 			"title": _plain(self.form.title)[:LABEL_MAX],
