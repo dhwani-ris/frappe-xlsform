@@ -1,0 +1,67 @@
+name: UI tests
+
+# Playwright smoke suite against a real bench: designer journey, Desk and web form collection.
+on:
+  pull_request:
+  schedule:
+    - cron: "0 4 * * *"
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    services:
+      redis-cache:
+        image: redis:alpine
+        ports: ["13000:6379"]
+      redis-queue:
+        image: redis:alpine
+        ports: ["11000:6379"]
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Bench and site
+        env:
+          CI: "Yes"
+        run: |
+          sudo apt-get update && sudo apt-get install -y mariadb-client
+          pip install frappe-bench
+          bench init --frappe-branch version-16 --skip-redis-config-generation --python "$(which python)" ~/frappe-bench
+          cd ~/frappe-bench
+          bench get-app xlsform $GITHUB_WORKSPACE
+          bench new-site --db-root-password root --admin-password admin xlsform.localhost
+          bench --site xlsform.localhost install-app xlsform
+          bench --site xlsform.localhost set-config allow_tests true
+          bench --site xlsform.localhost execute xlsform.tests.ui_support.complete_setup
+          bench build --app xlsform
+          echo "127.0.0.1 xlsform.localhost" | sudo tee -a /etc/hosts
+      - name: Start server and worker
+        working-directory: /home/runner/frappe-bench
+        run: |
+          nohup bench serve --port 8000 > serve.log 2>&1 &
+          nohup bench worker --queue long,default,short > worker.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://xlsform.localhost:8000/api/method/ping && break; sleep 2; done
+      - name: Playwright
+        working-directory: ui-tests
+        env:
+          XLSFORM_BASE_URL: http://xlsform.localhost:8000
+          XLSFORM_PYTHON: /home/runner/frappe-bench/env/bin/python
+        run: |
+          npm ci || npm install
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: ui-tests/test-results

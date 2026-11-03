@@ -14,10 +14,15 @@ async function uploadThroughDialog(page, file) {
 	const dialog = page.locator(".modal:visible").filter({ hasText: "Upload a workbook" });
 	await expect(dialog).toBeVisible();
 	await dialog.locator('[data-fieldname="file_url"] button').first().click();
-	const uploader = page.locator(".modal:visible").filter({ hasText: /Drag and drop|Upload/ }).last();
+	const uploader = page
+		.locator(".modal:visible")
+		.filter({ hasText: /Drag and drop|Upload/ })
+		.last();
 	await uploader.locator('input[type="file"]').first().setInputFiles(file);
 	await uploader.getByRole("button", { name: "Upload" }).last().click();
-	await expect(dialog.locator('[data-fieldname="file_url"] a.attached-file-link')).toBeVisible({ timeout: 30_000 });
+	await expect(dialog.locator('[data-fieldname="file_url"] a.attached-file-link')).toBeVisible({
+		timeout: 30_000,
+	});
 	await dialog.getByRole("button", { name: "Upload and check" }).click();
 }
 
@@ -27,7 +32,9 @@ test("designer uploads, fixes, previews and publishes", async ({ page }) => {
 	await uploadThroughDialog(page, path.join(FIX, "broken.xlsx"));
 
 	// the version page shows the problem at its cell, in plain language
-	await expect(page).toHaveURL(new RegExp(`/(app|desk)/xlsform-version/${formId()}-v1`), { timeout: 30_000 });
+	await expect(page).toHaveURL(new RegExp(`/(app|desk)/xlsform-version/${formId()}-v1`), {
+		timeout: 30_000,
+	});
 	const report = page.locator(".xf-report");
 	await expect(report).toContainText("1 errors");
 	await expect(report.locator("a.xf-copy", { hasText: "survey!G5" })).toBeVisible();
@@ -36,7 +43,9 @@ test("designer uploads, fixes, previews and publishes", async ({ page }) => {
 	await expect(report).not.toContainText("Traceback");
 
 	// the highlighted workbook downloads (same URL the button opens)
-	await expect(page.getByRole("button", { name: "Download highlighted workbook" })).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "Download highlighted workbook" })
+	).toBeVisible();
 	const annotated = await page.request.get(
 		`/api/method/xlsform.api.forms.validation_report?version=${formId()}-v1&format=xlsx`
 	);
@@ -62,7 +71,9 @@ test("designer uploads, fixes, previews and publishes", async ({ page }) => {
 	await expect(preview.locator('.frappe-control[data-fieldname="hh_head"]')).toBeVisible();
 	await page.evaluate(() => xlsform.preview_dialog.set_value("hh_size", 99));
 	await preview.getByRole("button", { name: "Check answers" }).click();
-	const result = page.locator(".modal:visible").filter({ hasText: "These answers would be refused" });
+	const result = page
+		.locator(".modal:visible")
+		.filter({ hasText: "These answers would be refused" });
 	await expect(result).toContainText("Between 1 and 39");
 	await page.keyboard.press("Escape");
 	await page.keyboard.press("Escape");
@@ -71,17 +82,27 @@ test("designer uploads, fixes, previews and publishes", async ({ page }) => {
 	await page.reload();
 	await page.getByRole("button", { name: "Publish" }).click();
 	await page.locator(".modal:visible").getByRole("button", { name: "Yes" }).click();
-	await expect(page.getByText("Published: this is the version collectors use.")).toBeVisible({ timeout: 60_000 });
+	await expect(page.getByText("Published: this is the version collectors use.")).toBeVisible({
+		timeout: 60_000,
+	});
 });
 
 test("collector fills the form on Desk with live skip logic", async ({ page }) => {
-	const dt = await page.evaluate(
-		async (fid) => (await frappe.db.get_value("XLSForm", fid, "data_doctype")).message.data_doctype,
-		formId()
-	).catch(async () => null);
+	const dt = await page
+		.evaluate(
+			async (fid) =>
+				(
+					await frappe.db.get_value("XLSForm", fid, "data_doctype")
+				).message.data_doctype,
+			formId()
+		)
+		.catch(async () => null);
 	await page.goto("/desk");
 	const doctype = await page.evaluate(
-		async (fid) => (await frappe.db.get_value("XLSForm", fid, "data_doctype")).message.data_doctype,
+		async (fid) =>
+			(
+				await frappe.db.get_value("XLSForm", fid, "data_doctype")
+			).message.data_doctype,
 		formId()
 	);
 	expect(doctype || dt).toBeTruthy();
@@ -92,11 +113,15 @@ test("collector fills the form on Desk with live skip logic", async ({ page }) =
 	await expect(page.locator('.frappe-control[data-fieldname="hh_head"]')).toBeVisible();
 
 	// saving with problems lists every one of them
-	await page.evaluate(() => cur_frm.set_value({ hh_head: "Asha", hh_size: 50, district: "d1", village: "v1", ack: 1 }));
+	await page.evaluate(() =>
+		cur_frm.set_value({ hh_head: "Asha", hh_size: 50, district: "d1", village: "v1", ack: 1 })
+	);
 	await page.evaluate(() => cur_frm.save().catch(() => null));
 	const msg = page.locator(".modal:visible .msgprint");
 	await expect(msg).toContainText("Between 1 and 39", { timeout: 15_000 });
-	const msgDialog = page.locator(".modal:visible").filter({ hasText: "Please check these answers" });
+	const msgDialog = page
+		.locator(".modal:visible")
+		.filter({ hasText: "Please check these answers" });
 	await msgDialog.locator(".btn-modal-close").click();
 	await expect(msgDialog).toBeHidden();
 

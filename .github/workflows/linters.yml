@@ -1,0 +1,36 @@
+name: Linters
+
+on:
+  pull_request:
+  push:
+    branches: [develop, version-16]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: pre-commit/action@v3.0.1
+
+  semgrep:
+    name: Frappe semgrep rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: frappe/semgrep-rules
+          path: frappe-semgrep-rules
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install semgrep
+      - run: semgrep ci --config ./frappe-semgrep-rules/rules --exclude ui-tests --exclude frappe-semgrep-rules
+        env:
+          SEMGREP_RULES: ""

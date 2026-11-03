@@ -2,104 +2,86 @@ name: CI
 
 on:
   push:
-    branches:
-      - develop
+    branches: [develop, version-16]
   pull_request:
 
 concurrency:
-  group: develop-xlsform-${{ github.event.number }}
+  group: ci-xlsform-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  tests:
+  core:
+    name: Core (unit + conformance, no site)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    name: Server
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Frappe source for the conformance runner (cint/flt/cstr)
+        run: git clone --depth 1 --branch version-16 https://github.com/frappe/frappe.git /tmp/frappe
+      - name: Test
+        env:
+          FRAPPE_APP_PATH: /tmp/frappe
+        run: |
+          pip install "openpyxl~=3.1.5" pytest pytest-cov
+          pytest xlsform/tests/unit xlsform/tests/conformance \
+            --cov=xlsform/core --cov-report=term-missing
+          # REQUIREMENTS.md section 13: 95% line coverage on the compiler
+          coverage report --include="xlsform/core/compiler.py" --fail-under=95
 
+  server:
+    name: Server (Frappe v16)
+    runs-on: ubuntu-latest
     services:
       redis-cache:
         image: redis:alpine
-        ports:
-          - 13000:6379
+        ports: ["13000:6379"]
       redis-queue:
         image: redis:alpine
-        ports:
-          - 11000:6379
+        ports: ["11000:6379"]
       mariadb:
         image: mariadb:11.8
         env:
           MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 3306:3306
+        ports: ["3306:3306"]
         options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=3
-
     steps:
-      - name: Clone
-        uses: actions/checkout@v6
-
-      - name: Find tests
-        run: |
-          echo "Finding tests"
-          grep -rn "def test" > /dev/null
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.14'
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
-          check-latest: true
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/*requirements.txt', '**/pyproject.toml', '**/setup.py', '**/setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-            ${{ runner.os }}-
-
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: 'echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT'
-
-      - uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Install MariaDB Client
-        run: |
-          sudo apt update
-          sudo apt-get install mariadb-client
-
-      - name: Setup
+      - name: Install MariaDB client
+        run: sudo apt-get update && sudo apt-get install -y mariadb-client
+      - name: Bench
         run: |
           pip install frappe-bench
-          bench init --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
-
-      - name: Install
+          bench init --frappe-branch version-16 --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
+      - name: Install app
         working-directory: /home/runner/frappe-bench
+        env:
+          CI: "Yes"
         run: |
           bench get-app xlsform $GITHUB_WORKSPACE
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
           bench --site test_site install-app xlsform
-          bench build
-        env:
-          CI: 'Yes'
-
-      - name: Run Tests
+          bench build --app xlsform
+      - name: Run tests
         working-directory: /home/runner/frappe-bench
+        env:
+          FRAPPE_APP_PATH: /home/runner/frappe-bench/apps/frappe
         run: |
           bench --site test_site set-config allow_tests true
           bench --site test_site run-tests --app xlsform
-        env:
-          TYPE: server
+      - name: Uninstall cleanly
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench --site test_site execute frappe.db.set_single_value --args '["XLSForm Settings", "allow_data_removal_on_uninstall", 1]'
+          bench --site test_site uninstall-app xlsform --yes --no-backup

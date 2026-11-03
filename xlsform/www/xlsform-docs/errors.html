@@ -1,0 +1,36 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="xf-docs">
+	<h1>{{ _("XLSForm issue codes") }}</h1>
+	<p class="text-muted">
+		{{ _("Every problem found in an uploaded workbook has a code. Errors block publishing; warnings need “I understand the warnings”; advice is optional. Download the highlighted copy of your workbook to see each problem in its cell.") }}
+	</p>
+	{% for stage in stages %}
+	<h2 class="xf-docs-stage">{{ stage.number }}. {{ _(stage.name) }}</h2>
+	{% for e in stage.entries %}
+	<section class="xf-docs-entry" id="{{ e.code | e }}">
+		<h3><a href="#{{ e.code | e }}">{{ e.code | e }}</a> <span class="xf-docs-sev xf-{{ e.severity | e }}">{{ _(e.severity_text) }}</span></h3>
+		<p><strong>{{ _("What it means") }}:</strong> {{ e.message | e }}</p>
+		<p><strong>{{ _("How to fix it") }}:</strong> {{ e.suggestion | e }}</p>
+		<blockquote>
+			{% if e.example.where %}<code>{{ e.example.where | e }}</code><br>{% endif %}
+			{{ e.example.message | e }}<br>→ {{ e.example.suggestion | e }}
+		</blockquote>
+	</section>
+	{% endfor %}
+	{% endfor %}
+</div>
+<style>
+	.xf-docs { max-width: 820px; margin: 0 auto 4rem; padding: 0 16px; }
+	.xf-docs-stage { margin-top: 2.5rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border-color, #e5e7eb); }
+	.xf-docs-entry { padding: 1rem 0; border-bottom: 1px solid var(--border-color, #f1f1f1); scroll-margin-top: 80px; }
+	.xf-docs-entry:target { background: var(--yellow-50, #fffbea); }
+	.xf-docs-entry h3 { font-size: 1.1rem; display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+	.xf-docs-entry blockquote { margin: .5rem 0 0; padding: .5rem .75rem; border-left: 3px solid var(--gray-300, #d1d5db); color: var(--text-muted, #555); font-size: .92rem; }
+	.xf-docs-sev { font-size: .75rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; }
+	.xf-docs-sev.xf-error { background: #fde8e8; color: #9b1c1c; }
+	.xf-docs-sev.xf-warning { background: #fdf6b2; color: #8e4b10; }
+	.xf-docs-sev.xf-info { background: #e1effe; color: #1e429f; }
+</style>
+{% endblock %}

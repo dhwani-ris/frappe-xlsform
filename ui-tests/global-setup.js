@@ -8,7 +8,9 @@ const { request } = require("@playwright/test");
 module.exports = async (config) => {
 	const out = path.join(__dirname, ".fixtures");
 	fs.mkdirSync(out, { recursive: true });
-	const python = process.env.XLSFORM_PYTHON || path.join(process.env.HOME, "bench/frappe-bench/env/bin/python");
+	const python =
+		process.env.XLSFORM_PYTHON ||
+		path.join(process.env.HOME, "bench/frappe-bench/env/bin/python");
 	const formId = "ui_" + Date.now().toString(36);
 	execFileSync(python, [path.join(__dirname, "make_fixtures.py"), out, formId], {
 		cwd: path.join(__dirname, ".."),

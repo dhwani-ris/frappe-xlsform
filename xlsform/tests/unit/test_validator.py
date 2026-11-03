@@ -105,7 +105,15 @@ def cases():
 			{},
 		),
 		"E-SHEET-MISSING": (
-			(make_xlsx(survey=None, settings=[["form_id"], ["abc_form"]], extra_sheets={"questions": [H, ["text", "a", "A"]]}), "f.xlsx", None),
+			(
+				make_xlsx(
+					survey=None,
+					settings=[["form_id"], ["abc_form"]],
+					extra_sheets={"questions": [H, ["text", "a", "A"]]},
+				),
+				"f.xlsx",
+				None,
+			),
 			(make_xlsx(survey=[H, ["text", "a", "A"]]), "f.xlsx", None),
 			{},
 		),
@@ -603,12 +611,25 @@ def cases():
 			{"sheet": "settings", "cell": "A2"},
 		),
 		"W-SHEET-UNKNOWN": (
-			(make_xlsx(survey=[H, ["text", "a", "A"]], extra_sheets={"stettings": [["form_id"], ["abc_form"]]}), "f.xlsx", None),
+			(
+				make_xlsx(
+					survey=[H, ["text", "a", "A"]], extra_sheets={"stettings": [["form_id"], ["abc_form"]]}
+				),
+				"f.xlsx",
+				None,
+			),
 			(make_xlsx(survey=[H, ["text", "a", "A"]], settings=[["form_id"], ["abc_form"]]), "f.xlsx", None),
 			{},
 		),
 		"E-SHEET-UNSUPPORTED": (
-			(make_xlsx(survey=[H, ["text", "a", "A"]], extra_sheets={"entities": [["dataset", "label"], ["trees", "Tree"]]}), "f.xlsx", None),
+			(
+				make_xlsx(
+					survey=[H, ["text", "a", "A"]],
+					extra_sheets={"entities": [["dataset", "label"], ["trees", "Tree"]]},
+				),
+				"f.xlsx",
+				None,
+			),
 			(make_xlsx(survey=[H, ["text", "a", "A"]]), "f.xlsx", None),
 			{"sheet": "entities"},
 		),

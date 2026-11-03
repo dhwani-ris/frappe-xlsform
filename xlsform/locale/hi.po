@@ -1,0 +1,1643 @@
+# Hindi translations for XLSForm.
+# Copyright (C) 2026 Dhwani RIS
+# This file is distributed under the same license as the XLSForm project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: XLSForm VERSION\n"
+"Report-Msgid-Bugs-To: deepak.batra@dhwaniris.com\n"
+"POT-Creation-Date: 2026-11-03 08:39+0000\n"
+"PO-Revision-Date: 2026-11-03 08:39+0000\n"
+"Last-Translator: deepak.batra@dhwaniris.com\n"
+"Language: hi\n"
+"Language-Team: Hindi\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: xlsform/core/issues.py:274
+#, python-brace-format
+msgid "\"{column}\" uses {name}, whose calculation can only run when the form is saved."
+msgstr "\"{column}\" में {name} का उपयोग है, जिसकी गणना केवल फ़ॉर्म सहेजते समय हो सकती है।"
+
+#: xlsform/core/issues.py:113
+#, python-brace-format
+msgid "\"{name}\" can't be used as a name: {reason}."
+msgstr "\"{name}\" को नाम के रूप में इस्तेमाल नहीं किया जा सकता: {reason}।"
+
+#: xlsform/core/issues.py:158
+#, python-brace-format
+msgid "\"{type}\" (row {row}) can't be collected in this app and will be ignored."
+msgstr "\"{type}\" (पंक्ति {row}) इस ऐप में एकत्र नहीं किया जा सकता और अनदेखा किया जाएगा।"
+
+#: xlsform/core/issues.py:146
+#, python-brace-format
+msgid "\"{type}\" isn't a question type."
+msgstr "\"{type}\" कोई प्रश्न प्रकार नहीं है।"
+
+#: xlsform/core/issues.py:152
+#, python-brace-format
+msgid "\"{type}\" questions aren't supported yet (row {row})."
+msgstr "\"{type}\" प्रश्न अभी समर्थित नहीं हैं (पंक्ति {row})।"
+
+#: xlsform/core/meaning.py:174
+msgid ", or use select_multiple"
+msgstr ", या select_multiple का उपयोग करें"
+
+#: xlsform/core/meaning.py:585
+msgid "1 value"
+msgstr "1 मान"
+
+#. Header text in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:3
+msgid "<span class=\"h4\"><b>Forms built in Excel</b></span>"
+msgstr "<span class=\"h4\"><b>Excel में बने फ़ॉर्म</b></span>"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.py:51
+msgid "A published form can't be deleted, because its data would be lost. Retire it instead."
+msgstr "प्रकाशित फ़ॉर्म हटाया नहीं जा सकता, क्योंकि उसका डेटा खो जाएगा। इसके बजाय इसे बंद करें।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:53
+msgid "A published version can't be cancelled. Upload a new version, or retire the form."
+msgstr "प्रकाशित संस्करण रद्द नहीं किया जा सकता। नया संस्करण अपलोड करें, या फ़ॉर्म बंद करें।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:120
+msgid "A published version can't be edited; to change the form later, upload a new version."
+msgstr "प्रकाशित संस्करण बदला नहीं जा सकता; बाद में फ़ॉर्म बदलने के लिए नया संस्करण अपलोड करें।"
+
+#. Label of the access (Table) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:118
+msgid "Access"
+msgstr "पहुँच"
+
+#: xlsform/core/issues.py:295
+#, python-brace-format
+msgid "Add a \"{choice_column}\" column to the choices sheet."
+msgstr "choices शीट में \"{choice_column}\" कॉलम जोड़ें।"
+
+#: xlsform/core/issues.py:84
+#, python-brace-format
+msgid "Add a column named {column} in row 1."
+msgstr "पंक्ति 1 में {column} नाम का कॉलम जोड़ें।"
+
+#: xlsform/core/issues.py:430
+msgid "Add a label."
+msgstr "एक लेबल जोड़ें।"
+
+#: xlsform/core/structure.py:101
+#, python-brace-format
+msgid "Add a question type for {name} in the type column."
+msgstr "type कॉलम में {name} के लिए प्रश्न प्रकार जोड़ें।"
+
+#: xlsform/core/issues.py:108
+#, python-brace-format
+msgid "Add a short name, e.g. {example}."
+msgstr "एक छोटा नाम जोड़ें, जैसे {example}।"
+
+#: xlsform/core/issues.py:126
+#, python-brace-format
+msgid "Add an {end} row where the {kind} should end."
+msgstr "जहाँ {kind} समाप्त होना चाहिए, वहाँ {end} पंक्ति जोड़ें।"
+
+#: xlsform/core/issues.py:171
+msgid "Add choices for it on the choices sheet."
+msgstr "choices शीट पर इसके विकल्प जोड़ें।"
+
+#: xlsform/core/meaning.py:244
+#, python-brace-format
+msgid "Add it to the choices sheet, or fix the list name after {type}."
+msgstr "इसे choices शीट में जोड़ें, या {type} के बाद सूची का नाम ठीक करें।"
+
+#: xlsform/core/meaning.py:241
+#, python-brace-format
+msgid "Add it to the choices sheet, or fix the spelling (found: \"{guess}\")."
+msgstr "इसे choices शीट में जोड़ें, या वर्तनी ठीक करें (मिला: \"{guess}\")।"
+
+#: xlsform/core/issues.py:211
+msgid "Add questions between begin_repeat and end_repeat, or remove the repeat."
+msgstr "begin_repeat और end_repeat के बीच प्रश्न जोड़ें, या repeat हटा दें।"
+
+#. Label of the info_count (Int) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:127
+msgid "Advice"
+msgstr "सलाह"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:205
+msgid "All answers pass"
+msgstr "सभी उत्तर सही हैं"
+
+#. Label of the allow_web (Check) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:94
+msgid "Allow Web Form"
+msgstr "वेब फ़ॉर्म की अनुमति दें"
+
+#. Label of the allow_mobile (Check) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:105
+msgid "Allow mForm"
+msgstr "mForm की अनुमति दें"
+
+#. Label of the allow_data_removal_on_uninstall (Check) field in DocType
+#. 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:101
+msgid "Allow uninstall to delete form data"
+msgstr "अनइंस्टॉल को फ़ॉर्म डेटा हटाने की अनुमति दें"
+
+#. Label of the amended_from (Link) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:215
+msgid "Amended From"
+msgstr "संशोधित से"
+
+#. Description of a DocType
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:6
+msgid "An XLSForm: the stable identity of a form across all of its versions."
+msgstr "एक XLSForm: अपने सभी संस्करणों में फ़ॉर्म की स्थायी पहचान।"
+
+#: xlsform/core/issues.py:326
+#, python-brace-format
+msgid "Appearance \"{appearance}\" (row {row}) isn't supported and will be ignored."
+msgstr "रूप \"{appearance}\" (पंक्ति {row}) समर्थित नहीं है और अनदेखा किया जाएगा।"
+
+#: xlsform/api/forms.py:102
+msgid "Attach an .xlsx workbook."
+msgstr "एक .xlsx वर्कबुक संलग्न करें।"
+
+#. Label of the behaviour_section (Section Break) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:70
+msgid "Behaviour"
+msgstr "व्यवहार"
+
+#: xlsform/core/issues.py:281
+msgid "Break the loop so one of them doesn't use the other."
+msgstr "चक्र तोड़ें ताकि इनमें से कोई एक दूसरे का उपयोग न करे।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:130
+msgid "Building the form…"
+msgstr "फ़ॉर्म बनाया जा रहा है…"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:208
+msgid "Calculated values:"
+msgstr "गणना किए गए मान:"
+
+#: xlsform/public/js/xlsform.bundle.js:108 xlsform/runtime/validation.py:176
+msgid "Cell"
+msgstr "सेल"
+
+#. Label of the change_summary (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:185
+msgid "Change Summary"
+msgstr "बदलाव सारांश"
+
+#: xlsform/core/issues.py:351
+#, python-brace-format
+msgid "Change form_id to {fixed} in the settings sheet to keep them the same."
+msgstr "दोनों एक जैसे रखने के लिए settings शीट में form_id को {fixed} कर दें।"
+
+#: xlsform/core/issues.py:134
+#, python-brace-format
+msgid "Change row {row} to {expected}, or add the missing {closing_end}."
+msgstr "पंक्ति {row} को {expected} में बदलें, या छूटी हुई {closing_end} जोड़ें।"
+
+#. Label of the change_view (HTML) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:155
+msgid "Changes"
+msgstr "बदलाव"
+
+#. Label of the change_html (Long Text) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:179
+msgid "Changes HTML"
+msgstr "बदलाव HTML"
+
+#. Label of the changes_section (Section Break) field in DocType 'XLSForm
+#. Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:149
+msgid "Changes from the published version"
+msgstr "प्रकाशित संस्करण से बदलाव"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.py:30
+msgid "Channel changes take effect when the next version is published."
+msgstr "चैनल के बदलाव अगला संस्करण प्रकाशित होने पर लागू होंगे।"
+
+#. Label of the channels_section (Section Break) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:89
+msgid "Channels"
+msgstr "चैनल"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:171
+msgid "Check answers"
+msgstr "उत्तर जाँचें"
+
+#. Label of the report_section (Section Break) field in DocType 'XLSForm
+#. Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:102
+msgid "Check results"
+msgstr "जाँच के परिणाम"
+
+#: xlsform/core/issues.py:235
+#, python-brace-format
+msgid "Check the formula: {expr}"
+msgstr "सूत्र जाँचें: {expr}"
+
+#: xlsform/core/meaning.py:559
+msgid "Check the spelling of the question name."
+msgstr "प्रश्न के नाम की वर्तनी जाँचें।"
+
+#: xlsform/public/js/xlsform.bundle.js:64
+msgid "Checking the workbook…"
+msgstr "वर्कबुक जाँची जा रही है…"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:64
+msgid "Checking the workbook… this page updates when it's done."
+msgstr "वर्कबुक जाँची जा रही है… पूरा होने पर यह पृष्ठ अपडेट हो जाएगा।"
+
+#: xlsform/core/validate.py:120
+#, python-brace-format
+msgid "Checks for {what} will run after the errors above are fixed."
+msgstr "{what} की जाँच ऊपर की त्रुटियाँ ठीक होने के बाद होगी।"
+
+#: xlsform/core/issues.py:176
+#, python-brace-format
+msgid "Choice \"{choice}\" appears twice in list \"{list}\" (choices rows {rows})."
+msgstr "विकल्प \"{choice}\" सूची \"{list}\" में दो बार है (choices पंक्तियाँ {rows})।"
+
+#: xlsform/core/issues.py:170
+#, python-brace-format
+msgid "Choice list \"{list}\" has no choices."
+msgstr "विकल्प सूची \"{list}\" में कोई विकल्प नहीं है।"
+
+#: xlsform/core/issues.py:188
+#, python-brace-format
+msgid "Choice list \"{list}\" has {count} choices; the limit is {limit}."
+msgstr "विकल्प सूची \"{list}\" में {count} विकल्प हैं; सीमा {limit} है।"
+
+#: xlsform/public/js/xlsform.bundle.js:48
+msgid "Choice list CSV (only for select_one_from_file)"
+msgstr "विकल्प सूची CSV (केवल select_one_from_file के लिए)"
+
+#: xlsform/core/issues.py:182
+#, python-brace-format
+msgid "Choice name \"{choice}\" in list \"{list}\" {reason}."
+msgstr "सूची \"{list}\" में विकल्प का नाम \"{choice}\" {reason}।"
+
+#: xlsform/runtime/validation.py:182
+msgid "Click to copy"
+msgstr "कॉपी करने के लिए क्लिक करें"
+
+#: xlsform/core/annotate.py:68 xlsform/runtime/validation.py:176
+msgid "Code"
+msgstr "कोड"
+
+#: xlsform/core/issues.py:89
+#, python-brace-format
+msgid "Column \"{column}\" isn't recognised and will be ignored."
+msgstr "कॉलम \"{column}\" पहचाना नहीं गया और अनदेखा किया जाएगा।"
+
+#: xlsform/core/issues.py:95
+#, python-brace-format
+msgid "Column \"{column}\" isn't supported yet and will be ignored."
+msgstr "कॉलम \"{column}\" अभी समर्थित नहीं है और अनदेखा किया जाएगा।"
+
+#: xlsform/core/issues.py:101
+#, python-brace-format
+msgid "Column \"{column}\" isn't supported."
+msgstr "कॉलम \"{column}\" समर्थित नहीं है।"
+
+#. Label of the compiled_meta (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:197
+msgid "Compiled Meta"
+msgstr "संकलित मेटा"
+
+#: xlsform/core/issues.py:411 xlsform/core/issues.py:417
+#: xlsform/core/issues.py:423
+msgid "Confirm this is intended."
+msgstr "पुष्टि करें कि यही इरादा है।"
+
+#. Label of the can_create (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:39
+msgid "Create"
+msgstr "बनाएँ"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:131
+msgid "Creating the data tables…"
+msgstr "डेटा तालिकाएँ बनाई जा रही हैं…"
+
+#. Label of the current_version (Link) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:61
+msgid "Current Version"
+msgstr "वर्तमान संस्करण"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:18
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:23
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:28
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:35
+msgid "Data"
+msgstr "डेटा"
+
+#. Label of the data_doctype (Link) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:69
+msgid "Data DocType"
+msgstr "डेटा DocType"
+
+#. Label of the default_language (Link) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:76
+msgid "Default Language"
+msgstr "डिफ़ॉल्ट भाषा"
+
+#. Label of the default_language (Link) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:83
+msgid "Default language"
+msgstr "डिफ़ॉल्ट भाषा"
+
+#. Label of the can_delete (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:53
+msgid "Delete"
+msgstr "हटाएँ"
+
+#: xlsform/core/issues.py:140
+#, python-brace-format
+msgid "Delete row {row}, or add the matching begin row above it."
+msgstr "पंक्ति {row} हटाएँ, या उसके ऊपर मिलती begin पंक्ति जोड़ें।"
+
+#. Label of the designers_can_publish (Check) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:94
+msgid "Designers can publish"
+msgstr "डिज़ाइनर प्रकाशित कर सकते हैं"
+
+#: xlsform/core/structure.py:210
+#, python-brace-format
+msgid "Did you mean \"{guess}\"?"
+msgstr "क्या आपका मतलब \"{guess}\" था?"
+
+#: xlsform/core/issues.py:71
+#, python-brace-format
+msgid "Did you mean \"{guess}\"? Rename the sheet if so."
+msgstr "क्या आपका मतलब \"{guess}\" था? यदि हाँ, तो शीट का नाम बदलें।"
+
+#: xlsform/core/meaning.py:557
+#, python-brace-format
+msgid "Did you mean ${{{guess}}}?"
+msgstr "क्या आपका मतलब ${{{guess}}} था?"
+
+#: xlsform/core/meaning.py:179
+#, python-brace-format
+msgid "Did you mean {guess}?"
+msgstr "क्या आपका मतलब {guess} था?"
+
+#: xlsform/public/js/xlsform.bundle.js:115
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:29
+msgid "Download highlighted workbook"
+msgstr "चिह्नित वर्कबुक डाउनलोड करें"
+
+#: xlsform/public/js/xlsform.bundle.js:34
+msgid "Download the starter workbook"
+msgstr "शुरुआती वर्कबुक डाउनलोड करें"
+
+#. Option for the 'Status' (Select) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:48
+msgid "Draft"
+msgstr "मसौदा"
+
+#. Label of the can_write (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:46
+msgid "Edit"
+msgstr "संपादित करें"
+
+#: xlsform/core/issues.py:356
+msgid "Encrypted forms (public_key) aren't supported."
+msgstr "एन्क्रिप्टेड फ़ॉर्म (public_key) समर्थित नहीं हैं।"
+
+#. Label of the error_count (Int) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:107
+msgid "Errors"
+msgstr "त्रुटियाँ"
+
+#: xlsform/www/xlsform-docs/errors.html:7
+msgid "Every problem found in an uploaded workbook has a code. Errors block publishing; warnings need “I understand the warnings”; advice is optional. Download the highlighted copy of your workbook to see each problem in its cell."
+msgstr "अपलोड की गई वर्कबुक में मिली हर समस्या का एक कोड होता है। त्रुटियाँ प्रकाशन रोकती हैं; चेतावनियों के लिए “मैं चेतावनियाँ समझता/समझती हूँ” चुनना होता है; सलाह वैकल्पिक है। हर समस्या उसके सेल में देखने के लिए अपनी वर्कबुक की चिह्नित प्रति डाउनलोड करें।"
+
+#: xlsform/core/issues.py:369
+msgid "Example: concat(${{village}}, '-', ${{hh_head}})"
+msgstr "उदाहरण: concat(${{village}}, '-', ${{hh_head}})"
+
+#: xlsform/core/issues.py:259
+#, python-brace-format
+msgid "Example: {example}"
+msgstr "उदाहरण: {example}"
+
+#. Name of a Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:14
+msgid "Excel Forms"
+msgstr "Excel फ़ॉर्म"
+
+#. Label of the can_export (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:60
+msgid "Export"
+msgstr "निर्यात"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:26
+msgid "Export CSV"
+msgstr "CSV निर्यात करें"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:21
+msgid "Export Excel"
+msgstr "Excel निर्यात करें"
+
+#: xlsform/runtime/apply.py:147
+#, python-brace-format
+msgid "Field {0} of {1} is a {2} on the site but the form needs a {3}."
+msgstr "साइट पर {1} का फ़ील्ड {0} एक {2} है, पर फ़ॉर्म को {3} चाहिए।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:67
+msgid "Fix the errors below in Excel, then upload the corrected workbook."
+msgstr "नीचे दी गई त्रुटियाँ Excel में ठीक करें, फिर सुधारी हुई वर्कबुक अपलोड करें।"
+
+#: xlsform/api/forms.py:266
+msgid "Fix the errors first; answers can only be checked on a form without errors."
+msgstr "पहले त्रुटियाँ ठीक करें; उत्तर केवल त्रुटि-रहित फ़ॉर्म पर जाँचे जा सकते हैं।"
+
+#: xlsform/api/forms.py:251
+msgid "Fix the errors first; the preview needs a form without errors."
+msgstr "पहले त्रुटियाँ ठीक करें; पूर्वावलोकन के लिए त्रुटि-रहित फ़ॉर्म चाहिए।"
+
+#. Label of the form (Link) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:50
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:43
+msgid "Form"
+msgstr "फ़ॉर्म"
+
+#. Label of the form_id (Data) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:29
+msgid "Form ID"
+msgstr "फ़ॉर्म ID"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.py:17
+msgid "Form ID must start with a letter and use only a-z, 0-9 and _ (3 to 41 characters)."
+msgstr "फ़ॉर्म ID अक्षर से शुरू होनी चाहिए और केवल a-z, 0-9 और _ का उपयोग करे (3 से 41 वर्ण)।"
+
+#. Label of a Card Break in the Excel Forms Workspace
+#. Label of a shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:20
+msgid "Forms"
+msgstr "फ़ॉर्म"
+
+#: xlsform/core/validate.py:107
+msgid "Frappe limits"
+msgstr "Frappe की सीमाएँ"
+
+#. Description of the 'Form ID' (Data) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:34
+msgid "From the settings sheet; lower-case letters, numbers and _"
+msgstr "settings शीट से; छोटे अक्षर, अंक और _"
+
+#: xlsform/runtime/apply.py:129
+#, python-brace-format
+msgid "Generated by XLSForm from form {0}. Change the form, not this DocType."
+msgstr "फ़ॉर्म {0} से XLSForm द्वारा बनाया गया। फ़ॉर्म बदलें, यह DocType नहीं।"
+
+#: xlsform/www/xlsform-docs/errors.html:15
+msgid "How to fix it"
+msgstr "इसे कैसे ठीक करें"
+
+#. Label of the warnings_accepted (Check) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:133
+msgid "I understand the warnings"
+msgstr "मैं चेतावनियाँ समझता/समझती हूँ"
+
+#. Label of the data_section (Section Break) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:160
+msgid "Internal"
+msgstr "आंतरिक"
+
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:60
+msgid "Invalid"
+msgstr "अमान्य"
+
+#: xlsform/core/issues.py:405
+msgid "Keep the old name if it's the same question."
+msgstr "यदि यह वही प्रश्न है तो पुराना नाम रखें।"
+
+#. Label of the max_upload_mb (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:30
+msgid "Largest workbook (MB)"
+msgstr "सबसे बड़ी वर्कबुक (MB)"
+
+#. Label of the limits_section (Section Break) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:25
+msgid "Limits"
+msgstr "सीमाएँ"
+
+#. Description of the 'Allow mForm' (Check) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:107
+msgid "Listed in the mForm app when Mobile Control is installed"
+msgstr "Mobile Control इंस्टॉल होने पर mForm ऐप में दिखेगा"
+
+#. Description of the 'Allow Web Form' (Check) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:96
+msgid "Logged-in users with access fill it at /xf/your-form-id"
+msgstr "पहुँच वाले लॉग-इन उपयोगकर्ता इसे /xf/your-form-id पर भरते हैं"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:164
+msgid "Long choice lists show their first 1,000 choices here."
+msgstr "लंबी विकल्प सूचियों के यहाँ पहले 1,000 विकल्प दिखते हैं।"
+
+#. Label of the max_expression_length (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:55
+msgid "Longest formula (characters)"
+msgstr "सबसे लंबा सूत्र (वर्ण)"
+
+#. Label of the max_choices_per_list (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:44
+msgid "Most choices per list"
+msgstr "प्रति सूची अधिकतम विकल्प"
+
+#. Label of the max_questions (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:37
+msgid "Most questions per form"
+msgstr "प्रति फ़ॉर्म अधिकतम प्रश्न"
+
+#: xlsform/core/issues.py:396
+msgid "Move some into a repeat, or shorten long choice names."
+msgstr "कुछ प्रश्न किसी repeat में ले जाएँ, या लंबे विकल्प नाम छोटे करें।"
+
+#: xlsform/core/issues.py:205
+#, python-brace-format
+msgid "Move {inner} out, or flatten it into the outer repeat."
+msgstr "{inner} को बाहर ले जाएँ, या उसे बाहरी repeat में मिला दें।"
+
+#: xlsform/runtime/validation.py:209
+msgid "Moved into or out of a repeat (answers do not move)"
+msgstr "repeat के अंदर या बाहर ले जाया गया (उत्तर साथ नहीं जाते)"
+
+#. Description of the 'I understand the warnings' (Check) field in DocType
+#. 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:135
+msgid "Needed before publishing a version that has warnings"
+msgstr "चेतावनियों वाले संस्करण को प्रकाशित करने से पहले ज़रूरी"
+
+#: xlsform/runtime/validation.py:206
+msgid "New questions"
+msgstr "नए प्रश्न"
+
+#: xlsform/core/issues.py:315
+msgid "No change needed, or untick Allow Web Form on the form."
+msgstr "कोई बदलाव ज़रूरी नहीं, या फ़ॉर्म पर \"वेब फ़ॉर्म की अनुमति दें\" हटाएँ।"
+
+#: xlsform/core/issues.py:309
+msgid "No change needed; the filter works on Desk and mForm."
+msgstr "कोई बदलाव ज़रूरी नहीं; फ़िल्टर Desk और mForm पर काम करता है।"
+
+#: xlsform/runtime/validation.py:218
+msgid "No changes to questions."
+msgstr "प्रश्नों में कोई बदलाव नहीं।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:76
+msgid "No errors. Preview it, then publish."
+msgstr "कोई त्रुटि नहीं। पूर्वावलोकन देखें, फिर प्रकाशित करें।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:73
+msgid "No errors. Read the warnings, tick “I understand the warnings”, preview, then publish."
+msgstr "कोई त्रुटि नहीं। चेतावनियाँ पढ़ें, “मैं चेतावनियाँ समझता/समझती हूँ” चुनें, पूर्वावलोकन देखें, फिर प्रकाशित करें।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:209
+msgid "No problems found."
+msgstr "कोई समस्या नहीं मिली।"
+
+#: xlsform/runtime/validation.py:159
+msgid "No problems found. This version is ready to preview and publish."
+msgstr "कोई समस्या नहीं मिली। यह संस्करण पूर्वावलोकन और प्रकाशन के लिए तैयार है।"
+
+#: xlsform/public/js/xlsform.bundle.js:10
+msgid "Not published yet. Upload a workbook, fix any problems, preview it, then publish."
+msgstr "अभी प्रकाशित नहीं। वर्कबुक अपलोड करें, समस्याएँ ठीक करें, पूर्वावलोकन देखें, फिर प्रकाशित करें।"
+
+#. Description of the 'Designers can publish' (Check) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:96
+msgid "Off: only a System Manager can publish"
+msgstr "बंद: केवल System Manager प्रकाशित कर सकता है"
+
+#: xlsform/core/issues.py:307
+#, python-brace-format
+msgid "On the web form, {name} will list all choices of \"{list}\"; answers that don't match the filter are rejected when saved."
+msgstr "वेब फ़ॉर्म पर {name} में \"{list}\" के सभी विकल्प दिखेंगे; फ़िल्टर से मेल न खाने वाले उत्तर सहेजते समय अस्वीकार होंगे।"
+
+#. Description of a DocType
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:5
+msgid "One uploaded workbook. Publishing (submitting) it is final; upload a new version to change the form."
+msgstr "एक अपलोड की गई वर्कबुक। इसे प्रकाशित (सबमिट) करना अंतिम है; फ़ॉर्म बदलने के लिए नया संस्करण अपलोड करें।"
+
+#: xlsform/runtime/settings.py:45
+msgid "Only XLSForm Designers can do this."
+msgstr "यह केवल XLSForm Designers कर सकते हैं।"
+
+#: xlsform/runtime/publish.py:28
+msgid "Only a System Manager can publish forms on this site."
+msgstr "इस साइट पर केवल System Manager फ़ॉर्म प्रकाशित कर सकता है।"
+
+#: xlsform/api/forms.py:324
+msgid "Only a published form can be retired."
+msgstr "केवल प्रकाशित फ़ॉर्म बंद किया जा सकता है।"
+
+#: xlsform/runtime/publish.py:33
+msgid "Only a version without errors can be published. Fix the workbook and upload it again."
+msgstr "केवल त्रुटि-रहित संस्करण प्रकाशित हो सकता है। वर्कबुक ठीक करके फिर से अपलोड करें।"
+
+#. Label of the only_own (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:81
+msgid "Only their own records"
+msgstr "केवल उनके अपने रिकॉर्ड"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:16
+msgid "Open data"
+msgstr "डेटा खोलें"
+
+#: xlsform/core/issues.py:59
+msgid "Open it in Excel, save it again as .xlsx and upload the new file."
+msgstr "इसे Excel में खोलें, फिर से .xlsx के रूप में सहेजें और नई फ़ाइल अपलोड करें।"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:33
+msgid "Open web form"
+msgstr "वेब फ़ॉर्म खोलें"
+
+#: xlsform/core/issues.py:338
+#, python-brace-format
+msgid "Parameter \"{parameter}\" (row {row}) has the value \"{value}\", which isn't a number."
+msgstr "पैरामीटर \"{parameter}\" (पंक्ति {row}) का मान \"{value}\" है, जो संख्या नहीं है।"
+
+#: xlsform/core/issues.py:332
+#, python-brace-format
+msgid "Parameter \"{parameter}\" (row {row}) isn't supported and will be ignored."
+msgstr "पैरामीटर \"{parameter}\" (पंक्ति {row}) समर्थित नहीं है और अनदेखा किया जाएगा।"
+
+#. Label of the parsed_json (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:191
+msgid "Parsed Form"
+msgstr "पार्स किया गया फ़ॉर्म"
+
+#. Description of the 'Who can use the data' (Section Break) field in DocType
+#. 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:113
+msgid "Pick roles and what they may do. Users get roles from your administrator. Changes apply as soon as you save."
+msgstr "भूमिकाएँ चुनें और बताएँ कि वे क्या कर सकती हैं। उपयोगकर्ताओं को भूमिकाएँ आपके व्यवस्थापक से मिलती हैं। सहेजते ही बदलाव लागू होते हैं।"
+
+#. Label of the doctype_prefix (Data) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:75
+msgid "Prefix of generated DocTypes"
+msgstr "बनाए गए DocTypes का उपसर्ग"
+
+#. Label of the preview_json (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:42
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:203
+msgid "Preview"
+msgstr "पूर्वावलोकन"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:168
+#, python-brace-format
+msgid "Preview: {0}"
+msgstr "पूर्वावलोकन: {0}"
+
+#. Label of the can_print (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:74
+msgid "Print"
+msgstr "प्रिंट"
+
+#: xlsform/core/annotate.py:70 xlsform/public/js/xlsform.bundle.js:110
+#: xlsform/runtime/validation.py:176
+msgid "Problem"
+msgstr "समस्या"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:45
+msgid "Publish"
+msgstr "प्रकाशित करें"
+
+#. Label of the publish_error (Small Text) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:95
+msgid "Publish Error"
+msgstr "प्रकाशन त्रुटि"
+
+#. Label of the publish_status (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:87
+msgid "Publish Status"
+msgstr "प्रकाशन स्थिति"
+
+#. Option for the 'Status' (Select) field in DocType 'XLSForm'
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:48
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:140
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:60
+msgid "Published"
+msgstr "प्रकाशित"
+
+#: xlsform/public/js/xlsform.bundle.js:13
+msgid "Published. Collectors can fill it on Desk, the web and mForm."
+msgstr "प्रकाशित। संग्रहकर्ता इसे Desk, वेब और mForm पर भर सकते हैं।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:80
+msgid "Published: this is the version collectors use."
+msgstr "प्रकाशित: संग्रहकर्ता यही संस्करण उपयोग करते हैं।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:147
+msgid "Publishing"
+msgstr "प्रकाशित हो रहा है"
+
+#: xlsform/runtime/publish.py:69
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:88
+#, python-brace-format
+msgid "Publishing failed: {0}"
+msgstr "प्रकाशन विफल: {0}"
+
+#. Label of the can_read (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:31
+msgid "Read"
+msgstr "पढ़ें"
+
+#: xlsform/runtime/apply.py:91
+#, python-brace-format
+msgid "Refusing to change DocType {0}: it belongs to another form."
+msgstr "DocType {0} नहीं बदला जाएगा: यह किसी दूसरे फ़ॉर्म का है।"
+
+#: xlsform/runtime/apply.py:88
+#, python-brace-format
+msgid "Refusing to change DocType {0}: it belongs to module {1}."
+msgstr "DocType {0} नहीं बदला जाएगा: यह मॉड्यूल {1} का है।"
+
+#: xlsform/runtime/apply.py:81
+#, python-brace-format
+msgid "Refusing to change DocType {0}: it isn't an XLSForm DocType."
+msgstr "DocType {0} नहीं बदला जाएगा: यह XLSForm DocType नहीं है।"
+
+#: xlsform/core/issues.py:47
+msgid "Remove embedded images or unused sheets."
+msgstr "एम्बेड की गई तस्वीरें या अनुपयोगी शीटें हटाएँ।"
+
+#: xlsform/core/issues.py:96 xlsform/core/issues.py:327
+#: xlsform/core/issues.py:333 xlsform/core/issues.py:363
+msgid "Remove it, or keep it for use in ODK."
+msgstr "इसे हटाएँ, या ODK में उपयोग के लिए रखें।"
+
+#: xlsform/core/issues.py:177
+msgid "Remove or rename one."
+msgstr "एक को हटाएँ या उसका नाम बदलें।"
+
+#: xlsform/core/structure.py:212
+msgid "Remove the column if you don't need it."
+msgstr "यदि ज़रूरत नहीं है तो कॉलम हटा दें।"
+
+#: xlsform/core/issues.py:102
+msgid "Remove the column; it changes how answers are stored, so it can't be ignored."
+msgstr "कॉलम हटाएँ; यह उत्तरों के सहेजे जाने का तरीका बदलता है, इसलिए इसे अनदेखा नहीं किया जा सकता।"
+
+#: xlsform/core/issues.py:53
+msgid "Remove the password and upload again."
+msgstr "पासवर्ड हटाकर फिर से अपलोड करें।"
+
+#: xlsform/core/issues.py:357
+msgid "Remove the public_key setting."
+msgstr "public_key सेटिंग हटाएँ।"
+
+#: xlsform/core/issues.py:159
+msgid "Remove the row, or keep it for use in ODK."
+msgstr "पंक्ति हटाएँ, या ODK में उपयोग के लिए रखें।"
+
+#: xlsform/core/issues.py:77
+msgid "Remove the sheet; Frappe DocTypes already store each record."
+msgstr "शीट हटाएँ; Frappe DocTypes पहले से हर रिकॉर्ड सहेजते हैं।"
+
+#: xlsform/runtime/validation.py:207
+msgid "Removed (answers kept, question hidden)"
+msgstr "हटाया गया (उत्तर रखे गए, प्रश्न छिपाया गया)"
+
+#: xlsform/core/issues.py:120
+#, python-brace-format
+msgid "Rename one, e.g. {example}."
+msgstr "एक का नाम बदलें, जैसे {example}।"
+
+#: xlsform/core/issues.py:65
+#, python-brace-format
+msgid "Rename your {purpose} sheet to \"{sheet_name}\" (lower case)."
+msgstr "अपनी {purpose} शीट का नाम बदलकर \"{sheet_name}\" करें (छोटे अक्षरों में)।"
+
+#: xlsform/runtime/validation.py:208
+msgid "Renamed (answers do not move)"
+msgstr "नाम बदला गया (उत्तर साथ नहीं जाते)"
+
+#: xlsform/core/issues.py:203
+#, python-brace-format
+msgid "Repeat {inner} (row {inner_row}) is inside repeat {outer} (row {outer_row}); repeats inside repeats aren't supported yet."
+msgstr "Repeat {inner} (पंक्ति {inner_row}) repeat {outer} (पंक्ति {outer_row}) के अंदर है; repeat के अंदर repeat अभी समर्थित नहीं है।"
+
+#: xlsform/core/issues.py:210
+#, python-brace-format
+msgid "Repeat {name} (row {row}) has no questions."
+msgstr "Repeat {name} (पंक्ति {row}) में कोई प्रश्न नहीं है।"
+
+#: xlsform/core/issues.py:223
+#, python-brace-format
+msgid "Replace ${{{name}}} with ."
+msgstr "${{{name}}} को . से बदलें"
+
+#: xlsform/core/issues.py:241
+msgid "Replace them with straight quotes (' or \")."
+msgstr "इन्हें सीधे उद्धरण चिह्नों (' या \") से बदलें।"
+
+#. Label of the can_report (Check) field in DocType 'XLSForm Access'
+#. Label of the report_view (HTML) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:67
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:144
+msgid "Report"
+msgstr "रिपोर्ट"
+
+#. Label of the report_html (Long Text) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:173
+msgid "Report HTML"
+msgstr "रिपोर्ट HTML"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:40
+msgid "Retire form"
+msgstr "फ़ॉर्म बंद करें"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:44
+#, python-brace-format
+msgid "Retire {0}? New records are refused on every channel; existing data, reports and exports stay. Publishing a new version re-opens it."
+msgstr "{0} बंद करें? हर चैनल पर नए रिकॉर्ड अस्वीकार होंगे; मौजूदा डेटा, रिपोर्ट और निर्यात बने रहेंगे। नया संस्करण प्रकाशित करने से यह फिर खुल जाएगा।"
+
+#. Option for the 'Status' (Select) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:48
+msgid "Retired"
+msgstr "बंद"
+
+#. Label of the retired_on (Datetime) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:82
+msgid "Retired On"
+msgstr "बंद करने की तारीख"
+
+#: xlsform/public/js/xlsform.bundle.js:14
+msgid "Retired. New records are refused; publish a new version to re-open it."
+msgstr "बंद। नए रिकॉर्ड अस्वीकार होते हैं; फिर से खोलने के लिए नया संस्करण प्रकाशित करें।"
+
+#. Label of the role (Link) field in DocType 'XLSForm Access'
+#. Label of a Link in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:22
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:66
+msgid "Role"
+msgstr "भूमिका"
+
+#. Label of the row_budget_bytes (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:62
+msgid "Row size budget (bytes)"
+msgstr "पंक्ति आकार बजट (बाइट)"
+
+#: xlsform/runtime/access.py:32
+#, python-brace-format
+msgid "Row {0}: the role {1} can't be given access to form data."
+msgstr "पंक्ति {0}: भूमिका {1} को फ़ॉर्म डेटा की पहुँच नहीं दी जा सकती।"
+
+#: xlsform/runtime/access.py:37
+#, python-brace-format
+msgid "Row {0}: the role {1} is listed twice."
+msgstr "पंक्ति {0}: भूमिका {1} दो बार है।"
+
+#: xlsform/core/issues.py:228
+#, python-brace-format
+msgid "Row {row} (outside repeat {repeat}) uses ${{{name}}} without count() or sum()."
+msgstr "पंक्ति {row} (repeat {repeat} के बाहर) ${{{name}}} का उपयोग count() या sum() के बिना करती है।"
+
+#: xlsform/core/issues.py:429
+#, python-brace-format
+msgid "Row {row} ({name}) has no label, so collectors will see only its name."
+msgstr "पंक्ति {row} ({name}) का कोई लेबल नहीं है, इसलिए संग्रहकर्ता केवल उसका नाम देखेंगे।"
+
+#: xlsform/core/issues.py:132
+#, python-brace-format
+msgid "Row {row} closes a {closing}, but the open block is a {open_kind} started in row {open_row}."
+msgstr "पंक्ति {row} एक {closing} बंद करती है, पर खुला ब्लॉक पंक्ति {open_row} से शुरू हुआ {open_kind} है।"
+
+#: xlsform/core/issues.py:139
+#, python-brace-format
+msgid "Row {row} closes a {kind} that was never opened."
+msgstr "पंक्ति {row} एक {kind} बंद करती है जो कभी खोला ही नहीं गया।"
+
+#: xlsform/core/issues.py:107
+#, python-brace-format
+msgid "Row {row} has a question type but no name."
+msgstr "पंक्ति {row} में प्रश्न प्रकार है, पर नाम नहीं है।"
+
+#: xlsform/core/issues.py:164
+#, python-brace-format
+msgid "Row {row} uses choice list \"{list}\", but the choices sheet has no list with that name."
+msgstr "पंक्ति {row} विकल्प सूची \"{list}\" का उपयोग करती है, पर choices शीट में इस नाम की कोई सूची नहीं है।"
+
+#: xlsform/core/issues.py:196
+#, python-brace-format
+msgid "Row {row} uses {file}, which wasn't uploaded with the form."
+msgstr "पंक्ति {row} {file} का उपयोग करती है, जो फ़ॉर्म के साथ अपलोड नहीं हुई।"
+
+#. Description of the 'Row size budget (bytes)' (Int) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:65
+msgid "Safety margin under MariaDB's 65,535-byte row limit"
+msgstr "MariaDB की 65,535-बाइट पंक्ति सीमा से नीचे सुरक्षा मार्जिन"
+
+#: xlsform/core/issues.py:41
+msgid "Save it as .xlsx from Excel or Google Sheets and upload again."
+msgstr "इसे Excel या Google Sheets से .xlsx के रूप में सहेजें और फिर से अपलोड करें।"
+
+#: xlsform/core/meaning.py:181
+msgid "See the list of question types in the docs."
+msgstr "प्रश्न प्रकारों की सूची दस्तावेज़ में देखें।"
+
+#: xlsform/core/issues.py:253
+msgid "See the supported function list in the docs."
+msgstr "समर्थित फ़ंक्शन की सूची दस्तावेज़ में देखें।"
+
+#: xlsform/core/issues.py:153
+#, python-brace-format
+msgid "See the supported list in the docs{alternative}."
+msgstr "समर्थित सूची दस्तावेज़ में देखें{alternative}।"
+
+#: xlsform/core/issues.py:375
+msgid "Set a higher value in the version setting."
+msgstr "version सेटिंग में बड़ा मान रखें।"
+
+#: xlsform/core/issues.py:381
+msgid "Set a new, higher version in the settings sheet."
+msgstr "settings शीट में नया, बड़ा संस्करण रखें।"
+
+#. Label of a shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:114
+msgid "Settings"
+msgstr "सेटिंग्स"
+
+#. Label of a Card Break in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:48
+msgid "Setup"
+msgstr "सेटअप"
+
+#: xlsform/core/annotate.py:67
+msgid "Severity"
+msgstr "गंभीरता"
+
+#. Label of the source_hash (Data) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:80
+msgid "Source Hash"
+msgstr "स्रोत हैश"
+
+#: xlsform/core/issues.py:247
+msgid "Split it into calculate questions."
+msgstr "इसे calculate प्रश्नों में बाँटें।"
+
+#: xlsform/core/issues.py:388
+msgid "Split it into two forms, or ask your administrator to raise the limit."
+msgstr "इसे दो फ़ॉर्म में बाँटें, या सीमा बढ़ाने के लिए अपने व्यवस्थापक से कहें।"
+
+#: xlsform/core/issues.py:190
+msgid "Split it with a cascading filter (district, then village), or ask your administrator about larger lists."
+msgstr "इसे cascading फ़िल्टर से बाँटें (पहले ज़िला, फिर गाँव), या बड़ी सूचियों के बारे में अपने व्यवस्थापक से पूछें।"
+
+#. Label of a shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:108
+msgid "Starter Workbook"
+msgstr "शुरुआती वर्कबुक"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform_list.js:9
+msgid "Starter workbook"
+msgstr "शुरुआती वर्कबुक"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:111
+msgid "Starting…"
+msgstr "शुरू हो रहा है…"
+
+#. Label of the state (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:59
+msgid "State"
+msgstr "स्थिति"
+
+#. Label of the status (Select) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:47
+msgid "Status"
+msgstr "स्थिति"
+
+#: xlsform/core/annotate.py:71 xlsform/public/js/xlsform.bundle.js:110
+#: xlsform/runtime/validation.py:176
+msgid "Suggested fix"
+msgstr "सुझाया गया सुधार"
+
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:60
+msgid "Superseded"
+msgstr "प्रतिस्थापित"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:83
+msgid "Superseded by a newer version. Records collected on it stay valid."
+msgstr "नए संस्करण से प्रतिस्थापित। इस पर एकत्र किए गए रिकॉर्ड मान्य रहते हैं।"
+
+#. Name of a role
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:132
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:116
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:234
+msgid "System Manager"
+msgstr "System Manager"
+
+#. Label of the test_results (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:209
+msgid "Test Results"
+msgstr "परीक्षण परिणाम"
+
+#: xlsform/core/issues.py:76
+#, python-brace-format
+msgid "The \"{sheet_name}\" sheet (entities) isn't supported yet."
+msgstr "\"{sheet_name}\" शीट (entities) अभी समर्थित नहीं है।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:57
+msgid "The current version of a form can't be deleted."
+msgstr "फ़ॉर्म का वर्तमान संस्करण हटाया नहीं जा सकता।"
+
+#: xlsform/core/issues.py:320
+#, python-brace-format
+msgid "The default \"{value}\" can't be used; defaults must be fixed values, today() or now()."
+msgstr "डिफ़ॉल्ट \"{value}\" का उपयोग नहीं हो सकता; डिफ़ॉल्ट स्थिर मान, today() या now() होने चाहिए।"
+
+#: xlsform/core/issues.py:46
+#, python-brace-format
+msgid "The file is {size_mb} MB; the limit is {limit_mb} MB."
+msgstr "फ़ाइल {size_mb} MB की है; सीमा {limit_mb} MB है।"
+
+#: xlsform/core/issues.py:350
+#, python-brace-format
+msgid "The form ID \"{value}\" will be used as {fixed}, because form IDs may only use a-z, 0-9 and _."
+msgstr "फ़ॉर्म ID \"{value}\" को {fixed} के रूप में उपयोग किया जाएगा, क्योंकि फ़ॉर्म ID में केवल a-z, 0-9 और _ हो सकते हैं।"
+
+#: xlsform/core/issues.py:394
+#, python-brace-format
+msgid "The form has too many short-answer questions outside repeats to store in one record ({bytes} of {limit} bytes)."
+msgstr "repeat के बाहर छोटे-उत्तर वाले प्रश्न इतने ज़्यादा हैं कि एक रिकॉर्ड में नहीं समा सकते ({bytes} / {limit} बाइट)।"
+
+#: xlsform/core/issues.py:387
+#, python-brace-format
+msgid "The form has {count} questions; the limit is {limit}."
+msgstr "फ़ॉर्म में {count} प्रश्न हैं; सीमा {limit} है।"
+
+#: xlsform/runtime/publish.py:99
+#, python-brace-format
+msgid "The form no longer passes its checks: {0}"
+msgstr "फ़ॉर्म अब अपनी जाँच पास नहीं करता: {0}"
+
+#: xlsform/core/issues.py:234
+#, python-brace-format
+msgid "The formula can't be read: {reason}."
+msgstr "सूत्र पढ़ा नहीं जा सकता: {reason}।"
+
+#: xlsform/core/issues.py:246
+#, python-brace-format
+msgid "The formula is {length} characters long; the limit is {limit}."
+msgstr "सूत्र {length} वर्ण लंबा है; सीमा {limit} है।"
+
+#: xlsform/core/issues.py:216
+#, python-brace-format
+msgid "The formula refers to ${{{name}}}, which isn't a question in this form."
+msgstr "सूत्र ${{{name}}} का उल्लेख करता है, जो इस फ़ॉर्म का प्रश्न नहीं है।"
+
+#: xlsform/core/issues.py:240
+msgid "The formula uses curly quotes (‘ ’ or “ ”), which formulas don't accept."
+msgstr "सूत्र में घुमावदार उद्धरण चिह्न (‘ ’ या “ ”) हैं, जो सूत्र स्वीकार नहीं करते।"
+
+#: xlsform/core/issues.py:119
+#, python-brace-format
+msgid "The name {name} is used in rows {rows}."
+msgstr "नाम {name} पंक्तियों {rows} में उपयोग हुआ है।"
+
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.py:20
+msgid "The prefix can't change once forms are published."
+msgstr "फ़ॉर्म प्रकाशित होने के बाद उपसर्ग नहीं बदल सकता।"
+
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.py:15
+msgid "The prefix must start with a capital letter and use only letters and numbers (up to 8)."
+msgstr "उपसर्ग बड़े अक्षर से शुरू होना चाहिए और केवल अक्षर व अंक (8 तक) होने चाहिए।"
+
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.py:22
+msgid "The row size budget must stay under MariaDB's limit of 65,535 bytes."
+msgstr "पंक्ति आकार बजट MariaDB की 65,535 बाइट सीमा से कम रहना चाहिए।"
+
+#: xlsform/core/issues.py:362
+#, python-brace-format
+msgid "The setting \"{setting}\" is ignored by this app."
+msgstr "सेटिंग \"{setting}\" को यह ऐप अनदेखा करता है।"
+
+#: xlsform/core/issues.py:344
+#, python-brace-format
+msgid "The setting {setting} = \"{value}\" isn't valid: {reason}."
+msgstr "सेटिंग {setting} = \"{value}\" मान्य नहीं है: {reason}।"
+
+#: xlsform/core/issues.py:70
+#, python-brace-format
+msgid "The sheet \"{sheet_name}\" isn't used, so anything on it will be ignored."
+msgstr "शीट \"{sheet_name}\" उपयोग में नहीं है, इसलिए उस पर जो कुछ है वह अनदेखा होगा।"
+
+#: xlsform/core/issues.py:58
+msgid "The workbook can't be opened; it may be damaged."
+msgstr "वर्कबुक खुल नहीं सकती; शायद यह खराब है।"
+
+#: xlsform/core/issues.py:64
+#, python-brace-format
+msgid "The workbook has no \"{sheet_name}\" sheet."
+msgstr "वर्कबुक में \"{sheet_name}\" शीट नहीं है।"
+
+#: xlsform/core/issues.py:52
+msgid "The workbook is password-protected, so it can't be read."
+msgstr "वर्कबुक पासवर्ड से सुरक्षित है, इसलिए पढ़ी नहीं जा सकती।"
+
+#: xlsform/core/issues.py:222
+#, python-brace-format
+msgid "The {column} of {name} refers to its own name; use . for \"this answer\"."
+msgstr "{name} का {column} अपने ही नाम का उल्लेख करता है; \"यह उत्तर\" के लिए . का उपयोग करें।"
+
+#: xlsform/core/issues.py:125
+#, python-brace-format
+msgid "The {kind} started in row {row} ({name}) is never closed."
+msgstr "पंक्ति {row} में शुरू हुआ {kind} ({name}) कभी बंद नहीं होता।"
+
+#: xlsform/core/issues.py:83
+#, python-brace-format
+msgid "The {sheet_name} sheet has no \"{column}\" column."
+msgstr "{sheet_name} शीट में \"{column}\" कॉलम नहीं है।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:222
+msgid "These answers would be refused"
+msgstr "ये उत्तर अस्वीकार होंगे"
+
+#: xlsform/core/issues.py:280
+#, python-brace-format
+msgid "These calculations depend on each other in a loop: {cycle}."
+msgstr "ये गणनाएँ एक चक्र में एक-दूसरे पर निर्भर हैं: {cycle}।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:115
+msgid "These changes will be made to the form's data table:"
+msgstr "फ़ॉर्म की डेटा तालिका में ये बदलाव होंगे:"
+
+#: xlsform/core/issues.py:286
+#, python-brace-format
+msgid "This choice_filter can't be applied: {reason}."
+msgstr "यह choice_filter लागू नहीं हो सकता: {reason}।"
+
+#: xlsform/core/issues.py:40
+msgid "This file is not an Excel workbook (.xlsx)."
+msgstr "यह फ़ाइल Excel वर्कबुक (.xlsx) नहीं है।"
+
+#: xlsform/api/forms.py:211
+msgid "This file isn't an Excel workbook, so it can't be annotated."
+msgstr "यह फ़ाइल Excel वर्कबुक नहीं है, इसलिए इस पर निशान नहीं लगाए जा सकते।"
+
+#: xlsform/api/data.py:27
+msgid "This form has not been published yet."
+msgstr "यह फ़ॉर्म अभी प्रकाशित नहीं हुआ है।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:160
+msgid "This is how collectors will see the form. Skip logic works as you type. Use “Check answers” to run the constraints, calculations and other checks done on save."
+msgstr "संग्रहकर्ता फ़ॉर्म ऐसे देखेंगे। Skip logic टाइप करते ही काम करता है। सहेजते समय होने वाली constraints, गणनाएँ और अन्य जाँचें चलाने के लिए “उत्तर जाँचें” का उपयोग करें।"
+
+#: xlsform/api/forms.py:197
+msgid "This report has expired. Upload the workbook again."
+msgstr "इस रिपोर्ट की अवधि समाप्त हो गई। वर्कबुक फिर से अपलोड करें।"
+
+#: xlsform/runtime/publish.py:36
+msgid "This version has warnings. Tick \"I understand the warnings\" first."
+msgstr "इस संस्करण में चेतावनियाँ हैं। पहले \"मैं चेतावनियाँ समझता/समझती हूँ\" चुनें।"
+
+#: xlsform/runtime/publish.py:30
+msgid "This version is already published."
+msgstr "यह संस्करण पहले ही प्रकाशित है।"
+
+#: xlsform/public/js/xlsform.bundle.js:103
+msgid "This workbook can't be used yet"
+msgstr "यह वर्कबुक अभी उपयोग नहीं हो सकती"
+
+#: xlsform/api/forms.py:46
+#, python-brace-format
+msgid "This workbook is for form {0} (settings sheet), not {1}."
+msgstr "यह वर्कबुक फ़ॉर्म {0} (settings शीट) के लिए है, {1} के लिए नहीं।"
+
+#. Label of the title (Data) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:39
+msgid "Title"
+msgstr "शीर्षक"
+
+#: xlsform/runtime/validation.py:210
+msgid "Type changed (new column; earlier answers stay in the old one)"
+msgstr "प्रकार बदला गया (नया कॉलम; पहले के उत्तर पुराने कॉलम में रहते हैं)"
+
+#. Description of the 'Allow uninstall to delete form data' (Check) field in
+#. DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:103
+msgid "Uninstalling removes every generated DocType and its records. Leave off unless you mean it."
+msgstr "अनइंस्टॉल करने से हर बनाया गया DocType और उसके रिकॉर्ड हट जाते हैं। जब तक आप सचमुच यही न चाहें, इसे बंद रखें।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:37
+msgid "Upload a corrected workbook"
+msgstr "सुधारी हुई वर्कबुक अपलोड करें"
+
+#: xlsform/public/js/xlsform.bundle.js:28
+#: xlsform/xlsform/doctype/xlsform/xlsform_list.js:8
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version_list.js:15
+msgid "Upload a workbook"
+msgstr "वर्कबुक अपलोड करें"
+
+#: xlsform/public/js/xlsform.bundle.js:52
+msgid "Upload and check"
+msgstr "अपलोड करें और जाँचें"
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:8
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:12
+msgid "Upload new version"
+msgstr "नया संस्करण अपलोड करें"
+
+#: xlsform/public/js/xlsform.bundle.js:32
+msgid "Upload the .xlsx you edited in Excel. Every problem is listed with the sheet, row and cell, and you can download your workbook with the problems highlighted."
+msgstr "Excel में संपादित .xlsx अपलोड करें। हर समस्या शीट, पंक्ति और सेल के साथ दिखाई जाती है, और आप समस्याओं को चिह्नित करके अपनी वर्कबुक डाउनलोड कर सकते हैं।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:17
+msgid "Upload workbooks with the Upload button on the XLSForm, so the form and version are read from it."
+msgstr "वर्कबुक XLSForm के अपलोड बटन से अपलोड करें, ताकि फ़ॉर्म और संस्करण उसी से पढ़े जाएँ।"
+
+#: xlsform/core/issues.py:197
+#, python-brace-format
+msgid "Upload {file} together with the workbook."
+msgstr "वर्कबुक के साथ {file} भी अपलोड करें।"
+
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:60
+msgid "Uploaded"
+msgstr "अपलोड किया गया"
+
+#: xlsform/core/issues.py:321
+msgid "Use a fixed value, or a calculate question."
+msgstr "स्थिर मान, या calculate प्रश्न का उपयोग करें।"
+
+#: xlsform/core/issues.py:339
+#, python-brace-format
+msgid "Use a number, e.g. {parameter}=10."
+msgstr "संख्या का उपयोग करें, जैसे {parameter}=10।"
+
+#: xlsform/core/issues.py:268
+msgid "Use a simpler condition here, or move the check into a constraint, which is checked on save."
+msgstr "यहाँ आसान शर्त रखें, या जाँच को constraint में ले जाएँ, जो सहेजते समय होती है।"
+
+#: xlsform/core/issues.py:287
+msgid "Use conditions like district = ${{district}}, joined by and."
+msgstr "district = ${{district}} जैसी शर्तें and से जोड़कर उपयोग करें।"
+
+#: xlsform/core/meaning.py:399
+msgid "Use lower-case letters, numbers and _, e.g. household_survey."
+msgstr "छोटे अक्षर, अंक और _ का उपयोग करें, जैसे household_survey।"
+
+#: xlsform/core/issues.py:301
+msgid "Use select_one, or remove the filter."
+msgstr "select_one का उपयोग करें, या फ़िल्टर हटाएँ।"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:49
+msgid "Use the Publish button: it checks the form and creates its DocTypes before publishing."
+msgstr "प्रकाशित करें बटन का उपयोग करें: यह प्रकाशन से पहले फ़ॉर्म जाँचता है और उसके DocTypes बनाता है।"
+
+#: xlsform/core/issues.py:114
+#, python-brace-format
+msgid "Use {fixed}."
+msgstr "{fixed} का उपयोग करें।"
+
+#: xlsform/core/issues.py:183
+#, python-brace-format
+msgid "Use {fixed}; the label can keep any text."
+msgstr "{fixed} का उपयोग करें; लेबल में कोई भी पाठ रह सकता है।"
+
+#. Description of the 'Only their own records' (Check) field in DocType
+#. 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:84
+msgid "Users see only records they created"
+msgstr "उपयोगकर्ता केवल अपने बनाए रिकॉर्ड देखते हैं"
+
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:60
+msgid "Valid"
+msgstr "मान्य"
+
+#. Label of the validation_report (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:167
+msgid "Validation Report"
+msgstr "जाँच रिपोर्ट"
+
+#. Label of the version (Data) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:52
+msgid "Version"
+msgstr "संस्करण"
+
+#: xlsform/core/issues.py:374
+#, python-brace-format
+msgid "Version \"{version}\" is not newer than the published version \"{published}\"."
+msgstr "संस्करण \"{version}\" प्रकाशित संस्करण \"{published}\" से नया नहीं है।"
+
+#: xlsform/core/issues.py:380
+#, python-brace-format
+msgid "Version \"{version}\" of this form is already published."
+msgstr "इस फ़ॉर्म का संस्करण \"{version}\" पहले ही प्रकाशित है।"
+
+#. Label of a shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:53
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:102
+msgid "Versions"
+msgstr "संस्करण"
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:129
+msgid "Waiting to publish…"
+msgstr "प्रकाशन की प्रतीक्षा…"
+
+#. Label of the warning_count (Int) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:117
+msgid "Warnings"
+msgstr "चेतावनियाँ"
+
+#: xlsform/www/xlsform-docs/errors.html:14
+msgid "What it means"
+msgstr "इसका अर्थ"
+
+#: xlsform/core/annotate.py:69
+msgid "Where"
+msgstr "कहाँ"
+
+#. Label of the access_section (Section Break) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:112
+msgid "Who can use the data"
+msgstr "डेटा का उपयोग कौन कर सकता है"
+
+#. Label of the source_file (Attach) field in DocType 'XLSForm Version'
+#: xlsform/runtime/validation.py:172
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:73
+msgid "Workbook"
+msgstr "वर्कबुक"
+
+#: xlsform/public/js/xlsform.bundle.js:41
+msgid "Workbook (.xlsx)"
+msgstr "वर्कबुक (.xlsx)"
+
+#: xlsform/core/issues.py:229
+#, python-brace-format
+msgid "Wrap it, e.g. sum(${{{name}}})."
+msgstr "इसे लपेटें, जैसे sum(${{{name}}})।"
+
+#: xlsform/core/issues.py:275
+#, python-brace-format
+msgid "Write the condition without {name}, or simplify its calculation."
+msgstr "{name} के बिना शर्त लिखें, या उसकी गणना सरल करें।"
+
+#. Name of a DocType
+#. Label of a Link in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:127
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:28
+msgid "XLSForm"
+msgstr "XLSForm"
+
+#. Name of a DocType
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:92
+msgid "XLSForm Access"
+msgstr "XLSForm पहुँच"
+
+#. Name of a role
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:144
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:126
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:247
+msgid "XLSForm Designer"
+msgstr "XLSForm Designer"
+
+#. Name of a DocType
+#. Label of a Link in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:112
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:56
+msgid "XLSForm Settings"
+msgstr "XLSForm सेटिंग्स"
+
+#. Name of a DocType
+#. Label of a Link in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:229
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:38
+msgid "XLSForm Version"
+msgstr "XLSForm संस्करण"
+
+#: xlsform/www/xlsform-docs/errors.html:5 xlsform/www/xlsform-docs/errors.py:21
+msgid "XLSForm issue codes"
+msgstr "XLSForm समस्या कोड"
+
+#: xlsform/api/data.py:29
+msgid "You don't have permission to export this form's data."
+msgstr "आपको इस फ़ॉर्म का डेटा निर्यात करने की अनुमति नहीं है।"
+
+#: xlsform/core/meaning.py:583
+#, python-brace-format
+msgid "at least {n} values"
+msgstr "कम से कम {n} मान"
+
+#: xlsform/core/validate.py:108
+msgid "changes from the published version"
+msgstr "प्रकाशित संस्करण से बदलाव"
+
+#: xlsform/core/issues.py:300
+#, python-brace-format
+msgid "choice_filter on select_multiple questions isn't supported yet (row {row})."
+msgstr "select_multiple प्रश्नों पर choice_filter अभी समर्थित नहीं है (पंक्ति {row})।"
+
+#: xlsform/core/issues.py:293
+#, python-brace-format
+msgid "choice_filter uses column \"{choice_column}\", which isn't on the choices sheet for list \"{list}\"."
+msgstr "choice_filter कॉलम \"{choice_column}\" का उपयोग करता है, जो सूची \"{list}\" के लिए choices शीट पर नहीं है।"
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:88
+msgid "compiling"
+msgstr "बनाया जा रहा है"
+
+#: xlsform/core/meaning.py:282
+msgid "contains a space"
+msgstr "में खाली जगह है"
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:88
+msgid "done"
+msgstr "पूरा"
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:88
+msgid "failed"
+msgstr "विफल"
+
+#: xlsform/core/issues.py:368
+msgid "instance_name can only combine questions and fixed text with concat(); it will be ignored."
+msgstr "instance_name केवल concat() से प्रश्नों और स्थिर पाठ को जोड़ सकता है; इसे अनदेखा किया जाएगा।"
+
+#: xlsform/core/meaning.py:274
+msgid "is empty"
+msgstr "खाली है"
+
+#: xlsform/core/meaning.py:284
+msgid "is too long or contains one of < > % \" # * ? \\ /"
+msgstr "बहुत लंबा है या इनमें से कोई है: < > % \" # * ? \\ /"
+
+#: xlsform/core/meaning.py:398
+msgid "it has no letters or numbers to build a form ID from"
+msgstr "इसमें फ़ॉर्म ID बनाने के लिए कोई अक्षर या अंक नहीं है"
+
+#: xlsform/www/xlsform-docs/errors.py:15
+msgid "message"
+msgstr "संदेश"
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:88
+msgid "migrating"
+msgstr "स्थानांतरित हो रहा है"
+
+#: xlsform/core/structure.py:334
+msgid "names can only use letters, numbers, _ . and -"
+msgstr "नामों में केवल अक्षर, अंक, _ . और - हो सकते हैं"
+
+#: xlsform/core/structure.py:329
+msgid "names can't contain spaces"
+msgstr "नामों में खाली जगह नहीं हो सकती"
+
+#: xlsform/core/structure.py:333
+msgid "names can't start with \"xml\""
+msgstr "नाम \"xml\" से शुरू नहीं हो सकते"
+
+#: xlsform/core/structure.py:331
+msgid "names can't start with a number"
+msgstr "नाम अंक से शुरू नहीं हो सकते"
+
+#: xlsform/core/meaning.py:706
+msgid "only conditions of the form column = ${{question}} joined by and can be used"
+msgstr "केवल column = ${{question}} जैसी शर्तें, and से जोड़कर, उपयोग की जा सकती हैं"
+
+#: xlsform/core/validate.py:106
+msgid "question types, choice lists and formulas"
+msgstr "प्रश्न प्रकार, विकल्प सूचियाँ और सूत्र"
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:88
+msgid "queued"
+msgstr "कतार में"
+
+#: xlsform/runtime/validation.py:180
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:216
+msgid "row"
+msgstr "पंक्ति"
+
+#: xlsform/core/validate.py:105
+msgid "structure"
+msgstr "संरचना"
+
+#: xlsform/www/xlsform-docs/errors.py:16
+msgid "suggestion"
+msgstr "सुझाव"
+
+#: xlsform/runtime/validation.py:165
+#, python-brace-format
+msgid "{0} advice"
+msgstr "{0} सलाह"
+
+#: xlsform/runtime/validation.py:165
+#, python-brace-format
+msgid "{0} errors"
+msgstr "{0} त्रुटियाँ"
+
+#: xlsform/runtime/validation.py:165
+#, python-brace-format
+msgid "{0} warnings"
+msgstr "{0} चेतावनियाँ"
+
+#: xlsform/core/issues.py:252
+#, python-brace-format
+msgid "{fn}() isn't supported yet."
+msgstr "{fn}() अभी समर्थित नहीं है।"
+
+#: xlsform/core/issues.py:258
+#, python-brace-format
+msgid "{fn}() needs {expected} but got {got}."
+msgstr "{fn}() को {expected} चाहिए, पर {got} मिले।"
+
+#: xlsform/core/issues.py:90 xlsform/core/issues.py:147
+#: xlsform/core/issues.py:165 xlsform/core/issues.py:217
+#: xlsform/core/issues.py:345
+#, python-brace-format
+msgid "{hint}"
+msgstr "{hint}"
+
+#: xlsform/core/engine.py:283
+#, python-brace-format
+msgid "{label} is required."
+msgstr "{label} आवश्यक है।"
+
+#: xlsform/core/engine.py:287
+#, python-brace-format
+msgid "{label} must be between {lo} and {hi} in steps of {step}."
+msgstr "{label} {lo} और {hi} के बीच, {step} के अंतराल में होना चाहिए।"
+
+#: xlsform/core/engine.py:297
+#, python-brace-format
+msgid "{label} needs {expected} rows but has {actual}."
+msgstr "{label} में {expected} पंक्तियाँ चाहिए, पर {actual} हैं।"
+
+#: xlsform/core/engine.py:303
+#, python-brace-format
+msgid "{label}: this answer isn't valid."
+msgstr "{label}: यह उत्तर मान्य नहीं है।"
+
+#: xlsform/core/engine.py:294
+#, python-brace-format
+msgid "{label}: this choice isn't allowed with the other answers."
+msgstr "{label}: यह विकल्प बाकी उत्तरों के साथ मान्य नहीं है।"
+
+#: xlsform/core/meaning.py:586
+#, python-brace-format
+msgid "{lo} to {hi} values"
+msgstr "{lo} से {hi} मान"
+
+#: xlsform/core/issues.py:314
+#, python-brace-format
+msgid "{name} ({type}) can't be shown on the web form; it can be answered on Desk and mForm."
+msgstr "{name} ({type}) वेब फ़ॉर्म पर नहीं दिखाया जा सकता; इसका उत्तर Desk और mForm पर दिया जा सकता है।"
+
+#: xlsform/core/issues.py:416
+#, python-brace-format
+msgid "{name} changed from {old} to {new}; earlier answers stay in the old column."
+msgstr "{name} {old} से बदलकर {new} हो गया; पहले के उत्तर पुराने कॉलम में रहते हैं।"
+
+#: xlsform/core/issues.py:410
+#, python-brace-format
+msgid "{name} moved {direction} repeat {repeat}; existing answers won't move."
+msgstr "{name} को repeat {repeat} {direction} ले जाया गया; मौजूदा उत्तर साथ नहीं जाएँगे।"
+
+#: xlsform/core/issues.py:422
+#, python-brace-format
+msgid "{name} was removed; its earlier answers are kept but no longer shown on the form."
+msgstr "{name} हटाया गया; इसके पहले के उत्तर रखे गए हैं पर फ़ॉर्म पर अब नहीं दिखते।"
+
+#: xlsform/core/meaning.py:585
+#, python-brace-format
+msgid "{n} values"
+msgstr "{n} मान"
+
+#: xlsform/core/issues.py:403
+#, python-brace-format
+msgid "{old} was removed and {new} added; existing answers to {old} won't move to the new question."
+msgstr "{old} हटाया गया और {new} जोड़ा गया; {old} के मौजूदा उत्तर नए प्रश्न में नहीं जाएँगे।"
+
+#: xlsform/core/issues.py:265
+#, python-brace-format
+msgid "{what} can't be used in \"{column}\": this rule is checked while the form is being filled, offline too."
+msgstr "\"{column}\" में {what} का उपयोग नहीं हो सकता: यह नियम फ़ॉर्म भरते समय जाँचा जाता है, ऑफ़लाइन भी।"
+
+#. Count format of shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:94
+#, python-brace-format
+msgid "{} Published"
+msgstr "{} प्रकाशित"
+

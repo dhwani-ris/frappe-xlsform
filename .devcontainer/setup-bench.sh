@@ -30,4 +30,13 @@ for SITE in xlsform.localhost test.localhost; do
   fi
 done
 bench --site test.localhost set-config allow_tests true
+bench --site xlsform.localhost set-config allow_tests true
+bench --site xlsform.localhost execute xlsform.tests.ui_support.complete_setup
+grep -q "xlsform.localhost" /etc/hosts || echo "127.0.0.1 xlsform.localhost test.localhost" | sudo tee -a /etc/hosts >/dev/null
 bench use xlsform.localhost
+
+# Dev-only tools, kept out of the bench env so they can't disturb Frappe's pinned dependencies.
+[ -d ~/pyxform-venv ] || { python3.14 -m venv ~/pyxform-venv && ~/pyxform-venv/bin/pip install -q pyxform==4.5.0; }
+[ -d ~/lint-venv ] || { python3.14 -m venv ~/lint-venv && ~/lint-venv/bin/pip install -q ruff==0.14.10 pre-commit semgrep; }
+./env/bin/pip install -q pytest pytest-cov
+echo "Ready: http://xlsform.localhost:8010 (Administrator / admin). Start with: bench start"

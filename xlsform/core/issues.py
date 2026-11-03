@@ -347,7 +347,9 @@ CATALOGUE: dict[str, Entry] = {
 		_e(
 			"W-FORM-ID",
 			3,
-			N_('The form ID "{value}" will be used as {fixed}, because form IDs may only use a-z, 0-9 and _.'),
+			N_(
+				'The form ID "{value}" will be used as {fixed}, because form IDs may only use a-z, 0-9 and _.'
+			),
 			N_("Change form_id to {fixed} in the settings sheet to keep them the same."),
 		),
 		_e(

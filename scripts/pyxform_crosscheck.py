@@ -24,7 +24,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from xlsform.core.validate import ValidateOptions, validate  # noqa: E402
+from xlsform.core.validate import ValidateOptions, validate
 
 # Errors that mean "valid XLSForm, but outside the v1 subset" (REQUIREMENTS.md section 2).
 LIMITATION_CODES = {
@@ -64,7 +64,9 @@ print(json.dumps(out))
 
 
 def run_pyxform(python: str, paths: list[str]) -> dict:
-	result = subprocess.run([python, "-c", PYXFORM_SNIPPET, *paths], capture_output=True, text=True, check=True)
+	result = subprocess.run(
+		[python, "-c", PYXFORM_SNIPPET, *paths], capture_output=True, text=True, check=True
+	)
 	return json.loads(result.stdout.strip().splitlines()[-1])
 
 

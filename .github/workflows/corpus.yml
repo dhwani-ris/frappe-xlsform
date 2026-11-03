@@ -1,0 +1,28 @@
+name: Real-world corpus
+
+# Every workbook in xlsform/tests/fixtures/corpus is checked by xlsform and by pyxform
+# (REQUIREMENTS.md section 13). pyxform runs from its own virtualenv: it pins xlrd==2.0.1,
+# which conflicts with Frappe v16, so it is never an app dependency.
+on:
+  pull_request:
+    paths: ["xlsform/core/**", "xlsform/tests/fixtures/corpus/**", "scripts/pyxform_crosscheck.py"]
+  schedule:
+    - cron: "0 3 * * *"
+
+jobs:
+  crosscheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: |
+          pip install "openpyxl~=3.1.5"
+          python -m venv /tmp/pyxform && /tmp/pyxform/bin/pip install pyxform==4.5.0
+          python scripts/pyxform_crosscheck.py /tmp/pyxform/bin/python xlsform/tests/fixtures/corpus --json corpus.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: corpus-report
+          path: corpus.json

@@ -1,0 +1,25 @@
+name: mForm SDK conformance
+
+# The emitted depends_on rules must evaluate identically in the mForm SDK's own interpreter
+# (frappe-mobile-sdk lib/src/utils/js_expression.dart). Bump XLSFORM_SDK_REF when the SDK changes.
+on:
+  pull_request:
+  push:
+    branches: [develop, version-16]
+  schedule:
+    - cron: "30 2 * * *"
+
+env:
+  XLSFORM_SDK_REF: 1058b155bc9024072fe6352c42f7030f81f20940
+
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: dart-lang/setup-dart@v1
+      - run: pip install "openpyxl~=3.1.5" pytest
+      - run: scripts/conformance-dart.sh python "$XLSFORM_SDK_REF"

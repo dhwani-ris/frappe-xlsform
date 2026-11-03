@@ -1,6 +1,6 @@
 # XLSForm for Frappe — Requirements
 
-Revision 2 · 3 Nov 2026 · supersedes `docs/original/REQUIREMENTS-2026-11-03.md`
+Revision 3 · 3 Nov 2026 · supersedes `docs/original/REQUIREMENTS-2026-11-03.md` (revision 1). Revision 3 adds what building and testing v1 settled (section 16).
 
 Revision 2 records three decisions taken with the product owner on 3 Nov 2026 (section 16 has the full log):
 
@@ -50,23 +50,23 @@ Every XLSForm feature falls in exactly one of three tiers. This matrix is the va
 
 | XLSForm type | Tier | Frappe field | Notes |
 | --- | --- | --- | --- |
-| text | Live | Small Text | No 140-char limit, off-page storage |
+| text | Live | Small Text | No 140-char limit, off-page storage. `max_height` 4.5rem (one-line look) unless appearance is `multiline` |
 | integer / decimal | Live | Int / Float | A blank number is stored as 0 after save (Frappe behaviour, see 6.3) |
 | range | Live + Server | Int or Float | `start`/`end`/`step` checked on the server |
 | select_one | Live | Link → generated choice DocType | Shows the choice label (`show_title_field_in_link`); stores the choice name |
 | select_multiple | Live | Table MultiSelect → generated pick table | Exported as space-separated names, as ODK stores them |
 | select_one_from_file / select_multiple_from_file | Live | as above | CSV with `name`,`label` columns attached to the upload |
-| rank | Rejected | | |
+| rank, loop (`begin loop over`), osm, select_one_external | Rejected | | |
 | note | Live | HTML | Display only, no column |
 | acknowledge | Live | Check | `required` on an acknowledge is enforced by the server (Frappe cannot make a Check mandatory) |
 | date / time / dateTime | Live | Date / Time / Datetime | |
-| geopoint / geotrace / geoshape | Live | Geolocation | GeoJSON |
+| geopoint / geotrace / geoshape | Live | Geolocation | GeoJSON. Not on Web Forms (Frappe v16 Web Form fields have no Geolocation): `W-WEB-FIELD` |
 | image | Live | Attach Image | |
 | audio / video / file | Live | Attach | |
 | barcode | Live | Data | Typed on all channels in v1 |
 | calculate | Server | Small Text, read-only | Recomputed on every save; hidden when it has no label |
 | hidden | Live | Small Text, hidden | |
-| start / end / today / username | Server | Datetime / Datetime / Date / Data, read-only | Filled by the server: start and today on insert, end on every save, username = session user |
+| start / end / today / username | Server | Datetime / Datetime / Date / Data, read-only, hidden | Filled by the server: start and today on insert, end on every save, username = session user |
 | deviceid, phonenumber, email, audit, simserial, subscriberid | — | none | Warning `W-META-IGNORED`; no column |
 | begin_group / end_group | Live | Section Break (Tab Break when > 3 top-level groups) | |
 | begin_repeat / end_repeat | Live | Table → child DocType | One level only |
@@ -92,9 +92,11 @@ Every XLSForm feature falls in exactly one of three tiers. This matrix is the va
 | media::*, guidance_hint, body::* | — | `W-COL-IGNORED` |
 | trigger, bind::*, instance::* | Rejected | `E-COL-UNSUPPORTED` |
 
-**Choices sheet**: `list_name`, `name`, `label`, `label::<lang>`, and any extra columns used by `choice_filter`. Choice names must be unique within a list.
+**Choices sheet**: `list_name`, `name`, `label`, `label::<lang>`, and any extra columns used by `choice_filter`. Choice names must be unique within a list and may not contain spaces or `< > % " # * ? \ /` (each choice becomes a record).
 
-**Settings sheet**: `form_title`, `form_id`, `version`, `default_language`. `instance_name` becomes the DocType's `autoname` when it is a `concat()` of question references and literals (`W-INSTANCE-NAME` otherwise). `public_key` (encryption) is rejected. `submission_url`, `style`, `allow_choice_duplicates` are ignored with `W-SETTING-IGNORED`.
+**pyxform compatibility**: every type spelling pyxform 4.5 accepts (112, e.g. `phone number`, `select one from <list>`, `begin looped group`), any letter case in sheet names and headers, `label:English` (single colon), a workbook whose only sheet is the survey, an empty choices sheet, and notes without a name. Extra sheets are ignored; one named like a known sheet (`stettings`) gets `W-SHEET-UNKNOWN`; an `entities` sheet with rows is `E-SHEET-UNSUPPORTED`.
+
+**Settings sheet**: `form_title`, `form_id` (a value that isn't a valid Frappe-safe ID, such as `Flat test`, is normalised to `flat_test` with `W-FORM-ID`), `version`, `default_language`. `instance_name` becomes the DocType's `autoname` when it is a `concat()` of question references and literals (`W-INSTANCE-NAME` otherwise). `public_key` (encryption) is rejected. `submission_url`, `style`, `allow_choice_duplicates` are ignored with `W-SETTING-IGNORED`.
 
 **Expression functions**
 
@@ -185,8 +187,11 @@ Default on a new form: no rows. System Manager always has full access; the XLSFo
 | error_count, warning_count | Int | Read-only |
 | warnings_accepted | Check | Required to publish when warnings exist |
 | validation_report | JSON | Issue objects (section 11) |
-| report_html | HTML | Rendered report |
+| report_html, change_html | Long Text | Rendered report and change summary (HTML fields have no column, so the HTML is stored here) |
+| report_view, change_view | HTML | Display of the two fields above |
 | change_summary | JSON | vs the published version |
+| publish_status | Select: queued, compiling, migrating, done, failed | Read-only |
+| publish_error | Small Text | Read-only |
 | parsed_json | JSON | Normalised form tree |
 | compiled_meta | JSON | See below |
 | test_results | JSON | Last 20 preview test submissions |
@@ -224,7 +229,9 @@ Uploading a workbook whose `version` matches an unpublished (draft) version of t
 | default_language | Link Language | en |
 | allow_data_removal_on_uninstall | Check | 0 |
 
-### 4.5 Generated DocTypes (module XLSForm Data, `custom = 1`, never shipped as app files)
+### 4.5 Generated DocTypes (`custom = 1`, never shipped as app files)
+
+Parents, repeats and pick tables are in module **XLSForm Data**; choice lists are in module **XLSForm Choices**, so the computed module sidebar (which lists at most 15 DocTypes) shows forms only. Every generated DocType's description carries `[xlsform:<form>]`, which identifies its form: `apply()` refuses a DocType of another form, and a failed publish's leftovers (DDL can't be rolled back) are reused by the next publish of the same form.
 
 | Kind | Name | Notes |
 | --- | --- | --- |
@@ -363,11 +370,11 @@ Rules for every issue: located (sheet, Excel row, column, cell), plain language,
 | 4. Frappe limits | Question count, row budget, name length | No |
 | 5. Version diff | Renames, removals, type changes vs the published version | No (warnings) |
 
-After our stages pass, pyxform converts the workbook as a second opinion; any error it raises appears as `E-PYXFORM` with the row it names.
+pyxform is **not** run on sites: every pyxform release pins `xlrd==2.0.1`, which conflicts with Frappe v16's `xlrd~=2.0.2`, so it can't be an app dependency (`E-PYXFORM` is dropped). Instead CI runs `scripts/pyxform_crosscheck.py`: every workbook in `xlsform/tests/fixtures/corpus` is checked by our validator and by pyxform (own virtualenv); a disagreement that isn't a documented v1 limitation, or reviewed in `corpus/expected.json` with a reason, fails the build.
 
 Designers see issues on the XLSForm Version form (summary bar + table grouped by sheet), as a downloadable **annotated copy of their workbook** (cells filled red/amber with the message as a comment), and in the API.
 
-**Issue catalogue** — the source of truth is `xlsform/validator/catalogue.py`; `docs/errors/<CODE>.md` has one page per code.
+**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (62 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
 
 | Code | Sev | Example message |
 | --- | --- | --- |
@@ -427,14 +434,13 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | W-MOVE-REPEAT | W | `age` moved into repeat `member`; answers won't move. |
 | W-TYPE-CHANGE | W | `income` changed from integer to text; earlier answers stay in the old column. |
 | I-NO-LABEL | I | Row 19 has no label. |
-| E-PYXFORM | E | (cleaned pyxform message) |
 
 **Preview and test answers**: before publishing, the designer opens **Preview**, a Desk dialog built from the compiled fields that applies the same Live expressions as the real form. **Check answers** sends the answers to the server, which runs the full server validation and returns the issues. The last 20 results are kept in `test_results`. Nothing is written to data tables.
 
 ## 8. Runtime
 
 - **Desk**: nothing beyond the generated meta and Translation records.
-- **Web**: when `allow_web` is on, a login-required Web Form is generated from the parent DocType with the same `depends_on` / `mandatory_depends_on` / `read_only_depends_on`.
+- **Web**: when `allow_web` is on, a login-required Web Form named `xf-<form-id>` at `/xf/<form-id>` is generated from the parent DocType with the same `depends_on` / `mandatory_depends_on` / `read_only_depends_on`. Web Form fields accept fewer types than DocFields: Table MultiSelect becomes a grid of the same pick rows (rules still work), Tab Breaks become Page Breaks, Geolocation is left out (`W-WEB-FIELD`); short text boxes come from generated `custom_css`.
 - **mForm**: when `allow_mobile` is on and `mobile_control` is installed, the parent DocType is added to Mobile Configuration; `mobile_control` provisions `mobile_uuid` and the SDK renders the form from meta. Choice DocTypes sync as Link targets.
 - **Server** (`doc_events["*"]["validate"]`, returns at once unless the DocType has `xf_form`), using the record's `xf_version` meta: reject inserts on a retired form; fill metadata questions; recompute calculations in order; clear non-relevant values; enforce required (including acknowledge); enforce constraints, ranges, `repeat_count` and choice filters. All failures are reported in one `ValidationError`, by question label.
 
@@ -445,7 +451,7 @@ Uploaded → Valid / Invalid (validation runs in a background job for files over
 ## 10. Permissions and security
 
 - **Privilege boundary**: `apply(plan)` and access sync run with `ignore_permissions` only after checking the caller is a Designer or System Manager, and only on DocTypes in `XLSForm Data` with the configured prefix.
-- **Per-form access**: role permission rows (`Custom DocPerm`-free: generated DocTypes are custom, so permissions live in their own `DocPerm` table) written from the Access table. A role with no row sees nothing. No `has_permission` or `permission_query_conditions` hooks.
+- **Per-form access**: role permission rows written from the Access table into the generated DocTypes' own permission table (they are custom DocTypes, so no Custom DocPerm is involved). A role with no row sees nothing. No `has_permission` or `permission_query_conditions` hooks.
 - **Untrusted spreadsheets**: openpyxl with formulas as cached values, macros/external links ignored; labels and notes HTML-escaped; only escaped string literals from user text enter `eval:` strings.
 - **No code from users**: expressions are parsed into an AST; never `eval`, `exec`, `safe_eval` or `render_template`.
 - **Limits** (Settings): upload size, questions, choices per list, expression length; parsing in a background job with a 120 s timeout.
@@ -479,10 +485,10 @@ Issue object:
 
 ## 12. Frappe standards and Marketplace readiness
 
-- Frappe **v16 only** (`frappe~=16.0`, Python 3.14); branches `version-16` and `develop`.
+- Frappe **v16 only** (`frappe~=16.0`, Python 3.14); branches `version-16` and `develop`. Desk routes are `/desk/...`; the workspace is **Excel Forms** (`/desk/excel-forms`) because a workspace named XLSForm would take the XLSForm list's route.
 - Extends only through hooks: `doc_events`, `fixtures`, `after_install`, `before_uninstall`, `add_to_apps_screen`.
-- Roles and Workspace as fixtures; all strings in `_()` / `__()`; Hindi translations.
-- Dependencies: `pyxform`, `openpyxl`; no system packages, no Java, no Node at runtime.
+- Role fixture and standard Workspace; all strings in `_()` / `__()` (`N_()` markers in the framework-free core); Hindi in `xlsform/locale/hi.po` (all 343 strings; `scripts/generate_pot.py` regenerates `main.pot`).
+- Dependencies: none beyond Frappe (openpyxl ships with it); no system packages, no Java, no Node at runtime. pyxform is used in CI only (section 7).
 - Lint: ruff, ruff-format, prettier, Frappe semgrep rules in CI.
 - Marketplace items needing people (logo, screenshots, video, privacy URL, listing, `frappe/marketplace` PR) are tracked in `docs/RELEASE.md`.
 
@@ -494,7 +500,8 @@ Issue object:
 | Expression conformance | pytest + Node + Dart (SDK interpreter) | Python, JavaScript and the SDK agree on every case |
 | Compiler unit | pytest (no site) | Type mapping, sanitising, layout, selects, budget, diffs (snapshots) |
 | Server integration | `bench run-tests --app xlsform` | Upload → publish → DocTypes → valid/invalid records → republish → old records still valid → access per role → retire |
-| Desk/Web smoke | Playwright (nightly) | Skip logic in a browser on Desk and a Web Form |
+| Desk/Web smoke | Playwright (`ui-tests/`, every PR and nightly) | Designer: upload a broken form, see the cell, download the highlighted workbook, upload the fix, preview with live skip logic, check answers, publish. Collector: skip logic and save on Desk; skip logic on the Web Form |
+| Corpus | `scripts/pyxform_crosscheck.py` (nightly) | Agreement with pyxform on real workbooks |
 
 Security tests: `<script>` in labels is inert; quotes and backslashes in literals can't break out of `eval:` strings; a non-designer gets 403 on upload/publish; `apply()` refuses a DocType outside `XLSForm Data`.
 
@@ -521,3 +528,8 @@ Security tests: `<script>` in labels is inert; quotes and backslashes in literal
 | 2026-11-03 | Preview answers are checked server-side and kept as JSON | No data DocType exists before the first publish |
 | 2026-11-03 | Same version string replaces an unpublished draft | Designers fix and re-upload without inventing versions |
 | 2026-11-03 | Frappe v16 only | All Dhwani sites run v16 |
+| 2026-11-03 | pyxform is CI-only; `E-PYXFORM` dropped | Every pyxform release pins xlrd==2.0.1; Frappe v16 needs ~=2.0.2 |
+| 2026-11-03 | Date comparisons and date arithmetic are server-only | `flt("2026-01-05")` is 2026 in Frappe; ODK compares dates as dates |
+| 2026-11-03 | Text-to-number guard `flt(x) == cstr(x)` in emitted rules | `flt("abc")` is 0 in Frappe but NaN in ODK; found by the generated comparison matrix |
+| 2026-11-03 | Choice lists in their own module | The computed module sidebar lists at most 15 DocTypes |
+| 2026-11-03 | Accept every pyxform spelling; normalise form_id with a warning | Real workbooks (pyxform's own examples) use them |
