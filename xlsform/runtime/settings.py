@@ -15,7 +15,6 @@ DEFAULTS = {
 }
 
 DATA_MODULE = "XLSForm Data"
-# Choice lists live apart so a module's sidebar (which lists at most 15 DocTypes) shows forms only.
 CHOICES_MODULE = "XLSForm Choices"
 GENERATED_MODULES = (DATA_MODULE, CHOICES_MODULE)
 DESIGNER = "XLSForm Designer"

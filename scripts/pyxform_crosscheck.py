@@ -26,7 +26,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from xlsform.core.validate import ValidateOptions, validate
 
-# Errors that mean "valid XLSForm, but outside the v1 subset" (REQUIREMENTS.md section 2).
 LIMITATION_CODES = {
 	"E-TYPE-UNSUPPORTED",
 	"E-FN-UNSUPPORTED",
@@ -39,14 +38,14 @@ LIMITATION_CODES = {
 	"E-SETTING-ENCRYPTED",
 	"E-DEFAULT-DYNAMIC",
 	"E-FILE-CSV-MISSING",
-	"E-CHOICE-NAME",  # choice names become document names: no spaces or < > % " # * ? \ /
-	"E-SETTING-INVALID",  # form_id must be a valid Frappe name; pyxform accepts any
-	"E-REF-SELF",  # ${own_name} inside its own constraint: we ask for "." instead
+	"E-CHOICE-NAME",
+	"E-SETTING-INVALID",
+	"E-REF-SELF",
 	"E-LIMIT-QUESTIONS",
 	"E-ROW-BUDGET",
-	"E-SHEET-UNSUPPORTED",  # entities
-	"E-CHOICE-DUPLICATE",  # choice names are document names, so unique within a list
-	"E-REF-REPEAT",  # ${repeat_question} outside its repeat needs count()/sum(); indexed-repeat is v2
+	"E-SHEET-UNSUPPORTED",
+	"E-CHOICE-DUPLICATE",
+	"E-REF-REPEAT",
 }
 
 PYXFORM_SNIPPET = r"""

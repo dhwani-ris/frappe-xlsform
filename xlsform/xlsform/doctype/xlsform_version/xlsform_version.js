@@ -1,5 +1,5 @@
 // Copyright (c) 2026, Dhwani RIS and contributors
-// For license information, please see license.txt
+// For license information, please see LICENSE
 
 frappe.ui.form.on("XLSForm Version", {
 	setup(frm) {
@@ -12,7 +12,6 @@ frappe.ui.form.on("XLSForm Version", {
 	},
 
 	onload(frm) {
-		// Publishing goes through the Publish button, never the standard Submit.
 		frm.show_submit_message = () => {};
 	},
 
@@ -173,8 +172,6 @@ function open_preview(frm) {
 			});
 			d.show();
 			xlsform.preview_dialog = d;
-			// Send whatever is filled in: the server reports missing answers together with every
-			// other problem, instead of the dialog stopping at the first required field.
 			d.get_primary_btn()
 				.off("click")
 				.on("click", () => {

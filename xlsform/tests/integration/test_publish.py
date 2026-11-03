@@ -108,7 +108,6 @@ class TestPublishAndCollect(IntegrationTestCase):
 		self.assertEqual(doc.total_age, "39")
 		self.assertTrue(doc.start)
 
-		# non-relevant answers are cleared, as in ODK
 		doc.consent = "no"
 		doc.save()
 		self.assertFalse(doc.hh_head)
@@ -122,7 +121,7 @@ class TestPublishAndCollect(IntegrationTestCase):
 		self.assertIn(form.data_doctype, [s.link_to for s in ws.shortcuts])
 		owned = set(json.loads(form.generated_doctypes))
 		self.assertIn(form.data_doctype, owned)
-		self.assertEqual(len(owned), 7)  # parent, member, 4 lists, 1 pick table
+		self.assertEqual(len(owned), 7)
 		self.assertNotIn("[xlsform", frappe.db.get_value("DocType", form.data_doctype, "description"))
 		forms.retire(fid)
 		ws.reload()
@@ -136,10 +135,10 @@ class TestPublishAndCollect(IntegrationTestCase):
 		with self.assertRaises(frappe.ValidationError) as ctx:
 			frappe.get_doc({"doctype": dt, **bad}).insert()
 		message = str(ctx.exception)
-		self.assertIn("Between 1 and 39", message)  # designer's constraint_message
-		self.assertIn("Village", message)  # choice filter
-		self.assertIn("I confirm the answers are correct", message)  # required acknowledge
-		self.assertIn("row 1", message)  # repeat row
+		self.assertIn("Between 1 and 39", message)
+		self.assertIn("Village", message)
+		self.assertIn("I confirm the answers are correct", message)
+		self.assertIn("row 1", message)
 		self.assertNotIn("Traceback", message)
 
 	def test_republish_keeps_old_records_valid(self):
@@ -150,20 +149,20 @@ class TestPublishAndCollect(IntegrationTestCase):
 
 		survey = [list(r) for r in HOUSEHOLD["survey"]]
 		header = survey[0]
-		survey = [r for r in survey if r[1] != "health_detail"]  # removed question
-		survey.insert(5, ["text", "phone", "Phone number"] + [None] * (len(header) - 3))  # added
+		survey = [r for r in survey if r[1] != "health_detail"]
+		survey.insert(5, ["text", "phone", "Phone number"] + [None] * (len(header) - 3))
 		for r in survey:
 			if r[1] == "hh_head":
-				r[0] = "integer"  # type change: new column
+				r[0] = "integer"
 		choices = [*HOUSEHOLD["choices"], ["village", "v4", "Village D", None, "d2"]]
-		choices = [c for c in choices if c[1] != "v2"]  # retired choice
+		choices = [c for c in choices if c[1] != "v2"]
 		res2 = publish(household(fid, "2", survey=survey, choices=choices))
 		self.assertEqual(frappe.db.get_value("XLSForm Version", f"{fid}-v1", "state"), "Superseded")
 		form.reload()
 		self.assertEqual(form.current_version, res2["version"])
 
 		meta = frappe.get_meta(form.data_doctype)
-		self.assertTrue(meta.get_field("health_detail").hidden)  # retired, column kept
+		self.assertTrue(meta.get_field("health_detail").hidden)
 		self.assertTrue(meta.get_field("phone"))
 		new_head = next(f for f in meta.fields if f.fieldname.startswith("hh_head_v"))
 		self.assertEqual(new_head.fieldtype, "Int")
@@ -175,9 +174,9 @@ class TestPublishAndCollect(IntegrationTestCase):
 		self.assertTrue(frappe.db.exists(lists["village"], "v4"))
 
 		old.reload()
-		self.assertEqual(old.hh_head, "Asha")  # data never cast or moved
+		self.assertEqual(old.hh_head, "Asha")
 		self.assertEqual(old.health_detail, "vaccination")
-		old.save()  # still valid under its own version's rules
+		old.save()
 		self.assertEqual(old.xf_version, f"{fid}-v1")
 
 	def test_draft_replaced_by_same_version(self):
@@ -239,7 +238,7 @@ class TestPublishAndCollect(IntegrationTestCase):
 		self.assertTrue(any("Between 1 and 39" in f["message"] for f in result["failures"]))
 		stored = json.loads(frappe.db.get_value("XLSForm Version", res["version"], "test_results"))
 		self.assertEqual(len(stored), 1)
-		self.assertEqual(frappe.db.count(dt), 0)  # test answers never reach the data table
+		self.assertEqual(frappe.db.count(dt), 0)
 
 	def test_export_uses_original_names(self):
 		fid = f"hh_{uid()}"
@@ -304,7 +303,7 @@ class TestAccessAndSecurity(IntegrationTestCase):
 		stranger = make_user(f"stranger-{uid()}@example.com", ["Blogger"])
 
 		self.assertFalse(frappe.has_permission(dt, "read", user=stranger))
-		self.assertFalse(frappe.has_permission(dt, "read", user=officer))  # nothing until granted
+		self.assertFalse(frappe.has_permission(dt, "read", user=officer))
 
 		form.append(
 			"access", {"role": "Field Officer", "can_read": 1, "can_create": 1, "can_write": 1, "only_own": 1}
@@ -318,7 +317,7 @@ class TestAccessAndSecurity(IntegrationTestCase):
 		frappe.set_user(other)
 		frappe.get_doc({"doctype": dt, **GOOD}).insert()
 		self.assertEqual(frappe.get_list(dt, pluck="name"), [n for n in frappe.get_list(dt, pluck="name")])
-		self.assertNotIn(mine.name, frappe.get_list(dt, pluck="name"))  # only own records
+		self.assertNotIn(mine.name, frappe.get_list(dt, pluck="name"))
 		frappe.set_user("Administrator")
 
 		lists = json.loads(frappe.db.get_value("XLSForm Version", form.current_version, "compiled_meta"))[

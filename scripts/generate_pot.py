@@ -21,8 +21,6 @@ def main(site: str) -> None:
 	frappe.init(site=site, sites_path=".")
 	frappe.connect()
 	app_path = frappe.get_pymodule_path(APP, "..")
-	# hooks.py holds no user-facing text, and Frappe's navbar extractor for it needs the app
-	# to live inside the bench directory
 	method_map = [("**/hooks.py", "ignore"), *get_method_map(APP), *get_method_map("frappe")]
 	catalog = new_catalog(APP)
 
