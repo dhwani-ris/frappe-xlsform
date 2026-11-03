@@ -618,6 +618,20 @@ ENTRIES = [
 		},
 	},
 	{
+		"code": "E-REGEX-UNSAFE",
+		"severity": "error",
+		"severity_text": "Error: blocks publishing",
+		"stage": 3,
+		"stage_name": "Meaning",
+		"message": "The pattern in regex() can't be used: ‹reason›.",
+		"suggestion": "Use a simpler pattern, e.g. ^[0-9]{10}$. Answers longer than ‹input_limit› characters never match a regex.",
+		"example": {
+			"where": "survey!D2",
+			"message": "survey!D2: The pattern in regex() can't be used: a repeated part contains another repeat, as in (a+)*.",
+			"suggestion": "Use a simpler pattern, e.g. ^[0-9]{10}$. Answers longer than 1,000 characters never match a regex.",
+		},
+	},
+	{
 		"code": "E-REPEAT-EMPTY",
 		"severity": "error",
 		"severity_text": "Error: blocks publishing",

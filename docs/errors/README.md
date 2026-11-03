@@ -48,6 +48,7 @@ Every problem the validator reports has a stable code. Errors block publishing; 
 | [E-REF-REPEAT](E-REF-REPEAT.md) | error | 3 | Row ‹row› (outside repeat ‹repeat›) uses ${‹name›} without count() or sum(). |
 | [E-REF-SELF](E-REF-SELF.md) | error | 3 | The ‹column› of ‹name› refers to its own name; use . for "this answer". |
 | [E-REF-UNKNOWN](E-REF-UNKNOWN.md) | error | 3 | The formula refers to ${‹name›}, which isn't a question in this form. |
+| [E-REGEX-UNSAFE](E-REGEX-UNSAFE.md) | error | 3 | The pattern in regex() can't be used: ‹reason›. |
 | [E-REPEAT-EMPTY](E-REPEAT-EMPTY.md) | error | 3 | Repeat ‹name› (row ‹row›) has no questions. |
 | [E-REPEAT-NESTED](E-REPEAT-NESTED.md) | error | 3 | Repeat ‹inner› (row ‹inner_row›) is inside repeat ‹outer› (row ‹outer_row›); repeats inside repeats aren't supported yet. |
 | [E-SETTING-ENCRYPTED](E-SETTING-ENCRYPTED.md) | error | 3 | Encrypted forms (public_key) aren't supported. |

@@ -10,7 +10,7 @@ import io
 import re
 from dataclasses import dataclass, field
 
-from xlsform.core.expr import emit_js
+from xlsform.core.expr import emit_js, regex_safety
 from xlsform.core.expr.evaluate import FUNCTIONS, REJECTED_FUNCTIONS
 from xlsform.core.expr.parser import CurlyQuoteError, ExprSyntaxError, parse, walk
 from xlsform.core.form import (
@@ -520,7 +520,7 @@ def _parse_all(form: Form, opts: Options, analysis: Analysis, issues: list[Issue
 			except ExprSyntaxError as exc:
 				issues.append(issue("E-EXPR-SYNTAX", reason=exc.reason, expr=text, **where))
 				continue
-			if _resolve(ast, node, column, names, issues, where):
+			if _resolve(ast, node, column, names, issues, where) and _check_regex(ast, issues, where):
 				analysis.asts.setdefault(node.path, {})[column] = ast
 		_parse_default(node, analysis, issues)
 
@@ -594,6 +594,30 @@ def _resolve(
 			visit(a, aggregate)
 
 	visit(ast, False)
+	return ok
+
+
+def _check_regex(ast: dict, issues: list[Issue], where: dict) -> bool:
+	"""Every regex() pattern is fixed text in the safe set (see expr/regex_safety.py)."""
+	ok = True
+	for n in walk(ast):
+		if n.get("fn") != "regex" or len(n["args"]) != 2:
+			continue
+		pattern = n["args"][1]
+		if "lit" in pattern and isinstance(pattern["lit"], str):
+			reason = regex_safety.unsafe_reason(pattern["lit"])
+		else:
+			reason = regex_safety.REASON_DYNAMIC
+		if reason is not None:
+			issues.append(
+				issue(
+					"E-REGEX-UNSAFE",
+					reason=tr(reason, limit=regex_safety.MAX_PATTERN_LENGTH),
+					input_limit=regex_safety.MAX_INPUT_LENGTH,
+					**where,
+				)
+			)
+			ok = False
 	return ok
 
 

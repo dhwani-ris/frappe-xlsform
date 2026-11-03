@@ -354,6 +354,10 @@ The target grammar is the intersection of JavaScript and the SDK interpreter: li
 - `int()` truncates toward zero; `round(x, n)` rounds half away from zero.
 - `sum()` and `count()` over an empty repeat return 0.
 - Values of non-relevant questions are `""` in other expressions and cleared on save.
+- Answers are untrusted, so no function can be made slow by them (`core/expr/evaluate.py`, `core/expr/regex_safety.py`):
+  - `regex(x, pattern)`: the pattern must be fixed text of at most 200 characters, without back-references, look-arounds, flags, conditionals, atomic or possessive parts, a repeat inside a repeat (`(x+)*`), or a repeated choice whose alternatives start with the same character (`E-REGEX-UNSAFE` at upload). The server matches it with its own linear-time NFA (built from Python's regex parser), not with backtracking `re`; text over 1,000 characters, or a pattern outside that set, never matches.
+  - `round(x, n)` clamps `n` to 0–15; `uuid(n)` clamps `n` to 1–64; `substr()` clamps its indexes to the text (NaN start is 0, NaN end is the length, ±Infinity is clamped); `pow()` overflows to ±Infinity; `date()` and `format-date()` of an impossible date (`2026-13-45`, Infinity, beyond year 9999) are `""`.
+  - A `repeat_count` that is Infinity (for example `${a} div 0`) fails the record with a named message instead of an error.
 
 ### 6.4 Conformance
 
@@ -389,7 +393,7 @@ pyxform is **not** run on sites: every pyxform release pins `xlrd==2.0.1`, which
 
 Designers see issues on the XLSForm Version form (summary bar + table grouped by sheet), as a downloadable **annotated copy of their workbook** (cells filled red/amber with the message as a comment), and in the API.
 
-**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (67 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
+**Issue catalogue** — the source of truth is `xlsform/core/issues.py` (68 codes). `scripts/gen_error_docs.py` writes `docs/errors/<CODE>.md` and the public page `/xlsform-docs/errors#CODE` (each `docs_url`), with a worked example taken from that code's failing test fixture. Codes added during the build: `E-FILE-UNREADABLE`, `E-GROUP-EXTRA-END`, `E-REPEAT-EMPTY`, `E-EXPR-TOO-LONG`, `E-FILTER-COLUMN`, `E-PARAMETER-INVALID`, `E-VERSION-PUBLISHED`, `W-REMOVED`, `W-WEB-FIELD`, `W-FORM-ID`, `W-SHEET-UNKNOWN`, `E-SHEET-UNSUPPORTED`.
 
 | Code | Sev | Example message |
 | --- | --- | --- |
@@ -429,6 +433,7 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | E-EXPR-SYNTAX | E | The formula can't be read: a bracket is never closed. |
 | E-EXPR-QUOTE | E | The formula uses curly quotes (‘ ’). |
 | E-EXPR-TOO-LONG | E | The formula is 2,400 characters; the limit is 2,000. |
+| E-REGEX-UNSAFE | E | The pattern in regex() can't be used: a repeated part contains another repeat, as in (a+)*. |
 | E-FN-UNSUPPORTED | E | `pulldata()` isn't supported. |
 | E-FN-ARGS | E | `selected()` needs 2 values but got 1. |
 | E-EXPR-NOT-LIVE | E | `today()` can't be used in "relevant": forms check that while being filled, offline too. |

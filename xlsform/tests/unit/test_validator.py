@@ -418,6 +418,19 @@ def cases():
 			),
 			{"row": 3},
 		),
+		"E-REGEX-UNSAFE": (
+			(
+				simple(["text", "a", "A", "regex(., '^([a-zA-Z0-9]+\\s?)*$')"], header=[*H, "constraint"]),
+				"f.xlsx",
+				None,
+			),
+			(
+				simple(["text", "a", "A", "regex(., '^[a-zA-Z0-9 ]+$')"], header=[*H, "constraint"]),
+				"f.xlsx",
+				None,
+			),
+			{"row": 2, "cell": "D2"},
+		),
 		"E-FN-UNSUPPORTED": (
 			(
 				simple(["calculate", "a", None, "pulldata('x', 'y', 'z', 'w')"], header=[*H, "calculation"]),

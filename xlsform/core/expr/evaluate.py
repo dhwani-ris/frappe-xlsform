@@ -16,7 +16,11 @@ import uuid as uuid_lib
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from xlsform.core.expr.regex_safety import safe_search
+
 EPOCH = datetime.date(1970, 1, 1)
+MAX_ROUND_DIGITS = 15
+MAX_UUID_LENGTH = 64
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?")
 
@@ -373,8 +377,27 @@ def _round_half_away(x: float, digits: int = 0) -> float:
 		return x
 	factor = 10**digits
 	scaled = abs(x) * factor
+	if math.isinf(scaled) or scaled >= 2**53:
+		return x
 	rounded = math.floor(scaled + 0.5 + 1e-9) / factor
 	return math.copysign(rounded, x) if rounded else 0.0
+
+
+def _clamp(value: float, low: int, high: int, default: int) -> int:
+	"""``value`` as an int in ``[low, high]``; NaN gives ``default``. Safe for ±Infinity."""
+	if math.isnan(value):
+		return default
+	return int(max(low, min(high, value)))
+
+
+def _pow(x: float, y: float) -> float:
+	try:
+		return math.pow(x, y)
+	except OverflowError:
+		negative = x < 0 and y == int(y) and int(y) % 2 == 1
+		return -math.inf if negative else math.inf
+	except ValueError:
+		return math.nan
 
 
 def _to_date(v):
@@ -384,16 +407,22 @@ def _to_date(v):
 		return v
 	if isinstance(v, str):
 		s = v.strip()
-		if DATE_RE.match(s):
-			return datetime.date.fromisoformat(s)
-		if DATETIME_RE.match(s):
-			return datetime.datetime.fromisoformat(s.replace(" ", "T"))
+		try:
+			if DATE_RE.match(s):
+				return datetime.date.fromisoformat(s)
+			if DATETIME_RE.match(s):
+				return datetime.datetime.fromisoformat(s.replace(" ", "T"))
+		except ValueError:
+			return None
 	n = to_number(v)
-	if math.isnan(n):
+	if math.isnan(n) or math.isinf(n):
 		return None
-	if n == int(n):
-		return EPOCH + datetime.timedelta(days=int(n))
-	return datetime.datetime(1970, 1, 1) + datetime.timedelta(days=n)
+	try:
+		if n == int(n):
+			return EPOCH + datetime.timedelta(days=int(n))
+		return datetime.datetime(1970, 1, 1) + datetime.timedelta(days=n)
+	except OverflowError:
+		return None
 
 
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -486,11 +515,9 @@ def _call(fn: str, args: list, ctx: Context):
 		return "".join(parts)
 	if fn == "substr":
 		s = to_string(arg(0))
-		start = to_number(arg(1))
-		start = 0 if math.isnan(start) else max(0, int(start))
+		start = _clamp(to_number(arg(1)), 0, len(s), 0)
 		if len(args) == 3:
-			end = to_number(arg(2))
-			end = len(s) if math.isnan(end) else int(end)
+			end = _clamp(to_number(arg(2)), 0, len(s), len(s))
 			return s[start:end] if end > start else ""
 		return s[start:]
 	if fn == "string-length":
@@ -504,11 +531,7 @@ def _call(fn: str, args: list, ctx: Context):
 	if fn == "normalize-space":
 		return " ".join(to_string(arg(0) if args else evaluate({"self": True}, ctx)).split())
 	if fn == "regex":
-		value = to_string(arg(0))[:10000]
-		try:
-			return re.search(to_string(arg(1)), value) is not None
-		except re.error:
-			return False
+		return safe_search(to_string(arg(1)), to_string(arg(0)))
 	if fn == "string":
 		return to_string(arg(0) if args else evaluate({"self": True}, ctx))
 	if fn == "int":
@@ -519,18 +542,12 @@ def _call(fn: str, args: list, ctx: Context):
 	if fn == "number":
 		return to_number(arg(0) if args else evaluate({"self": True}, ctx))
 	if fn == "round":
-		digits = 0
-		if len(args) == 2:
-			d = to_number(arg(1))
-			digits = 0 if math.isnan(d) else int(d)
+		digits = _clamp(to_number(arg(1)), 0, MAX_ROUND_DIGITS, 0) if len(args) == 2 else 0
 		return _round_half_away(to_number(arg(0)), digits)
 	if fn == "abs":
 		return abs(to_number(arg(0)))
 	if fn == "pow":
-		try:
-			return math.pow(to_number(arg(0)), to_number(arg(1)))
-		except OverflowError, ValueError:
-			return math.nan
+		return _pow(to_number(arg(0)), to_number(arg(1)))
 	if fn == "floor":
 		x = to_number(arg(0))
 		return x if math.isnan(x) or math.isinf(x) else float(math.floor(x))
@@ -571,8 +588,7 @@ def _call(fn: str, args: list, ctx: Context):
 		return arg(0)
 	if fn == "uuid":
 		if args:
-			length = to_number(arg(0))
-			n = 32 if math.isnan(length) else max(1, int(length))
+			n = _clamp(to_number(arg(0)), 1, MAX_UUID_LENGTH, 32)
 			raw = ""
 			while len(raw) < n:
 				raw += uuid_lib.uuid4().hex

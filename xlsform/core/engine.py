@@ -105,7 +105,15 @@ class _Engine:
 	def eval(self, ast, path, row, scope_repeat):
 		try:
 			return evaluate(ast, self.ctx(path, row, scope_repeat))
-		except EvalError, ZeroDivisionError, OverflowError, ValueError, IndexError, TypeError:
+		except (
+			EvalError,
+			ZeroDivisionError,
+			OverflowError,
+			ValueError,
+			IndexError,
+			TypeError,
+			RecursionError,
+		):
 			return ""
 
 	def value(self, path: str, row: int | None):
@@ -271,6 +279,9 @@ class _Engine:
 		if math.isnan(expected):
 			return
 		actual = len(self.data.get(path) or [])
+		if math.isinf(expected):
+			self.fail(path, None, None, "repeat_count")
+			return
 		if actual != int(expected):
 			self.fail(path, None, None, "repeat_count", detail=(int(expected), actual))
 
@@ -292,6 +303,10 @@ class _Engine:
 				)
 			elif kind == "choice":
 				message = tr(N_("{label}: this choice isn't allowed with the other answers."), label=label)
+			elif kind == "repeat_count" and detail is None:
+				message = tr(
+					N_("{label}: the number of rows can't be worked out from the answers."), label=label
+				)
 			elif kind == "repeat_count":
 				message = tr(
 					N_("{label} needs {expected} rows but has {actual}."),

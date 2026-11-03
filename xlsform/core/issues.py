@@ -273,6 +273,14 @@ CATALOGUE: dict[str, Entry] = {
 			N_("Split it into calculate questions."),
 		),
 		_e(
+			"E-REGEX-UNSAFE",
+			3,
+			N_("The pattern in regex() can't be used: {reason}."),
+			N_(
+				"Use a simpler pattern, e.g. ^[0-9]{{10}}$. Answers longer than {input_limit} characters never match a regex."
+			),
+		),
+		_e(
 			"E-FN-UNSUPPORTED",
 			3,
 			N_("{fn}() isn't supported yet."),

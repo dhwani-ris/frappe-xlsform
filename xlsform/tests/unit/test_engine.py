@@ -1,11 +1,14 @@
 """Server rules for one record (REQUIREMENTS.md section 8), without a site."""
 
 import datetime
+import math
+import re
+import time
 import unittest
 
 from xlsform.core import engine
 from xlsform.core.expr.evaluate import Context, evaluate
-from xlsform.core.expr.parser import parse
+from xlsform.core.expr.parser import parse, walk
 from xlsform.core.validate import validate
 from xlsform.core.values import answer
 from xlsform.tests.workbooks import HOUSEHOLD, make_xlsx
@@ -108,6 +111,88 @@ class TestEngine(unittest.TestCase):
 		ctx = Context(data={"/x": ""}, self_path="/x")
 		self.assertEqual(len(evaluate(parse("once(uuid())"), ctx)), 36)
 		self.assertEqual(len(evaluate(parse("uuid(8)"), Context(data={}))), 8)
+
+
+def ev(text, data=None, self_path=None):
+	ast = parse(text)
+	for node in walk(ast):
+		if "ref" in node:
+			node["ref"] = "/" + node["name"]
+	return evaluate(ast, Context(data=data or {}, self_path=self_path))
+
+
+class TestCollectorDataCantSlowASave(unittest.TestCase):
+	"""Answers are untrusted: no function may take seconds or crash on them."""
+
+	def assertFast(self, text, data=None, self_path=None, limit=0.5):
+		start = time.monotonic()
+		value = ev(text, data, self_path)
+		self.assertLess(time.monotonic() - start, limit, text)
+		return value
+
+	def test_regex_refuses_unsafe_patterns_and_long_text(self):
+		data = {"/x": "a" * 30 + "!"}
+		self.assertFalse(self.assertFast("regex(., '^([a-zA-Z0-9]+\\s?)*$')", data, "/x"))
+		self.assertFalse(self.assertFast("regex(., 'x.*y.*z')", {"/x": "xy" * 500}, "/x"))
+		self.assertTrue(self.assertFast("regex(., '^[a-z]+!$')", data, "/x"))
+		self.assertFalse(ev("regex(., 'a')", {"/x": "a" * 5000}, "/x"))
+
+	def test_regex_matcher_agrees_with_python(self):
+		import random
+
+		from xlsform.core.expr.regex_safety import safe_search, unsafe_reason
+
+		patterns = [
+			r"^[0-9]{10}$",
+			r"^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$",
+			r"^(yes|no)+$",
+			r"^\d+(\.\d{1,2})?$",
+			r"\bab\B",
+			r"^a?b{2,3}c*$",
+			r"(ab|cd){1,3}e",
+			r"[^a-c]+x",
+			r"\w+\s\w+",
+			r"a|b|",
+		]
+		rng = random.Random(7)
+		for pattern in patterns:
+			self.assertIsNone(unsafe_reason(pattern), pattern)
+			for _ in range(500):
+				text = "".join(rng.choice("abcde019.@ \nAB_") for _ in range(rng.randint(0, 12)))
+				self.assertEqual(
+					safe_search(pattern, text), re.search(pattern, text) is not None, (pattern, text)
+				)
+
+	def test_huge_arguments_are_bounded(self):
+		self.assertEqual(self.assertFast("round(1.23456, 300000000)"), 1.23456)
+		self.assertEqual(self.assertFast("round(1234.5, -300000000)"), 1235.0)
+		self.assertEqual(len(self.assertFast("uuid(100000000)")), 64)
+		self.assertEqual(len(self.assertFast("uuid(0)")), 1)
+		self.assertTrue(math.isinf(self.assertFast("pow(10, 1000000000)")))
+		self.assertEqual(self.assertFast("substr('abc', 1 div 0)"), "")
+		self.assertEqual(self.assertFast("substr('abc', -1 div 0, 1 div 0)"), "abc")
+		self.assertEqual(self.assertFast("substr('abc', 0 div 0)"), "abc")
+		self.assertEqual(self.assertFast("date(1 div 0)"), "")
+		self.assertEqual(self.assertFast("date(100000000000)"), "")
+		self.assertEqual(self.assertFast("format-date(1 div 0, '%Y')"), "")
+		self.assertEqual(self.assertFast("date('2026-13-45')"), "")
+		self.assertEqual(self.assertFast("int(1 div 0)"), math.inf)
+
+	def test_repeat_count_overflow_is_a_failure(self):
+		survey = [
+			["type", "name", "label", "repeat_count"],
+			["integer", "a", "A", None],
+			["integer", "b", "B", None],
+			["begin_repeat", "kids", "Kids", "${a} div ${b}"],
+			["text", "k", "K", None],
+			["end_repeat", None, None, None],
+		]
+		meta = validate(make_xlsx(survey=survey), "f.xlsx").plan["compiled_meta"]
+		for b in (0, None):
+			out = engine.run(meta, {"a": 1, "b": b, "kids": [{"k": "x"}]})
+			self.assertEqual([f.kind for f in out.failures], ["repeat_count"] if b == 0 else [])
+		out = engine.run(meta, {"a": 10**300, "b": 10**-300, "kids": []})
+		self.assertEqual([f.kind for f in out.failures], ["repeat_count"])
 
 
 class TestValues(unittest.TestCase):
