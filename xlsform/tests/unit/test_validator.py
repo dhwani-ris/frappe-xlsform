@@ -967,6 +967,16 @@ class TestIssueCatalogue(unittest.TestCase):
 		]
 		self.assertEqual([(i.sheet, i.column) for i in hits], [("v.csv", "state name")])
 
+	def test_choice_names_equal_in_mariadb_are_duplicates(self):
+		for other in ("Yes", "YES", "yés"):
+			with self.subTest(other=other):
+				content = simple(["select_one yn", "a", "A"], choices=[*YN, ["yn", other, "Yes again"]])
+				hits = [i for i in validate(content, "f.xlsx").issues if i.code == "E-CHOICE-DUPLICATE"]
+				self.assertEqual([(i.sheet, i.row) for i in hits], [("choices", 4)])
+				self.assertIn('"yes"', hits[0].message)
+				self.assertIn(f'"{other}"', hits[0].message)
+				self.assertIn("2 and 4", hits[0].message)
+
 	def test_version_ordering(self):
 		self.assertEqual(compare_versions("2026110301", "2026110201"), 1)
 		self.assertEqual(compare_versions("2025-03", "2024-12"), 1)

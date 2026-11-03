@@ -199,7 +199,9 @@ CATALOGUE: dict[str, Entry] = {
 		_e(
 			"E-CHOICE-DUPLICATE",
 			3,
-			N_('Choice "{choice}" appears twice in list "{list}" (choices rows {rows}).'),
+			N_(
+				'List "{list}" has the choice name {choices} more than once (choices rows {rows}). Names that differ only in upper or lower case, accents or trailing spaces count as the same.'
+			),
 			N_("Remove or rename one."),
 		),
 		_e(

@@ -27,7 +27,7 @@ Every problem the validator reports has a stable code. Errors block publishing; 
 | [W-COL-UNKNOWN](W-COL-UNKNOWN.md) | warning | 2 | Column "‹column›" isn't recognised and will be ignored. |
 | [E-CALC-CYCLE](E-CALC-CYCLE.md) | error | 3 | These calculations depend on each other in a loop: ‹cycle›. |
 | [E-CALC-NOT-LIVE](E-CALC-NOT-LIVE.md) | error | 3 | "‹column›" uses ‹name›, whose calculation can only run when the form is saved. |
-| [E-CHOICE-DUPLICATE](E-CHOICE-DUPLICATE.md) | error | 3 | Choice "‹choice›" appears twice in list "‹list›" (choices rows ‹rows›). |
+| [E-CHOICE-DUPLICATE](E-CHOICE-DUPLICATE.md) | error | 3 | List "‹list›" has the choice name ‹choices› more than once (choices rows ‹rows›). Names that differ only in upper or lower case, accents or trailing spaces count as the same. |
 | [E-CHOICE-NAME](E-CHOICE-NAME.md) | error | 3 | Choice name "‹choice›" in list "‹list›" ‹reason›. |
 | [E-DEFAULT-DYNAMIC](E-DEFAULT-DYNAMIC.md) | error | 3 | The default "‹value›" can't be used; defaults must be fixed values, today() or now(). |
 | [E-EXPR-NOT-LIVE](E-EXPR-NOT-LIVE.md) | error | 3 | ‹what› can't be used in "‹column›": this rule is checked while the form is being filled, offline too. |

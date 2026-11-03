@@ -418,7 +418,7 @@ Designers see issues on the XLSForm Version form (summary bar + table grouped by
 | W-META-IGNORED | W | "deviceid" can't be collected and will be ignored. |
 | E-LIST-MISSING | E | Row 18 uses choice list "districts", which isn't on the choices sheet. |
 | E-LIST-EMPTY | E | Choice list "districts" has no choices. |
-| E-CHOICE-DUPLICATE | E | Choice "yes" appears twice in list "yes_no". |
+| E-CHOICE-DUPLICATE | E | List "yes_no" has the choice name "yes" / "Yes" more than once (choices rows 2 and 4). Names are compared as MariaDB's default collation does (case, accents and trailing spaces ignored), because they are the list DocType's primary key. |
 | E-CHOICE-NAME | E | Choice name "not sure" contains a space. |
 | E-LIST-TOO-LARGE | E | Choice list "villages" has 25,000 choices; the limit is 20,000. |
 | E-FILE-CSV-MISSING | E | Row 7 uses villages.csv, which wasn't uploaded with the form. |

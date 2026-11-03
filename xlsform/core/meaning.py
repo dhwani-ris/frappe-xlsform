@@ -8,6 +8,7 @@ reused by the compiler, so nothing is parsed twice.
 import csv
 import io
 import re
+import unicodedata
 from dataclasses import dataclass, field
 
 from xlsform.core.expr import emit_js, regex_safety
@@ -304,21 +305,32 @@ def _check_lists(form: Form, opts: Options) -> list[Issue]:
 					)
 				)
 				continue
-			seen.setdefault(choice.name, []).append(choice.row.number)
-		for choice_name, rows in seen.items():
-			if len(rows) > 1:
+			seen.setdefault(choice_key(choice.name), []).append(choice)
+		for same in seen.values():
+			if len(same) > 1:
+				spellings = list(dict.fromkeys(c.name for c in same))
 				issues.append(
 					issue(
 						"E-CHOICE-DUPLICATE",
-						choice=choice_name,
+						choices=" / ".join(f'"{s}"' for s in spellings),
 						list=name,
-						rows=" and ".join(str(r) for r in rows),
+						rows=" and ".join(str(c.row.number) for c in same),
 						sheet=sheet,
-						row=rows[1],
+						row=same[1].row.number,
 						column="name",
+						col_index=same[1].row.col("name"),
 					)
 				)
 	return issues
+
+
+def choice_key(name: str) -> str:
+	"""How MariaDB's default collation (utf8mb4_unicode_ci, PAD SPACE) compares choice names.
+
+	Choice names are the primary key of the list DocType, so names equal under it collide.
+	"""
+	decomposed = unicodedata.normalize("NFKD", name.rstrip(" "))
+	return "".join(ch for ch in decomposed if not unicodedata.combining(ch)).casefold()
 
 
 def _check_repeats(form: Form) -> list[Issue]:
