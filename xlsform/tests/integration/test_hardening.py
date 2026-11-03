@@ -9,17 +9,31 @@ from frappe.tests import IntegrationTestCase
 from xlsform.api import data as data_api
 from xlsform.api import forms
 from xlsform.runtime import access, hooks
-from xlsform.tests.integration.test_publish import DESIGNER, GOOD, household, make_user, publish, uid, upload
+from xlsform.tests.integration.test_publish import (
+	CREATED_FILES,
+	DESIGNER,
+	GOOD,
+	household,
+	make_user,
+	publish,
+	remove_test_data,
+	uid,
+	upload,
+)
 from xlsform.tests.workbooks import make_xlsx
+
+
+def tearDownModule():
+	remove_test_data()
 
 
 def private_file(name: str, content: bytes) -> str:
 	frappe.set_user("Administrator")
-	return (
-		frappe.get_doc({"doctype": "File", "file_name": name, "content": content, "is_private": 1})
-		.insert(ignore_permissions=True)
-		.file_url
+	file = frappe.get_doc({"doctype": "File", "file_name": name, "content": content, "is_private": 1}).insert(
+		ignore_permissions=True
 	)
+	CREATED_FILES.add(file.name)
+	return file.file_url
 
 
 def simple_form(form_id: str, version: str = "1") -> bytes:
@@ -31,7 +45,7 @@ def simple_form(form_id: str, version: str = "1") -> bytes:
 
 class TestFileAccess(IntegrationTestCase):
 	def setUp(self):
-		self.designer = make_user(f"designer-{uid()}@example.com", [DESIGNER])
+		self.designer = make_user("xf-test-designer@example.com", [DESIGNER])
 
 	def tearDown(self):
 		frappe.set_user("Administrator")
@@ -141,7 +155,7 @@ class TestAccessModel(IntegrationTestCase):
 		frappe.set_user("Administrator")
 
 	def test_designer_sees_data_only_when_granted(self):
-		designer = make_user(f"designer-{uid()}@example.com", [DESIGNER])
+		designer = make_user("xf-test-designer@example.com", [DESIGNER])
 		frappe.set_user(designer)
 		fid = f"hh_{uid()}"
 		publish(household(fid))
@@ -158,8 +172,8 @@ class TestAccessModel(IntegrationTestCase):
 		fid = f"hh_{uid()}"
 		publish(household(fid))
 		form = frappe.get_doc("XLSForm", fid)
-		officer = make_user(f"officer-{uid()}@example.com", ["Field Officer"])
-		make_user(f"reviewer-{uid()}@example.com", ["xf Reviewer"])
+		officer = make_user("xf-test-officer@example.com", ["Field Officer"])
+		make_user("xf-test-reviewer@example.com", ["xf Reviewer"])
 		add_permission(form.data_doctype, "xf Reviewer")
 		form.append("access", {"role": "Field Officer", "can_read": 1})
 		form.save()
@@ -169,7 +183,7 @@ class TestAccessModel(IntegrationTestCase):
 	def test_title_change_does_not_resync_access(self):
 		fid = f"hh_{uid()}"
 		publish(household(fid))
-		make_user(f"officer-{uid()}@example.com", ["Field Officer"])
+		make_user("xf-test-officer@example.com", ["Field Officer"])
 		form = frappe.get_doc("XLSForm", fid)
 		form.append("access", {"role": "Field Officer", "can_read": 1})
 		form.save()
@@ -192,7 +206,7 @@ class TestLifecycle(IntegrationTestCase):
 		self.assertEqual(frappe.db.get_single_value("XLSForm Settings", "designers_can_publish"), 0)
 
 	def test_workspace_is_built_when_a_designer_publishes(self):
-		designer = make_user(f"designer-{uid()}@example.com", [DESIGNER])
+		designer = make_user("xf-test-designer@example.com", [DESIGNER])
 		frappe.set_user(designer)
 		fid = f"hh_{uid()}"
 		publish(household(fid, title=f"Findable {fid}"))

@@ -1,7 +1,8 @@
 """End-to-end behaviour on a real site (REQUIREMENTS.md section 13, "Server integration").
 
-Publishing runs DDL, which MariaDB commits implicitly, so every test uses its own form_id
-(random suffix) instead of relying on rollback.
+Publishing runs DDL, which MariaDB commits implicitly, so every test uses its own form_id (random
+suffix) instead of relying on rollback, and ``tearDownModule`` removes every form, DocType, table and
+user the tests made.
 """
 
 import io
@@ -18,6 +19,9 @@ from xlsform.runtime import apply as xf_apply
 from xlsform.tests.workbooks import HOUSEHOLD, make_xlsx
 
 DESIGNER = "XLSForm Designer"
+CREATED_FORMS: set[str] = set()
+CREATED_USERS: set[str] = set()
+CREATED_FILES: set[str] = set()
 
 
 def uid() -> str:
@@ -38,7 +42,11 @@ def upload(content: bytes, filename="form.xlsx", form=None, csv_urls=None) -> di
 	f = frappe.get_doc(
 		{"doctype": "File", "file_name": filename, "content": content, "is_private": 1}
 	).insert(ignore_permissions=True)
-	return forms.upload(file_url=f.file_url, form=form, csv_urls=csv_urls)
+	CREATED_FILES.add(f.name)
+	res = forms.upload(file_url=f.file_url, form=form, csv_urls=csv_urls)
+	if res.get("form"):
+		CREATED_FORMS.add(res["form"])
+	return res
 
 
 def publish(content: bytes) -> dict:
@@ -52,6 +60,7 @@ def publish(content: bytes) -> dict:
 
 
 def make_user(email: str, roles: list[str]) -> str:
+	CREATED_USERS.add(email)
 	if not frappe.db.exists("User", email):
 		user = frappe.get_doc(
 			{"doctype": "User", "email": email, "first_name": email.split("@")[0], "send_welcome_email": 0}
@@ -67,6 +76,45 @@ def make_user(email: str, roles: list[str]) -> str:
 		user.append("roles", {"role": r})
 	user.save(ignore_permissions=True)
 	return email
+
+
+def remove_test_data() -> None:
+	"""Delete the forms and users the tests made, with their DocTypes, tables, versions and files."""
+	from xlsform.runtime.hooks import remove_generated_doctypes
+	from xlsform.runtime.navigation import sync_workspace
+
+	frappe.set_user("Administrator")
+	for form in list(CREATED_FORMS):
+		owned = json.loads(frappe.db.get_value("XLSForm", form, "generated_doctypes") or "[]")
+		remove_generated_doctypes(owned)
+		frappe.db.delete("Translation", {"context": ["in", owned or ["-"]]})
+		versions = frappe.get_all("XLSForm Version", filters={"form": form}, pluck="name")
+		for doctype, names in (("XLSForm Version", versions), ("XLSForm", [form])):
+			for name in frappe.get_all(
+				"File",
+				filters={"attached_to_doctype": doctype, "attached_to_name": ["in", names or ["-"]]},
+				pluck="name",
+			):
+				frappe.delete_doc("File", name, ignore_permissions=True)
+		frappe.db.delete("Access Log", {"reference_document": form})
+		frappe.db.delete("XLSForm Version", {"form": form})
+		frappe.db.delete("XLSForm Access", {"parent": form})
+		frappe.db.delete("XLSForm", {"name": form})
+		CREATED_FORMS.discard(form)
+	for name in list(CREATED_FILES):
+		if frappe.db.exists("File", name):
+			frappe.delete_doc("File", name, ignore_permissions=True)
+		CREATED_FILES.discard(name)
+	for user in list(CREATED_USERS):
+		if frappe.db.exists("User", user):
+			frappe.delete_doc("User", user, force=True, ignore_permissions=True)
+		CREATED_USERS.discard(user)
+	sync_workspace()
+	frappe.db.commit()  # nosemgrep
+
+
+def tearDownModule():
+	remove_test_data()
 
 
 GOOD = {
@@ -298,9 +346,9 @@ class TestAccessAndSecurity(IntegrationTestCase):
 		publish(household(fid))
 		form = frappe.get_doc("XLSForm", fid)
 		dt = form.data_doctype
-		officer = make_user(f"officer-{uid()}@example.com", ["Field Officer"])
-		other = make_user(f"other-{uid()}@example.com", ["Field Officer"])
-		stranger = make_user(f"stranger-{uid()}@example.com", ["Blogger"])
+		officer = make_user("xf-test-officer@example.com", ["Field Officer"])
+		other = make_user("xf-test-other@example.com", ["Field Officer"])
+		stranger = make_user("xf-test-stranger@example.com", ["Blogger"])
 
 		self.assertFalse(frappe.has_permission(dt, "read", user=stranger))
 		self.assertFalse(frappe.has_permission(dt, "read", user=officer))
@@ -340,7 +388,7 @@ class TestAccessAndSecurity(IntegrationTestCase):
 	def test_non_designer_cannot_upload_or_publish(self):
 		fid = f"hh_{uid()}"
 		res = upload(household(fid))
-		collector = make_user(f"collector-{uid()}@example.com", ["Field Officer"])
+		collector = make_user("xf-test-collector@example.com", ["Field Officer"])
 		frappe.set_user(collector)
 		with self.assertRaises(frappe.PermissionError):
 			upload(household(f"hh_{uid()}"))
@@ -348,7 +396,7 @@ class TestAccessAndSecurity(IntegrationTestCase):
 			forms.publish(res["version"])
 
 	def test_designer_can_publish_without_system_manager(self):
-		designer = make_user(f"designer-{uid()}@example.com", [DESIGNER])
+		designer = make_user("xf-test-designer@example.com", [DESIGNER])
 		frappe.set_user(designer)
 		fid = f"hh_{uid()}"
 		publish(household(fid))
