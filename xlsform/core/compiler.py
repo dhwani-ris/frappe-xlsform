@@ -30,6 +30,7 @@ MODULE = "XLSForm Data"
 CHOICES_MODULE = "XLSForm Choices"
 RESERVED_PARENT_FIELDS = ("xf_form", "xf_version", "xf_channel")
 LABEL_MAX = 140
+LINK_LENGTH = 140
 TAB_THRESHOLD = 3
 
 FIELDTYPES = {
@@ -280,7 +281,7 @@ class _Compiler:
 						columns[col] = sanitize(col, f"{list_name}::{col}", taken, self.s.reserved_fieldnames)
 			self.list_columns[list_name] = columns
 			longest = max((len(c.name) for c in lst.choices), default=1) if lst else 1
-			length = max(20, -(-longest // 20) * 20, prev_lengths.get(list_name, 0))
+			length = max(LINK_LENGTH, longest, prev_lengths.get(list_name, 0))
 			self.list_lengths[list_name] = length
 			fields = [
 				{
@@ -369,7 +370,7 @@ class _Compiler:
 							"options": self.lists[list_name],
 							"reqd": 1,
 							"in_list_view": 1,
-							"length": self.list_lengths.get(list_name, 140),
+							"length": self.list_lengths.get(list_name, LINK_LENGTH),
 						},
 					],
 					"module": MODULE,
@@ -389,6 +390,7 @@ class _Compiler:
 				"options": "XLSForm",
 				"read_only": 1,
 				"hidden": 1,
+				"set_only_once": 1,
 				"length": 64,
 			},
 			{
@@ -398,6 +400,8 @@ class _Compiler:
 				"options": "XLSForm Version",
 				"read_only": 1,
 				"hidden": 1,
+				"set_only_once": 1,
+				"search_index": 1,
 				"length": 120,
 			},
 			{

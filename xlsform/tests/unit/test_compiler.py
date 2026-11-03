@@ -147,7 +147,7 @@ class TestCompiler(unittest.TestCase):
 		]
 		choices = [["list_name", "name", "label"], ["long", "x" * 25, "X"]]
 		f = fields(plan_for(survey, choices))
-		self.assertEqual(f["s"]["length"], 40)
+		self.assertEqual(f["s"]["length"], 140)  # Frappe's default Link length
 		self.assertEqual(f["s"]["default"], "x" * 25)
 		self.assertEqual(f["d"]["default"], "Today")
 		self.assertEqual(f["k"]["default"], "1")
@@ -198,6 +198,23 @@ class TestCompiler(unittest.TestCase):
 		total = row_bytes(plan["doctypes"][-1]["fields"])
 		self.assertEqual(total, FIXED_ROW_BYTES + 258 + 482 + 42 + 5 * 562)
 
+	def test_reserved_parent_fields(self):
+		f = fields(plan_for([H, ["text", "a", "A"]]))
+		self.assertEqual((f["xf_form"]["set_only_once"], f["xf_version"]["set_only_once"]), (1, 1))
+		self.assertEqual(f["xf_version"]["search_index"], 1)
+		self.assertNotIn("set_only_once", f["xf_channel"])
+
+	def test_choice_links_use_frappe_default_length(self):
+		plan = plan_for(
+			[H, ["select_one yn", "s", "S"], ["select_multiple yn", "m", "M"]],
+			choices=[["list_name", "name", "label"], ["yn", "y", "Y"]],
+		)
+		self.assertEqual(fields(plan)["s"]["length"], 140)
+		kinds = {d["xf_kind"]: d for d in plan["doctypes"]}
+		choice_name = next(x for x in kinds["list"]["fields"] if x["fieldname"] == "choice_name")
+		self.assertEqual(choice_name["length"], 140)
+		self.assertEqual(kinds["pick"]["fields"][0]["length"], 140)
+
 	def test_web_form_spec(self):
 		plan = plan_for(
 			[H, ["select_multiple yn", "m", "M"], ["geopoint", "g", "G"], ["text", "t", "T"]],
@@ -232,7 +249,7 @@ class TestRepublish(unittest.TestCase):
 		self.assertEqual(f["a"]["hidden"], 1)
 		self.assertEqual(f["a_v2"]["fieldtype"], "Int")  # new column for the new type
 		self.assertEqual(f["b"]["hidden"], 1)  # removed question kept hidden
-		self.assertEqual(f["c"]["length"], 40)  # widened for the longer choice
+		self.assertEqual(f["c"]["length"], 140)  # Frappe's default Link length, never narrowed
 		self.assertIn("d", f)
 		self.assertEqual(r2.change_summary["removed"], ["b"])
 		self.assertEqual(r2.change_summary["type_changed"], [{"name": "a", "from": "text", "to": "integer"}])
