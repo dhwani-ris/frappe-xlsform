@@ -614,11 +614,7 @@ class _Compiler:
 		return field
 
 	def _filter_value(self, ast: dict, node: Node) -> str:
-		if "lit" in ast:
-			value = ast["lit"]
-			return emit_js.format_number(value) if isinstance(value, float) else value
-		js = emit_js.emit_value(ast, self._scope(node))
-		return "eval:" + (f"cstr({js.code})" if js.kind != "bool" else f'({js.code} ? "true" : "false")')
+		return emit_js.filter_value(ast, self._scope(node))
 
 	def _record_field(self, node: Node, doctype: str, field: dict) -> None:
 		entry = {

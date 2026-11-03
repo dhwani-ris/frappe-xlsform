@@ -280,7 +280,7 @@ Exports always use the original XLSForm names.
 
 **Layout**: top-level groups → Section Breaks (Tab Breaks when there are more than 3); nested groups → Section Breaks labelled "Outer › Inner"; group `relevant` is ANDed into every descendant's `depends_on` and set on its section.
 
-**Selects**: `select_one` → Link with `length` = longest choice name rounded up to 20 (min 20), `link_filters` = the compiled `choice_filter` plus `xf_retired = 0`. `select_multiple` → Table MultiSelect to the list's pick table. A choice list is loaded into its DocType as records; removed choices get `xf_retired = 1` and stay valid for old records.
+**Selects**: `select_one` → Link with `length` = longest choice name rounded up to 20 (min 20), `link_filters` = the compiled `choice_filter` plus `xf_retired = 0`. Every non-numeric filter value is emitted as `eval:` code; a text value is a JavaScript string literal, never raw text, because Frappe's `link.js` evaluates any value that starts with `eval:`. Text containing `eval:` is written as `"ev" + "al:…"`, because `link.js` reads only the part between the first and the second `eval:`. `select_multiple` → Table MultiSelect to the list's pick table. A choice list is loaded into its DocType as records; removed choices get `xf_retired = 1` and stay valid for old records.
 
 **Live expressions**: `depends_on`, `mandatory_depends_on`, `read_only_depends_on` are `eval:` strings produced by the emitter (section 6). User text appears in them only as JSON-escaped string literals.
 

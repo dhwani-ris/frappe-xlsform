@@ -105,7 +105,7 @@ class _Engine:
 	def eval(self, ast, path, row, scope_repeat):
 		try:
 			return evaluate(ast, self.ctx(path, row, scope_repeat))
-		except (EvalError, ZeroDivisionError, OverflowError, ValueError, IndexError, TypeError):
+		except EvalError, ZeroDivisionError, OverflowError, ValueError, IndexError, TypeError:
 			return ""
 
 	def value(self, path: str, row: int | None):

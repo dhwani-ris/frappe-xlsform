@@ -529,7 +529,7 @@ def _call(fn: str, args: list, ctx: Context):
 	if fn == "pow":
 		try:
 			return math.pow(to_number(arg(0)), to_number(arg(1)))
-		except (OverflowError, ValueError):
+		except OverflowError, ValueError:
 			return math.nan
 	if fn == "floor":
 		x = to_number(arg(0))

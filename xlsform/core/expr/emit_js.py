@@ -21,7 +21,6 @@ ODK semantics are kept by tracking a static *kind* for every sub-expression:
 - ``str`` — anything else (text, choice names, dates as ISO strings).
 """
 
-import json
 import math
 import re
 from collections.abc import Callable
@@ -31,6 +30,7 @@ from xlsform.core.expr.evaluate import format_number
 
 NUMERIC_TYPES = {"integer", "decimal", "range"}
 DATE_TYPES = {"date", "datetime", "time", "start", "end", "today"}
+EVAL_MARKER = "eval:"
 FORBIDDEN_LITERAL_CHARS = {"\n", "\r", " ", " ", "\t", "\x00"}
 
 
@@ -61,6 +61,7 @@ class Js:
 	kind: str  # bool / num / numref / str
 	guards: tuple[str, ...] = ()
 	literal: bool = False  # a string literal: already a string, never blank-guarded
+	text: str | None = None  # the literal's own text, when literal
 	date: bool = False  # a date/time answer: ODK compares these as dates, Frappe's flt can't
 
 
@@ -74,9 +75,31 @@ def emit_value(ast: dict, scope: Scope) -> Js:
 
 
 def js_string(text: str) -> str:
+	"""A JavaScript string literal for ``text``.
+
+	Text containing ``eval:`` is split into ``("ev" + "al:...")`` so the marker never appears
+	in emitted code: Frappe's link.js evaluates ``value.split("eval:")[1]`` of a link filter.
+	"""
 	if any(ch in text for ch in FORBIDDEN_LITERAL_CHARS) or any(ord(ch) < 32 for ch in text):
 		raise NotLive("text with line breaks or control characters")
+	if EVAL_MARKER in text:
+		head, *rest = text.split(EVAL_MARKER)
+		pieces = [_quote(head)] if head else []
+		for part in rest:
+			pieces += ['"ev"', _quote("al:" + part)]
+		return "(" + " + ".join(pieces) + ")"
+	return _quote(text)
+
+
+def _quote(text: str) -> str:
 	return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def filter_value(ast: dict, scope: "Scope") -> str:
+	"""A link_filters value: always ``eval:`` code, so no designer text is ever read as code."""
+	if "lit" in ast and isinstance(ast["lit"], float):
+		return format_number(ast["lit"])
+	return EVAL_MARKER + _as_str(_emit(ast, scope))
 
 
 def _num_literal(value: float) -> str:
@@ -113,7 +136,7 @@ def _as_num(e: Js) -> tuple[str, tuple[str, ...]]:
 	if e.kind == "bool":
 		return f"({e.code} ? 1 : 0)", ()
 	if e.literal:
-		text = json.loads(e.code)
+		text = e.text or ""
 		try:
 			value = float(text) if text.strip() else math.nan
 		except ValueError:
@@ -143,7 +166,7 @@ def _emit(node: dict, scope: Scope) -> Js:
 		value = node["lit"]
 		if isinstance(value, float):
 			return Js(_num_literal(value), "num")
-		return Js(js_string(value), "str", literal=True)
+		return Js(js_string(value), "str", literal=True, text=value)
 	if "ref" in node:
 		return _ref(node["ref"], scope)
 	if node.get("self"):
@@ -249,7 +272,7 @@ def _equals(a: Js, b: Js) -> str:
 
 
 def _date_literal(e: Js) -> bool:
-	return e.literal and bool(re.match(r'^"\d{4}-\d{2}-\d{2}', e.code))
+	return e.literal and bool(re.match(r"^\d{4}-\d{2}-\d{2}", e.text or ""))
 
 
 def _check_arity(fn: str, args: list, n: int) -> None:

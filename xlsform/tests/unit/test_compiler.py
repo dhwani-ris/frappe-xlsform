@@ -361,8 +361,17 @@ class TestCompilerRules(unittest.TestCase):
 		choices = [["list_name", "name", "label", "district", "type"], ["v", "v1", "V1", "d1", "2"]]
 		f = fields(plan_for(survey, choices))
 		filters = json.loads(f["v"]["link_filters"])
-		self.assertEqual(filters[1][3], "d1")
+		self.assertEqual(filters[1][3], 'eval:"d1"')
 		self.assertEqual(filters[2][3], "2")
+
+	def test_filter_literals_never_reach_link_filters_raw(self):
+		"""Frappe evaluates any link_filters value that starts with eval:, so text is always quoted."""
+		survey = [[*H, "choice_filter"], ["select_one v", "v", "V", "region = 'eval:window.x=1'"]]
+		choices = [["list_name", "name", "label", "region"], ["v", "v1", "V1", "eval:window.x=1"]]
+		value = json.loads(fields(plan_for(survey, choices))["v"]["link_filters"])[1][3]
+		self.assertTrue(value.startswith("eval:"))
+		self.assertEqual(value.split("eval:")[1], value[len("eval:") :])
+		self.assertEqual(value, 'eval:("ev" + "al:window.x=1")')
 
 	def test_group_inside_group_spacer_keeps_conditions(self):
 		survey = [

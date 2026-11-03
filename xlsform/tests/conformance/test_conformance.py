@@ -71,6 +71,22 @@ class TestConformance(unittest.TestCase):
 		os.unlink(path)
 		self._compare(json.loads(out.stdout), "Frappe JS")
 
+	def test_filter_literals_evaluate_to_themselves_in_frappe(self):
+		"""link.js parse_filters runs value.split("eval:")[1] through frappe.utils.eval."""
+		app = _frappe_app_path()
+		node = shutil.which("node")
+		if not app or not node:
+			self.skipTest("node and the Frappe app source are needed (set FRAPPE_APP_PATH)")
+		cases = harness.filter_literal_cases()
+		with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+			json.dump(cases, f, ensure_ascii=False)
+			path = f.name
+		runner = os.path.join(harness.HERE, "run_js.js")
+		out = subprocess.run([node, runner, app, path], capture_output=True, text=True, check=True)
+		os.unlink(path)
+		got = {r["id"]: r.get("result", r.get("error")) for r in json.loads(out.stdout)}
+		self.assertEqual(got, {c["id"]: c["expected"] for c in cases})
+
 	def test_mform_sdk_matches_odk(self):
 		path = os.environ.get("XLSFORM_SDK_RESULTS")
 		if not path or not os.path.exists(path):

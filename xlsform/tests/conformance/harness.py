@@ -181,6 +181,40 @@ def build(cases: list[dict]) -> dict:
 	return results
 
 
+FILTER_LITERALS = [
+	"d1",
+	"eval:window.x=1",
+	"a eval:b eval:c",
+	'say "hi" \\ bye',
+	"' + alert(1) + '",
+	"हाँ",
+	"eval:",
+]
+
+
+def filter_literal_cases() -> list[dict]:
+	"""Each literal in a choice_filter, as Frappe's link.js would evaluate the compiled value."""
+	survey = [["type", "name", "label", "choice_filter"]]
+	choices = [["list_name", "name", "label", "region"]]
+	for i, text in enumerate(FILTER_LITERALS):
+		quote = '"' if "'" in text else "'"
+		survey.append([f"select_one l{i}", f"q{i}", "Q", f"region = {quote}{text}{quote}"])
+		choices.append([f"l{i}", "c1", "C1", text])
+	content = make_xlsx(survey=survey, choices=choices, settings=[["form_id"], ["filters_form"]])
+	result = validate(content, "filters.xlsx", ValidateOptions(allow_web=False))
+	errors = [i.message for i in result.issues if i.severity == "error"]
+	if errors:
+		raise AssertionError("; ".join(errors))
+	parent = result.plan["doctypes"][-1]["fields"]
+	cases = []
+	for i, text in enumerate(FILTER_LITERALS):
+		field = next(f for f in parent if f["fieldname"] == f"q{i}")
+		value = json.loads(field["link_filters"])[1][3]
+		code = value.split("eval:")[1] if value.startswith("eval:") else None
+		cases.append({"id": f"filter-{i}", "js": code, "doc": {}, "value": True, "expected": text})
+	return cases
+
+
 def write_js_cases(results: dict, path: str) -> None:
 	with open(path, "w", encoding="utf-8") as f:
 		json.dump(results["js_cases"], f, ensure_ascii=False)
