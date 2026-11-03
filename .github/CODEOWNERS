@@ -1,0 +1,7 @@
+# CODEOWNERS — Dhwani RIS
+# Any change to GitHub Actions workflow files requires approval from a senior.
+# This prevents unauthorized workflow injection (ref: GhostAction incident Oct 2026).
+
+.github/workflows/ @Vivek-Dhwani @dhwani-ankit
+.github/           @Vivek-Dhwani @dhwani-ankit
+

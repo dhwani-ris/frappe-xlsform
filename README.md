@@ -31,7 +31,7 @@ Supports a documented subset of XLSForm — see [docs/compatibility.md](docs/com
 ## Installation (self-hosted)
 
 ```bash
-bench get-app https://github.com/dhwani-ris/frappe_xlsform --branch version-16
+bench get-app https://github.com/dhwani-ris/frappe-xlsform --branch version-16
 bench --site your.site install-app xlsform
 ```
 

@@ -10,6 +10,8 @@ repos:
       - id: trailing-whitespace
         files: "xlsform.*"
         exclude: ".*json$|.*txt$|.*csv|.*md|.*svg"
+      - id: no-commit-to-branch
+        args: ['--branch', 'develop']
       - id: check-merge-conflict
       - id: check-ast
       - id: check-json
@@ -23,12 +25,15 @@ repos:
       - id: ruff
         name: "Run ruff import sorter"
         args: ["--select=I", "--fix"]
+        exclude: ^\.github/helper/
 
       - id: ruff
         name: "Run ruff linter"
+        exclude: ^\.github/helper/
 
       - id: ruff-format
         name: "Run ruff formatter"
+        exclude: ^\.github/helper/
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v2.7.1

@@ -1,0 +1,61 @@
+name: Kotwal Workflow Guard
+
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  scan-for-malicious-patterns:
+    name: Scan workflow files for malicious patterns
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Check for known GhostAction patterns
+        run: |
+          echo "=== Kotwal Workflow Guard — scanning .github/workflows/ ==="
+          FAIL=0
+
+          # External curl/wget to non-GitHub hosts in workflow files
+          for f in .github/workflows/*.yml .github/workflows/*.yaml; do
+            [ -f "$f" ] || continue
+            echo "Checking: $f"
+
+            # Check for curl/wget posting secrets to external hosts
+            if grep -qE "curl.*(secrets\.|env\.)[A-Z].*http[^s]?://" "$f"; then
+              echo "❌ HIGH: Workflow posting secrets via curl to HTTP endpoint in $f"
+              grep -nE "curl.*(secrets\.|env\.)[A-Z]" "$f"
+              FAIL=1
+            fi
+
+            # Check for base64-encoded payloads (obfuscation)
+            if grep -qE "base64.*decode.*curl|curl.*base64" "$f"; then
+              echo "⚠️  HIGH: Base64-encoded curl call in $f — possible obfuscation"
+              FAIL=1
+            fi
+
+            # Check for non-SHA-pinned actions
+            while IFS= read -r line; do
+              if echo "$line" | grep -qE '^\s+uses:\s+[^.#].*@[^0-9a-f]'; then
+                if ! echo "$line" | grep -qE '@[0-9a-f]{40}'; then
+                  echo "⚠️  LOW: Non-SHA-pinned action in $f: $line"
+                fi
+              fi
+            done < "$f"
+          done
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo ""
+            echo "❌ Kotwal Workflow Guard FAILED — review findings above before merging."
+            exit 1
+          else
+            echo ""
+            echo "✅ All workflow files passed Kotwal security scan."
+          fi
