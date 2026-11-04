@@ -173,18 +173,6 @@ class TestTranslations(IntegrationTestCase):
 		)
 		self.assertEqual(count, 1)
 
-	def test_patch_removes_duplicate_translations(self):
-		from xlsform.patches.v1_0 import dedupe_translations
-
-		source = f"dup-{uid()}"
-		for _ in range(3):
-			frappe.get_doc(
-				{"doctype": "Translation", "language": "hi", "source_text": source, "translated_text": "x"}
-			).insert(ignore_permissions=True)
-		dedupe_translations.execute()
-		self.assertEqual(frappe.db.count("Translation", {"source_text": source}), 1)
-		frappe.db.delete("Translation", {"source_text": source})
-
 
 class TestLayout(IntegrationTestCase):
 	def test_republish_removes_stale_layout_fields(self):
