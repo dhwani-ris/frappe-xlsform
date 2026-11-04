@@ -1,0 +1,85 @@
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/*.md'
+        - 'docs/**'
+        - 'README*'
+        - 'CHANGELOG*'
+
+ci:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '.github/**'
+        - '.pre-commit-config.yaml'
+        - '.releaserc'
+        - 'commitlint.config.js'
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/requirements.txt'
+        - '**/pyproject.toml'
+        - '**/poetry.lock'
+        - '**/package.json'
+        - '**/package-lock.json'
+        - '**/yarn.lock'
+
+backend:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/*.py'
+
+frontend:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/*.js'
+        - '**/*.ts'
+        - '**/*.vue'
+        - '**/*.html'
+        - '**/*.css'
+        - '**/*.scss'
+
+doctype:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/doctype/**'
+        - '**/*.json'
+
+migration:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/patches/**'
+        - '**/patches.txt'
+
+hooks:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/hooks.py'
+        - '**/modules.txt'
+
+tests:
+  - changed-files:
+    - any-glob-to-any-file:
+        - 'tests/**'
+        - '**/test_*.py'
+        - '**/tests/**'
+        - '**/*.test.js'
+        - '**/*.spec.js'
+
+reports:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/report/**'
+
+print-format:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/print_format/**'
+        - '**/letter_head/**'
+
+translation:
+  - changed-files:
+    - any-glob-to-any-file:
+        - '**/translations/**'
+        - '**/locale/**'
+        - '**/*.csv'
