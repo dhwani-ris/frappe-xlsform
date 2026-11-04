@@ -21,6 +21,7 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -80,12 +81,13 @@ def main() -> int:
 	)
 	theirs = run_pyxform(python, paths)
 	expected_path = os.path.join(corpus, "expected.json")
-	expected = json.load(open(expected_path)) if os.path.exists(expected_path) else {}
+	expected = json.loads(Path(expected_path).read_text()) if os.path.exists(expected_path) else {}
 	rows = []
 	attention = 0
 	for path in paths:
-		with open(path, "rb") as f:
-			result = validate(f.read(), os.path.basename(path), ValidateOptions(max_questions=10_000))
+		result = validate(
+			Path(path).read_bytes(), os.path.basename(path), ValidateOptions(max_questions=10_000)
+		)
 		errors = sorted({i.code for i in result.issues if i.severity == "error"})
 		ours_ok = not errors
 		pyx = theirs[path]
@@ -120,8 +122,7 @@ def main() -> int:
 	summary = {v: sum(1 for r in rows if r["verdict"] == v) for v in sorted({r["verdict"] for r in rows})}
 	print("\n" + ", ".join(f"{k}: {v}" for k, v in summary.items()))
 	if json_out:
-		with open(json_out, "w") as f:
-			json.dump({"summary": summary, "rows": rows}, f, indent=1)
+		Path(json_out).write_text(json.dumps({"summary": summary, "rows": rows}, indent=1))
 	return 1 if attention else 0
 
 

@@ -4,7 +4,6 @@ app_publisher = "Dhwani RIS"
 app_description = "Build data-collection forms in Excel and collect into Frappe DocTypes"
 app_email = "deepak.batra@dhwaniris.com"
 app_license = "agpl-3.0"
-required_apps = ["frappe"]
 
 add_to_apps_screen = [
 	{

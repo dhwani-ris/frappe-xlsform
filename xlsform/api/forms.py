@@ -60,7 +60,7 @@ def upload(file_url: str | None = None, form: str | None = None, csv_urls: str |
 		if existing and existing.docstatus == 1:
 			return _transient(content, filename, csvs, form=form_id)
 		version = _store_version(form_doc, existing, version_str, content, filename, csvs, proposed)
-	except frappe.DuplicateEntryError, frappe.QueryDeadlockError:
+	except (frappe.DuplicateEntryError, frappe.QueryDeadlockError):
 		frappe.throw(
 			_("Another upload of this form is in progress. Wait a moment and upload again."),
 			title=_("Upload in progress"),

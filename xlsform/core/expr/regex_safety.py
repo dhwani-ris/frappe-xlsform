@@ -72,7 +72,7 @@ def _compile(pattern: str) -> tuple["Matcher | None", str | None]:
 	try:
 		re.compile(pattern)
 		tree = sre.parse(pattern)
-	except re.error, RecursionError, OverflowError:
+	except (re.error, RecursionError, OverflowError):
 		return None, REASON_INVALID
 	try:
 		if tree.state.flags & ~UNICODE_ONLY:
