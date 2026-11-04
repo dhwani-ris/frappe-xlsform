@@ -43,7 +43,7 @@ Records of generated DocTypes use the standard REST API. The server rules run on
 1. Get the app on a Frappe v16 bench and install it on a site:
 
    ```bash
-   bench get-app https://github.com/dhwani-ris/frappe-xlsform --branch develop
+   bench get-app https://github.com/dhwani-ris/frappe-xlsform
    bench --site <site> install-app xlsform
    bench --site <site> set-config allow_tests true
    ```

@@ -17,7 +17,7 @@ Build data-collection forms in Excel and collect the answers into normal Frappe 
 ### Installation
 
 ```bash
-bench get-app https://github.com/dhwani-ris/frappe-xlsform --branch develop
+bench get-app https://github.com/dhwani-ris/frappe-xlsform
 bench --site <site> install-app xlsform
 ```
 
