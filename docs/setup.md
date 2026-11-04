@@ -6,7 +6,7 @@ You can install this app with the [bench](https://github.com/frappe/bench) CLI:
 
 ```bash
 cd $PATH_TO_YOUR_BENCH
-bench get-app https://github.com/dhwani-ris/frappe-xlsform --branch develop
+bench get-app https://github.com/dhwani-ris/frappe-xlsform
 bench --site <site> install-app xlsform
 ```
 
