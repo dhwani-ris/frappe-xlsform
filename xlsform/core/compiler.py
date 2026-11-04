@@ -457,12 +457,13 @@ class _Compiler:
 		count = min(self.s.columns, visible)
 		if count <= 1:
 			return items
-		per_column = -(-visible // count)
+		sizes = [visible // count + (1 if i < visible % count else 0) for i in range(count)]
+		starts = {sum(sizes[:i]) for i in range(1, count)}
 		out: list[dict] = []
 		seen, column = 0, 1
 		for f in items:
 			if not f.get("hidden"):
-				if seen and seen % per_column == 0 and column < count:
+				if seen in starts:
 					column += 1
 					out.append(
 						{
@@ -949,6 +950,8 @@ def _plain(text: str) -> str:
 
 
 def _is_wide(f: dict) -> bool:
+	if f.get("hidden"):
+		return False
 	return f["fieldtype"] in WIDE_FIELDTYPES or (f["fieldtype"] == "Small Text" and not f.get("max_height"))
 
 

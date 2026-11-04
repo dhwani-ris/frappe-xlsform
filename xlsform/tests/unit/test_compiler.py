@@ -147,6 +147,21 @@ class TestCompiler(unittest.TestCase):
 		types = [t for t, _n in self._layout(plan_for(survey)) if t != "Section Break"]
 		self.assertEqual(types, ["Int", "Int", "Column Break", "Int", "Int", "Column Break", "Int", "Int"])
 
+	def test_every_column_is_used(self):
+		survey = [H, *[["integer", f"q{i}", f"Q{i}"] for i in range(1, 5)]]
+		types = [t for t, _n in self._layout(plan_for(survey)) if t != "Section Break"]
+		self.assertEqual(types, ["Int", "Int", "Column Break", "Int", "Column Break", "Int"])
+
+	def test_hidden_calculations_do_not_break_sections(self):
+		survey = [
+			["type", "name", "label", "calculation"],
+			["integer", "a", "A", None],
+			["calculate", "c", None, "${a} + 1"],
+			["integer", "b", "B", None],
+		]
+		layout = [t for t, _n in self._layout(plan_for(survey))]
+		self.assertNotIn("Section Break", layout)
+
 	def test_wide_fields_get_their_own_row(self):
 		survey = [
 			H,
