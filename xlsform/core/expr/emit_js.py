@@ -21,16 +21,21 @@ ODK semantics are kept by tracking a static *kind* for every sub-expression:
 - ``str`` — anything else (text, choice names, dates as ISO strings).
 """
 
-import json
 import math
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from decimal import Decimal
 
-from xlsform.core.expr.evaluate import format_number
+from xlsform.core.expr import profile
+from xlsform.core.expr.evaluate import NUMBER_TEXT_RE, format_number
 
 NUMERIC_TYPES = {"integer", "decimal", "range"}
 DATE_TYPES = {"date", "datetime", "time", "start", "end", "today"}
+EVAL_MARKER = "eval:"
+MAX_JS_LENGTH = 4000
+MAX_EMIT_DEPTH = 200
+MAX_INLINE_DEPTH = 20
 FORBIDDEN_LITERAL_CHARS = {"\n", "\r", " ", " ", "\t", "\x00"}
 
 
@@ -40,33 +45,60 @@ class NotLive(Exception):
 	def __init__(self, what: str, calc: str | None = None):
 		super().__init__(what)
 		self.what = what
-		self.calc = calc  # set when the culprit is a server-only calculate question
+		self.calc = calc
+
+
+class TooComplex(NotLive):
+	"""Written out with every calculation it uses, the formula is too long or too deep to ship."""
+
+	def __init__(self):
+		super().__init__("this formula")
+
+
+@dataclass
+class Budget:
+	"""Shared by a formula and the calculations inlined into it, so expansion stops early."""
+
+	depth: int = 0
 
 
 @dataclass
 class Scope:
 	"""Facts about the form that the emitter needs, supplied by the compiler."""
 
-	fieldname: Callable[[str], str]  # path -> Frappe fieldname
-	type_of: Callable[[str], str]  # path -> XLSForm base type ("repeat" / "group" for containers)
-	repeat_of: Callable[[str], str | None]  # path -> enclosing repeat path
-	calc_ast: Callable[[str], dict | None] = lambda path: None  # calculate path -> resolved AST
-	scope_repeat: str | None = None  # repeat that owns the formula (rows evaluate with doc = row)
+	fieldname: Callable[[str], str]
+	type_of: Callable[[str], str]
+	repeat_of: Callable[[str], str | None]
+	calc_ast: Callable[[str], dict | None] = lambda path: None
+	scope_repeat: str | None = None
 	inlining: tuple[str, ...] = field(default_factory=tuple)
+	budget: Budget = field(default_factory=Budget)
 
 
 @dataclass
 class Js:
 	code: str
-	kind: str  # bool / num / numref / str
+	kind: str
 	guards: tuple[str, ...] = ()
-	literal: bool = False  # a string literal: already a string, never blank-guarded
-	date: bool = False  # a date/time answer: ODK compares these as dates, Frappe's flt can't
+	literal: bool = False
+	text: str | None = None
+	date: bool = False
 
 
 def emit(ast: dict, scope: Scope) -> str:
 	"""Return a boolean JavaScript expression (for depends_on-style properties)."""
-	return _as_bool(_emit(ast, scope))
+	return _checked(_as_bool(_emit(ast, scope)))
+
+
+def _checked(code: str) -> str:
+	"""Every shipped string is within the size cap and the JavaScript profile."""
+	if len(code) > MAX_JS_LENGTH:
+		raise TooComplex()
+	try:
+		profile.check(code)
+	except profile.OutsideProfile as exc:
+		raise NotLive("this formula") from exc
+	return code
 
 
 def emit_value(ast: dict, scope: Scope) -> Js:
@@ -74,27 +106,50 @@ def emit_value(ast: dict, scope: Scope) -> Js:
 
 
 def js_string(text: str) -> str:
+	"""A JavaScript string literal for ``text``.
+
+	Text containing ``eval:`` is split into ``("ev" + "al:...")`` so the marker never appears
+	in emitted code: Frappe's link.js evaluates ``value.split("eval:")[1]`` of a link filter.
+	"""
 	if any(ch in text for ch in FORBIDDEN_LITERAL_CHARS) or any(ord(ch) < 32 for ch in text):
 		raise NotLive("text with line breaks or control characters")
+	if EVAL_MARKER in text:
+		head, *rest = text.split(EVAL_MARKER)
+		pieces = [_quote(head)] if head else []
+		for part in rest:
+			pieces += ['"ev"', _quote("al:" + part)]
+		return "(" + " + ".join(pieces) + ")"
+	return _quote(text)
+
+
+def _quote(text: str) -> str:
 	return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+def filter_value(ast: dict, scope: "Scope") -> str:
+	"""A link_filters value: always ``eval:`` code, so no designer text is ever read as code."""
+	if "lit" in ast and isinstance(ast["lit"], float):
+		return format_number(ast["lit"])
+	return EVAL_MARKER + _checked(_as_str(_emit(ast, scope)))
+
+
 def _num_literal(value: float) -> str:
-	text = format_number(value)
-	if text in ("NaN", "Infinity", "-Infinity"):
+	"""A fixed-point literal: the mForm SDK tokenizer reads only digits and ".", never 1e-07."""
+	if math.isnan(value) or math.isinf(value):
 		raise NotLive("this number")
-	return f"({text})" if value < 0 else text
-
-
-# ── conversions ────────────────────────────────────────────────────────────────
+	text = format(Decimal(repr(value)), "f")
+	if "." in text:
+		text = text.rstrip("0").rstrip(".")
+	if text in ("-0", ""):
+		text = "0"
+	return f"({text})" if value < 0 and text != "0" else text
 
 
 def _as_bool(e: Js) -> str:
 	if e.kind == "bool":
 		return e.code
 	if e.kind == "num":
-		comparison = f"({e.code} !== 0)"
-		return _guarded(e.guards, comparison)
+		return _guarded(e.guards, f"!!({e.code})")
 	return f"!!({e.code})"
 
 
@@ -107,25 +162,28 @@ def _as_str(e: Js) -> str:
 
 
 def _as_num(e: Js) -> tuple[str, tuple[str, ...]]:
-	"""Numeric code plus the guards under which it is a real number (not ODK's NaN)."""
+	"""Numeric code plus the guards under which it is a real number (not ODK's NaN).
+
+	For text, ``flt("red")`` is 0 in Frappe but NaN in ODK. A loose ``==`` between the number and the
+	original text is true only when the whole text is a number ("5", " 5", "5.0").
+	"""
 	if e.kind == "num":
 		return e.code, e.guards
 	if e.kind == "bool":
 		return f"({e.code} ? 1 : 0)", ()
 	if e.literal:
-		text = json.loads(e.code)
-		try:
-			value = float(text) if text.strip() else math.nan
-		except ValueError:
-			value = math.nan
+		text = (e.text or "").strip()
+		value = float(text) if NUMBER_TEXT_RE.match(text) else math.nan
 		if math.isnan(value):
 			return "0", ("false",)
 		return _num_literal(value), ()
 	if e.kind == "numref":
 		return f"flt({e.code})", (f'cstr({e.code}) !== ""',)
-	# Text: flt("red") is 0 in Frappe but NaN in ODK. Loose == between the number and the
-	# original text is true only when the whole text is a number ("5", " 5", "5.0").
-	return f"flt({e.code})", (f'cstr({e.code}) !== ""', f"flt({e.code}) == cstr({e.code})")
+	return f"flt({e.code})", (
+		f'cstr({e.code}) !== ""',
+		f"flt({e.code}) == cstr({e.code})",
+		f'!cstr({e.code}).includes("Infinity")',
+	)
 
 
 def _guarded(guards: tuple[str, ...], expr: str) -> str:
@@ -135,15 +193,26 @@ def _guarded(guards: tuple[str, ...], expr: str) -> str:
 	return "(" + " && ".join((*unique, expr)) + ")"
 
 
-# ── emission ───────────────────────────────────────────────────────────────────
-
-
 def _emit(node: dict, scope: Scope) -> Js:
+	budget = scope.budget
+	budget.depth += 1
+	try:
+		if budget.depth > MAX_EMIT_DEPTH:
+			raise TooComplex()
+		js = _emit_node(node, scope)
+	finally:
+		budget.depth -= 1
+	if len(js.code) + sum(len(g) for g in js.guards) > MAX_JS_LENGTH:
+		raise TooComplex()
+	return js
+
+
+def _emit_node(node: dict, scope: Scope) -> Js:
 	if "lit" in node:
 		value = node["lit"]
 		if isinstance(value, float):
 			return Js(_num_literal(value), "num")
-		return Js(js_string(value), "str", literal=True)
+		return Js(js_string(value), "str", literal=True, text=value)
 	if "ref" in node:
 		return _ref(node["ref"], scope)
 	if node.get("self"):
@@ -178,9 +247,13 @@ def _ref(path: str, scope: Scope) -> Js:
 		inner = scope.calc_ast(path)
 		if inner is None or path in scope.inlining:
 			raise NotLive(f"${{{name}}}", calc=name)
+		if len(scope.inlining) >= MAX_INLINE_DEPTH:
+			raise TooComplex()
 		sub = Scope(**{**scope.__dict__, "inlining": (*scope.inlining, path)})
 		try:
 			return _emit(inner, sub)
+		except TooComplex:
+			raise
 		except NotLive as exc:
 			raise NotLive(exc.what, calc=name) from exc
 	owner = _owner(path, scope)
@@ -249,7 +322,7 @@ def _equals(a: Js, b: Js) -> str:
 
 
 def _date_literal(e: Js) -> bool:
-	return e.literal and bool(re.match(r'^"\d{4}-\d{2}-\d{2}', e.code))
+	return e.literal and bool(re.match(r"^\d{4}-\d{2}-\d{2}", e.text or ""))
 
 
 def _check_arity(fn: str, args: list, n: int) -> None:
@@ -339,6 +412,6 @@ def _count_rows(node: dict, scope: Scope) -> str:
 	if repeat is None:
 		raise NotLive("count() of a question outside a repeat")
 	if repeat == scope.scope_repeat and scope.type_of(path) != "repeat":
-		return "[1]"  # ODK resolves ${q} to the current row's node: always one node
+		return "[1]"
 	owner = "parent" if scope.scope_repeat else "doc"
 	return f"({owner}.{scope.fieldname(repeat)} || [])"

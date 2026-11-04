@@ -1,8 +1,10 @@
-"""Publishing: compile a Valid version, apply it, then submit it (REQUIREMENTS.md section 9).
+"""Publishing: compile a Valid version, check it, apply it, then submit it (REQUIREMENTS.md section 9).
 
-The version is submitted (docstatus 1, immutable) only after the schema changes succeeded,
-so "Published" always means "the DocTypes match this version". A site-level lock makes two
-publishes run one after the other.
+The version is submitted (docstatus 1, immutable) only after the schema changes succeeded, so
+"Published" always means "the DocTypes match this version". A Redis lock, shared by every worker of
+the site, makes two publishes run one after the other. MariaDB commits DDL at once, so a publish
+that fails after its first schema change leaves those changes in place; ownership is recorded first,
+and publishing again reuses them.
 """
 
 import json
@@ -10,7 +12,6 @@ import traceback
 
 import frappe
 from frappe import _
-from frappe.utils.synchronization import filelock
 
 import xlsform.runtime
 from xlsform.core.validate import validate
@@ -18,7 +19,8 @@ from xlsform.runtime import apply as xf_apply
 from xlsform.runtime import navigation, validation
 from xlsform.runtime import settings as xf_settings
 
-LOCK = "xlsform-publish"
+LOCK_SECONDS = 1800
+LOCK_WAIT_SECONDS = 600
 
 
 def check_can_publish(version) -> None:
@@ -39,27 +41,30 @@ def check_can_publish(version) -> None:
 def enqueue(version_name: str) -> str:
 	version = frappe.get_doc("XLSForm Version", version_name)
 	check_can_publish(version)
-	version.db_set("publish_status", "queued")
-	version.db_set("publish_error", None)
+	version.db_set({"publish_status": "queued", "publish_error": None})
 	job_id = f"xlsform-publish-{version_name}"
+	in_test = bool(frappe.flags.in_test)
 	frappe.enqueue(
 		"xlsform.runtime.publish.run",
 		queue="long",
-		timeout=1800,
+		timeout=LOCK_SECONDS,
 		job_id=job_id,
 		deduplicate=True,
+		enqueue_after_commit=not in_test,
 		version_name=version_name,
 		user=frappe.session.user,
-		now=bool(frappe.flags.in_test),
+		now=in_test,
 	)
 	return job_id
 
 
 def run(version_name: str, user: str | None = None) -> None:
-	# frappe.enqueue runs the job as the user who queued it, so permission checks still apply.
+	"""The background job. Runs as the user who queued it, so permission checks still apply."""
 	version = frappe.get_doc("XLSForm Version", version_name)
 	try:
-		with filelock(LOCK, timeout=600):
+		with frappe.cache.lock(
+			f"xlsform-publish:{frappe.local.site}", timeout=LOCK_SECONDS, blocking_timeout=LOCK_WAIT_SECONDS
+		):
 			_publish(version)
 	except Exception as exc:
 		frappe.db.rollback()
@@ -72,7 +77,6 @@ def run(version_name: str, user: str | None = None) -> None:
 		frappe.db.set_value(
 			"XLSForm Version", version_name, {"publish_status": "failed", "publish_error": message}
 		)
-		# The job is failing, so the runner won't commit; keep the status the designer is polling.
 		frappe.db.commit()  # nosemgrep
 		if frappe.flags.in_test:
 			raise
@@ -99,7 +103,7 @@ def _publish(version) -> None:
 			_("The form no longer passes its checks: {0}").format(errors[0].message if errors else "")
 		)
 	plan = result.plan
-	parsed = result.form
+	xf_apply.preflight(plan, form, s.doctype_prefix)
 
 	_status(version, "migrating")
 	xf_apply.apply(plan, form, s.doctype_prefix)
@@ -119,8 +123,8 @@ def _publish(version) -> None:
 	form.data_doctype = plan["compiled_meta"]["doctypes"]["parent"]
 	form.status = "Published"
 	form.retired_on = None
-	if parsed.title and not form.title:
-		form.title = parsed.title
+	if result.form.title and not form.title:
+		form.title = result.form.title
 	form.flags.ignore_permissions = True
 	form.flags.xf_skip_access_sync = True
 	form.save()

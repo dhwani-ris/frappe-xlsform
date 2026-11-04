@@ -25,6 +25,7 @@ from xlsform.core.reader import Row, Sheet, Workbook
 from xlsform.core.suggest import closest, slug
 
 NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.\-]*$")
+MAX_GROUP_DEPTH = 30
 
 SURVEY_COLUMNS = {
 	"type",
@@ -51,13 +52,16 @@ UNSUPPORTED_PREFIXES = ("bind::", "instance::")
 UNSUPPORTED_COLUMNS = {"trigger"}
 
 CHOICE_COLUMNS = {"list_name", "name", "label"}
+CHOICE_COLUMN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
-def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issue]]:
+def build_form(
+	wb: Workbook, filename: str = "", max_depth: int = MAX_GROUP_DEPTH
+) -> tuple[Form | None, list[Issue]]:
 	issues: list[Issue] = []
 	survey = wb.sheet("survey")
 	if survey is None and len(wb.sheets) == 1:
-		survey = next(iter(wb.sheets.values()))  # pyxform: a workbook's only sheet is the survey
+		survey = next(iter(wb.sheets.values()))
 	if survey is None:
 		return None, [issue("E-SHEET-MISSING", sheet_name="survey", sheet="survey", purpose="questions")]
 	issues += _check_sheet_names(wb, survey)
@@ -67,14 +71,13 @@ def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issu
 
 	settings, settings_cols = _read_settings(wb.sheet("settings"))
 	if not settings.get("form_id"):
-		# pyxform's rule: no form_id means the file name. Keep it a valid form ID.
 		default = slug(_stem(filename))[:41] or "form"
 		settings["form_id"] = default if len(default) >= 3 else f"{default}_form"
 	default_language = language_name(settings.get("default_language", "")) or DEFAULT_LANGUAGE
 
 	choices_sheet = wb.sheet("choices")
 	if choices_sheet is not None and not choices_sheet.headers:
-		choices_sheet = None  # an empty choices sheet is the same as none
+		choices_sheet = None
 	lists: dict[str, ChoiceList] = {}
 	choice_columns: set[str] = set()
 	if choices_sheet is not None:
@@ -109,11 +112,25 @@ def build_form(wb: Workbook, filename: str = "") -> tuple[Form | None, list[Issu
 			continue
 		name = row.get("name")
 		if not name and info.base == "note":
-			name = f"note_r{row.number}"  # pyxform accepts notes without a name
+			name = f"note_r{row.number}"
 		kind = {"begin_group": GROUP, "begin_repeat": REPEAT, "begin_loop": GROUP}.get(info.base, QUESTION)
 		node = Node(kind, name, info, row, parent=stack[-1])
 		stack[-1].children.append(node)
 		if kind != QUESTION:
+			if len(stack) > max_depth:
+				issues.append(
+					issue(
+						"E-GROUP-TOO-DEEP",
+						sheet="survey",
+						row=row.number,
+						column="type",
+						col_index=survey.column_index("type"),
+						kind=_block_kind(node),
+						depth=len(stack) - 1,
+						limit=max_depth,
+					)
+				)
+				return None, issues
 			stack.append(node)
 	for open_node in reversed(stack[1:]):
 		kind = _block_kind(open_node)
@@ -177,7 +194,7 @@ def _check_sheet_names(wb: Workbook, survey: Sheet) -> list[Issue]:
 			continue
 		guess = closest(key, KNOWN_SHEETS)
 		if not guess:
-			continue  # unrelated extra sheets are ignored, as in pyxform
+			continue
 		known = wb.sheet(guess)
 		if known is None or (not known.rows and sheet.rows) or not sheet.rows:
 			issues.append(issue("W-SHEET-UNKNOWN", sheet_name=sheet.name, guess=guess))
@@ -222,7 +239,29 @@ def _check_choice_columns(sheet: Sheet) -> list[Issue]:
 			issues.append(
 				issue("E-COL-MISSING", sheet="choices", row=1, sheet_name="choices", column=required)
 			)
+	for col, raw, norm in sheet.headers:
+		if is_extra_choice_column(norm) and not CHOICE_COLUMN_RE.match(norm):
+			issues.append(choice_column_issue(raw, sheet="choices", col_index=col))
 	return issues
+
+
+def is_extra_choice_column(norm: str) -> bool:
+	"""A choices column other than list_name, name, labels and media (a filter column)."""
+	return norm not in CHOICE_COLUMNS and not norm.startswith(("label::", "media::"))
+
+
+def choice_column_issue(raw: str, sheet: str, col_index: int | None = None) -> Issue:
+	"""E-NAME-INVALID for a choice column header: it becomes a field name and a label."""
+	return issue(
+		"E-NAME-INVALID",
+		sheet=sheet,
+		row=1,
+		column=raw,
+		col_index=col_index,
+		name=raw,
+		reason=tr(N_("choice column names can only use letters, numbers and _")),
+		fixed=slug(raw) or "column_1",
+	)
 
 
 def _read_settings(sheet: Sheet | None) -> tuple[dict[str, str], dict[str, int]]:
@@ -237,11 +276,7 @@ def _read_settings(sheet: Sheet | None) -> tuple[dict[str, str], dict[str, int]]
 
 def _read_choices(sheet: Sheet, default_language: str) -> tuple[dict[str, ChoiceList], set[str]]:
 	lists: dict[str, ChoiceList] = {}
-	extra_columns = {
-		norm
-		for _c, _r, norm in sheet.headers
-		if norm not in CHOICE_COLUMNS and not norm.startswith(("label::", "media::"))
-	}
+	extra_columns = {norm for _c, _r, norm in sheet.headers if is_extra_choice_column(norm)}
 	for row in sheet.rows:
 		list_name = row.get("list_name")
 		if not list_name:

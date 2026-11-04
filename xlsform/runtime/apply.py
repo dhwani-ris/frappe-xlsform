@@ -1,13 +1,8 @@
-"""Turn a compiler plan into real DocTypes, choice records, translations and a Web Form.
+"""Turn a compiler plan into DocTypes, choice records, translations and a Web Form.
 
-This is the only code that changes a site's schema (REQUIREMENTS.md section 10):
-
-- it runs inside the publish job, after the caller's role was checked;
-- it only touches DocTypes in module ``XLSForm Data`` whose name starts with the prefix,
-  and aborts on anything else;
-- it never removes a field or a table (fields missing from the plan are kept, hidden);
-- it never changes an existing field's type (the compiler gives a changed question a new
-  column instead).
+This is the only code that changes a site's schema (REQUIREMENTS.md section 10). It runs inside the
+publish job after the caller's role was checked, touches only the DocTypes the form owns, never
+removes a field or a table, and never changes an existing field's type.
 """
 
 import frappe
@@ -48,12 +43,10 @@ FIELD_PROPS = (
 	"non_negative",
 	"unique",
 	"max_height",
+	"set_only_once",
+	"search_index",
 )
-# Properties cleared when the plan doesn't set them, so removed rules really go away.
-CLEARABLE = (
-	"reqd",
-	"read_only",
-	"hidden",
+CLEARED_TO_NONE = (
 	"depends_on",
 	"mandatory_depends_on",
 	"read_only_depends_on",
@@ -62,6 +55,8 @@ CLEARABLE = (
 	"link_filters",
 	"max_height",
 )
+CLEARED_TO_ZERO = ("reqd", "read_only", "hidden")
+LAYOUT_TYPES = ("Section Break", "Tab Break", "Column Break")
 
 
 class ApplyRefused(frappe.ValidationError):
@@ -77,6 +72,7 @@ def ensure_module() -> None:
 
 
 def guard(name: str, prefix: str, form: str) -> None:
+	"""Refuse a DocType that is not an XLSForm DocType of ``form``."""
 	if not name.startswith(prefix + " "):
 		raise ApplyRefused(_("Refusing to change DocType {0}: it isn't an XLSForm DocType.").format(name))
 	if frappe.db.exists("DocType", name):
@@ -89,16 +85,57 @@ def guard(name: str, prefix: str, form: str) -> None:
 			raise ApplyRefused(_("Refusing to change DocType {0}: it belongs to another form.").format(name))
 
 
-def apply(plan: dict, form: "frappe.model.document.Document", prefix: str, progress=None) -> None:
+def preflight(plan: dict, form, prefix: str) -> None:
+	"""Run Frappe's own DocType validation on every planned DocType before any DDL.
+
+	The checks run inside a savepoint that is always rolled back. A new DocType's meta rows are
+	inserted without DDL, so the DocTypes after it in the plan can link to it, and a problem stops the
+	publish while the site is still unchanged.
+	"""
+	for dt in plan["doctypes"]:
+		guard(dt["name"], prefix, form.name)
+	savepoint = "xlsform_preflight"
+	created = []
+	frappe.db.savepoint(savepoint)
+	try:
+		for spec in plan["doctypes"]:
+			doc, exists = _build_doctype(spec, form)
+			_validate_without_ddl(doc)
+			if not exists:
+				doc.db_insert()
+				for child in doc.get_all_children():
+					child.db_insert()
+				created.append(doc.name)
+	finally:
+		frappe.db.rollback(save_point=savepoint)
+		for name in created:
+			frappe.clear_cache(doctype=name)
+
+
+def _validate_without_ddl(doc) -> None:
+	"""The checks of ``DocType.validate`` that only read. ``validate`` itself can alter child tables."""
+	from frappe.core.doctype.doctype.doctype import validate_fields, validate_permissions
+
+	doc.flags.ignore_permissions = True
+	if doc.is_new():
+		doc.validate_name()
+	doc.scrub_field_names()
+	validate_fields(doc)
+	if not doc.istable:
+		validate_permissions(doc)
+	doc._validate_mandatory()
+	doc._validate_length()
+
+
+def apply(plan: dict, form, prefix: str) -> None:
 	ensure_module()
 	for dt in plan["doctypes"]:
 		guard(dt["name"], prefix, form.name)
 	ownership.claim(form.name, {dt["name"] for dt in plan["doctypes"]})
-	total = len(plan["doctypes"])
-	for n, dt in enumerate(plan["doctypes"], start=1):
-		_upsert_doctype(dt, form)
-		if progress:
-			progress(n, total, dt["name"])
+	for spec in plan["doctypes"]:
+		doc, exists = _build_doctype(spec, form)
+		doc.flags.ignore_permissions = True
+		doc.save() if exists else doc.insert()
 	for doctype, records in plan["choices"].items():
 		_sync_choices(doctype, records)
 	_sync_translations(plan["translations"])
@@ -107,16 +144,16 @@ def apply(plan: dict, form: "frappe.model.document.Document", prefix: str, progr
 	if form.allow_web:
 		_sync_web_form(plan["web_form"], form)
 	else:
-		_unpublish_web_form(parent)
+		unpublish_web_form(parent)
 	if form.allow_mobile:
 		_register_mobile(parent)
 	for dt in plan["doctypes"]:
 		frappe.clear_cache(doctype=dt["name"])
 
 
-def _upsert_doctype(spec: dict, form) -> None:
+def _build_doctype(spec: dict, form):
 	name = spec["name"]
-	exists = frappe.db.exists("DocType", name)
+	exists = bool(frappe.db.exists("DocType", name))
 	doc = frappe.get_doc("DocType", name) if exists else frappe.new_doc("DocType")
 	if not exists:
 		doc.name = name
@@ -139,51 +176,45 @@ def _upsert_doctype(spec: dict, form) -> None:
 			doc.append("fields", {"fieldname": f["fieldname"], "fieldtype": f["fieldtype"], **_props(f)})
 			continue
 		if row.fieldtype != f["fieldtype"] and not (row.fieldtype == "Data" and f["fieldtype"] == "Link"):
-			# The compiler never retypes a column; a mismatch means the DocType was edited by hand.
 			frappe.throw(
 				_("Field {0} of {1} is a {2} on the site but the form needs a {3}.").format(
 					f["fieldname"], name, row.fieldtype, f["fieldtype"]
 				)
 			)
-		for prop in CLEARABLE:
-			if prop not in f:
-				row.set(
-					prop,
-					None
-					if prop
-					in (
-						"depends_on",
-						"mandatory_depends_on",
-						"read_only_depends_on",
-						"description",
-						"default",
-						"link_filters",
-						"max_height",
-					)
-					else 0,
-				)
-		for prop, value in _props(f).items():
-			if prop == "length" and row.length and value and int(value) < int(row.length):
-				continue  # never narrow a column
-			row.set(prop, value)
-	# keep fields the plan no longer has (retired questions, mobile_uuid, …), hidden, at the end
+		_update_field(row, f)
+	stale_layout = set()
 	for fieldname, row in existing.items():
-		if fieldname not in order:
-			if not fieldname.startswith("mobile_") and row.fieldtype not in (
-				"Section Break",
-				"Tab Break",
-				"Column Break",
-			):
-				row.hidden = 1
-			order.append(fieldname)
+		if fieldname in order:
+			continue
+		if row.fieldtype in LAYOUT_TYPES and not fieldname.startswith("mobile_"):
+			stale_layout.add(fieldname)
+			continue
+		if not fieldname.startswith("mobile_"):
+			row.hidden = 1
+		order.append(fieldname)
 	position = {fn: i for i, fn in enumerate(order)}
-	doc.fields = sorted(doc.fields, key=lambda r: position.get(r.fieldname, len(position)))
+	doc.fields = sorted(
+		(r for r in doc.fields if r.fieldname not in stale_layout),
+		key=lambda r: position.get(r.fieldname, len(position)),
+	)
 	for i, row in enumerate(doc.fields, start=1):
 		row.idx = i
 	if not doc.istable and not doc.permissions:
 		access.default_permissions(doc)
-	doc.flags.ignore_permissions = True
-	doc.save() if exists else doc.insert()
+	return doc, exists
+
+
+def _update_field(row, f: dict) -> None:
+	for prop in CLEARED_TO_NONE:
+		if prop not in f:
+			row.set(prop, None)
+	for prop in CLEARED_TO_ZERO:
+		if prop not in f:
+			row.set(prop, 0)
+	for prop, value in _props(f).items():
+		if prop == "length" and row.length and value and int(value) < int(row.length):
+			continue
+		row.set(prop, value)
 
 
 def _props(f: dict) -> dict:
@@ -191,27 +222,29 @@ def _props(f: dict) -> dict:
 
 
 def _sync_choices(doctype: str, records: list[dict]) -> None:
+	columns = [c for c in (records[0].keys() if records else []) if c != "choice_name"]
 	existing = {
 		r.name: r
 		for r in frappe.get_all(
-			doctype, fields=["name", "label", "xf_order", "xf_retired"], limit_page_length=0
+			doctype,
+			fields=["name", "xf_retired", *[c for c in columns if c != "xf_retired"]],
+			limit_page_length=0,
 		)
 	}
-	columns = [c for c in (records[0].keys() if records else []) if c not in ("choice_name",)]
 	keep = set()
 	new_rows = []
-	now = frappe.utils.now()
-	user = frappe.session.user
 	for r in records:
 		keep.add(r["choice_name"])
-		if r["choice_name"] in existing:
-			current = frappe.db.get_value(doctype, r["choice_name"], columns, as_dict=True) or {}
-			changes = {c: r.get(c) for c in columns if (current.get(c) or None) != (r.get(c) or None)}
-			if changes:
-				frappe.db.set_value(doctype, r["choice_name"], changes, update_modified=False)
-		else:
+		current = existing.get(r["choice_name"])
+		if current is None:
 			new_rows.append(r)
+			continue
+		changes = {c: r.get(c) for c in columns if (current.get(c) or None) != (r.get(c) or None)}
+		if changes:
+			frappe.db.set_value(doctype, r["choice_name"], changes, update_modified=False)
 	if new_rows:
+		now = frappe.utils.now()
+		user = frappe.session.user
 		fields = [
 			"name",
 			"choice_name",
@@ -228,8 +261,9 @@ def _sync_choices(doctype: str, records: list[dict]) -> None:
 		]
 		frappe.db.bulk_insert(doctype, fields, values, chunk_size=1000)
 	retired = [n for n, r in existing.items() if n not in keep and not r.xf_retired]
-	for n in retired:
-		frappe.db.set_value(doctype, n, "xf_retired", 1, update_modified=False)
+	if retired:
+		table = frappe.qb.DocType(doctype)
+		frappe.qb.update(table).set(table.xf_retired, 1).where(table.name.isin(retired)).run()
 
 
 def _language(spec: str) -> str | None:
@@ -237,14 +271,14 @@ def _language(spec: str) -> str | None:
 	if code and frappe.db.exists("Language", code):
 		return code
 	name = spec.split("(")[0].strip()
-	found = frappe.db.get_value("Language", {"language_name": name}, "name") or (
+	return frappe.db.get_value("Language", {"language_name": name}, "name") or (
 		name.lower() if frappe.db.exists("Language", name.lower()) else None
 	)
-	return found
 
 
 def _sync_translations(translations: list[dict]) -> None:
 	languages: dict[str, str | None] = {}
+	changed = False
 	for t in translations:
 		spec = t["language"]
 		if spec not in languages:
@@ -252,10 +286,17 @@ def _sync_translations(translations: list[dict]) -> None:
 		lang = languages[spec]
 		if not lang:
 			continue
-		filters = {"language": lang, "source_text": t["source_text"], "context": t.get("context") or ""}
+		context = t.get("context") or None
+		filters = {
+			"language": lang,
+			"source_text": t["source_text"],
+			"context": context if context else ["is", "not set"],
+		}
 		name = frappe.db.get_value("Translation", filters)
 		if name:
-			frappe.db.set_value("Translation", name, "translated_text", t["translated_text"])
+			if frappe.db.get_value("Translation", name, "translated_text") != t["translated_text"]:
+				frappe.db.set_value("Translation", name, "translated_text", t["translated_text"])
+				changed = True
 		else:
 			frappe.get_doc(
 				{
@@ -263,12 +304,14 @@ def _sync_translations(translations: list[dict]) -> None:
 					"language": lang,
 					"source_text": t["source_text"],
 					"translated_text": t["translated_text"],
-					"context": t.get("context") or None,
+					"context": context,
 				}
 			).insert(ignore_permissions=True)
-	for lang in {v for v in languages.values() if v}:
-		frappe.cache.hdel("lang_user_translations", lang)
-		frappe.clear_cache()
+			changed = True
+	if changed:
+		from frappe.translate import clear_cache
+
+		clear_cache()
 
 
 def _sync_web_form(spec: dict, form) -> None:
@@ -298,25 +341,28 @@ def _sync_web_form(spec: dict, form) -> None:
 	if name:
 		doc.save()
 	else:
-		# Web Forms are named from their title by default, and two forms may share a title.
 		doc.insert(set_name=spec["route"].replace("/", "-"))
 
 
-def _unpublish_web_form(parent: str) -> None:
+def unpublish_web_form(parent: str) -> None:
 	name = frappe.db.get_value("Web Form", {"doc_type": parent})
 	if name:
 		frappe.db.set_value("Web Form", name, "published", 0)
 
 
+def _mobile_control_ready() -> bool:
+	return "mobile_control" in frappe.get_installed_apps() and bool(
+		frappe.db.exists("DocType", "Mobile Configuration")
+	)
+
+
 def _register_mobile(parent: str) -> None:
-	if "mobile_control" not in frappe.get_installed_apps() or not frappe.db.exists(
-		"DocType", "Mobile Configuration"
-	):
+	if not _mobile_control_ready():
 		return
 	config = frappe.get_single("Mobile Configuration")
+	config.flags.ignore_permissions = True
 	if any(row.mobile_workspace_item == parent for row in config.get("table_lwis") or []):
-		config.flags.ignore_permissions = True
-		config.save()  # re-run mobile_uuid provisioning for new repeat tables
+		config.save()
 		return
 	group = None
 	if frappe.db.exists("DocType", "Mobile Workspace Group"):
@@ -326,14 +372,11 @@ def _register_mobile(parent: str) -> None:
 				ignore_permissions=True
 			)
 	config.append("table_lwis", {"mobile_workspace_item": parent, "workspace_group_name": group})
-	config.flags.ignore_permissions = True
 	config.save()
 
 
 def unregister_mobile(parent: str) -> None:
-	if "mobile_control" not in frappe.get_installed_apps() or not frappe.db.exists(
-		"DocType", "Mobile Configuration"
-	):
+	if not _mobile_control_ready():
 		return
 	config = frappe.get_single("Mobile Configuration")
 	rows = [r for r in config.get("table_lwis") or [] if r.mobile_workspace_item != parent]

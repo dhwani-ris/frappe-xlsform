@@ -54,9 +54,22 @@ jspm_packages/
 # Aider AI Chat
 .aider*
 
-# xlsform
-.sdk-conformance-results.json
-.sdk-cases.json
+# Test, lint and coverage caches
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
+
+# Generated locally
+corpus.json
+*.mo
+
+# AI assistant files
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json

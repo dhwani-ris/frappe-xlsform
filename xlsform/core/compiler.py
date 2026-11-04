@@ -18,7 +18,7 @@ import html
 import re
 from dataclasses import dataclass, field
 
-from xlsform.core.expr import emit_js
+from xlsform.core.expr import emit_js, profile
 from xlsform.core.expr.parser import AST_VERSION, strip_positions
 from xlsform.core.form import GROUP, QUESTION, REPEAT, SELECT_TYPES, SUPPORTED_TYPES, Form, Node
 from xlsform.core.issues import Issue, issue
@@ -30,6 +30,7 @@ MODULE = "XLSForm Data"
 CHOICES_MODULE = "XLSForm Choices"
 RESERVED_PARENT_FIELDS = ("xf_form", "xf_version", "xf_channel")
 LABEL_MAX = 140
+LINK_LENGTH = 63
 TAB_THRESHOLD = 3
 
 FIELDTYPES = {
@@ -75,11 +76,11 @@ ROW_BYTES = {
 	"Datetime": 8,
 }
 NO_COLUMN = {"HTML", "Section Break", "Tab Break", "Column Break", "Table", "Table MultiSelect"}
+WIDE_FIELDTYPES = {"Table", "Table MultiSelect", "HTML", "Geolocation", "Long Text", "Text Editor"}
+SECTION_FIELDTYPES = ("Section Break", "Tab Break")
 FIXED_ROW_BYTES = 3500
 SHORT_TEXT_HEIGHT = "4.5rem"
 
-# Web Form fields accept fewer types than DocFields (Frappe v16 WebFormField.fieldtype).
-# Table MultiSelect becomes a grid of the same pick rows; tabs become web form pages.
 WEB_FIELDTYPES = {"Table MultiSelect": "Table", "Tab Break": "Page Break", "Geolocation": None}
 WEB_UNSUPPORTED_TYPES = {"geopoint", "geotrace", "geoshape"}
 
@@ -90,8 +91,9 @@ class CompileSettings:
 	row_budget_bytes: int = 60000
 	max_questions: int = 400
 	site_language: str = "en"
-	taken_doctypes: set[str] = field(default_factory=set)  # DocType names used by anything else
-	reserved_fieldnames: set[str] = field(default_factory=set)  # e.g. Document attributes
+	columns: int = 3
+	taken_doctypes: set[str] = field(default_factory=set)
+	reserved_fieldnames: set[str] = field(default_factory=set)
 
 
 def compile_form(
@@ -114,8 +116,6 @@ class _Compiler:
 		self.translations: list[dict] = []
 		self.issues: list[Issue] = []
 		self.lang = form.default_language
-
-	# ── naming ──────────────────────────────────────────────────────────────────
 
 	def run(self) -> dict:
 		self._name_doctypes()
@@ -242,7 +242,6 @@ class _Compiler:
 		prev = self.prev_fields.get(node.path)
 		if prev and prev.get("doctype") == doctype and not prev.get("retired_in"):
 			if not self._compatible(prev, node):
-				# never cast data in place: a changed question gets a new column (section 5)
 				name = f"{node.name}_v{_version_slug(self.version)}"
 				return sanitize(name, node.path + "@" + self.version, taken, self.s.reserved_fieldnames)
 			if prev["fieldname"] not in taken:
@@ -261,8 +260,6 @@ class _Compiler:
 	def _fieldtype(self, node: Node) -> str:
 		return fieldtype_for(node, self.a.ranges)
 
-	# ── choice lists ────────────────────────────────────────────────────────────
-
 	def _build_lists(self) -> list[dict]:
 		self.choice_records: dict[str, list[dict]] = {}
 		self.list_lengths: dict[str, int] = {}
@@ -280,7 +277,7 @@ class _Compiler:
 						columns[col] = sanitize(col, f"{list_name}::{col}", taken, self.s.reserved_fieldnames)
 			self.list_columns[list_name] = columns
 			longest = max((len(c.name) for c in lst.choices), default=1) if lst else 1
-			length = max(20, -(-longest // 20) * 20, prev_lengths.get(list_name, 0))
+			length = max(LINK_LENGTH, longest, prev_lengths.get(list_name, 0))
 			self.list_lengths[list_name] = length
 			fields = [
 				{
@@ -308,7 +305,12 @@ class _Compiler:
 					"in_standard_filter": 1,
 				},
 			] + [
-				{"fieldname": fn, "label": col, "fieldtype": "Data", "in_standard_filter": 1}
+				{
+					"fieldname": fn,
+					"label": _plain(col)[:LABEL_MAX],
+					"fieldtype": "Data",
+					"in_standard_filter": 1,
+				}
 				for col, fn in columns.items()
 			]
 			out.append(
@@ -364,7 +366,7 @@ class _Compiler:
 							"options": self.lists[list_name],
 							"reqd": 1,
 							"in_list_view": 1,
-							"length": self.list_lengths.get(list_name, 140),
+							"length": self.list_lengths.get(list_name, LINK_LENGTH),
 						},
 					],
 					"module": MODULE,
@@ -372,8 +374,6 @@ class _Compiler:
 				}
 			)
 		return out
-
-	# ── fields ──────────────────────────────────────────────────────────────────
 
 	def _parent_reserved(self) -> list[dict]:
 		return [
@@ -384,6 +384,7 @@ class _Compiler:
 				"options": "XLSForm",
 				"read_only": 1,
 				"hidden": 1,
+				"set_only_once": 1,
 				"length": 64,
 			},
 			{
@@ -393,6 +394,8 @@ class _Compiler:
 				"options": "XLSForm Version",
 				"read_only": 1,
 				"hidden": 1,
+				"set_only_once": 1,
+				"search_index": 1,
 				"length": 120,
 			},
 			{
@@ -411,7 +414,76 @@ class _Compiler:
 		use_tabs = top and sum(1 for n in nodes if n.kind == GROUP) > TAB_THRESHOLD
 		out: list[dict] = []
 		self._emit_nodes(nodes, doctype, repeat_scope, out, use_tabs, inherited=[], section_prefix="")
+		return self._columns(out, doctype)
+
+	def _columns(self, fields: list[dict], doctype: str) -> list[dict]:
+		"""Spread each section's questions over ``columns`` columns, keeping their order.
+
+		Tables, multi-selects, notes and other wide fields get a full-width row of their own.
+		"""
+		if self.s.columns <= 1:
+			return fields
+		out: list[dict] = []
+		segment: list[dict] = []
+		key = "xf_main"
+		for f in fields:
+			if f["fieldtype"] in SECTION_FIELDTYPES:
+				out += self._lay_out(segment, key, doctype)
+				out.append(f)
+				segment, key = [], f["fieldname"]
+			else:
+				segment.append(f)
+		return out + self._lay_out(segment, key, doctype)
+
+	def _lay_out(self, segment: list[dict], key: str, doctype: str) -> list[dict]:
+		blocks: list[tuple[bool, list[dict]]] = []
+		for f in segment:
+			wide = _is_wide(f)
+			if wide or not blocks or blocks[-1][0]:
+				blocks.append((wide, [f]))
+			else:
+				blocks[-1][1].append(f)
+		out: list[dict] = []
+		for i, (wide, items) in enumerate(blocks):
+			if i:
+				out.append(
+					{"fieldname": self._layout_name(doctype, f"{key}_p{i}"), "fieldtype": "Section Break"}
+				)
+			out += items if wide else self._spread(items, f"{key}_p{i}", doctype)
 		return out
+
+	def _spread(self, items: list[dict], key: str, doctype: str) -> list[dict]:
+		visible = sum(1 for f in items if not f.get("hidden"))
+		count = min(self.s.columns, visible)
+		if count <= 1:
+			return items
+		sizes = [visible // count + (1 if i < visible % count else 0) for i in range(count)]
+		starts = {sum(sizes[:i]) for i in range(1, count)}
+		out: list[dict] = []
+		seen, column = 0, 1
+		for f in items:
+			if not f.get("hidden"):
+				if seen in starts:
+					column += 1
+					out.append(
+						{
+							"fieldname": self._layout_name(doctype, f"{key}_c{column}"),
+							"fieldtype": "Column Break",
+						}
+					)
+				seen += 1
+			out.append(f)
+		return out
+
+	def _layout_name(self, doctype: str, base: str) -> str:
+		taken = self.taken_fieldnames.setdefault(doctype, set(RESERVED_PARENT_FIELDS))
+		name = base[:MAX_FIELDNAME]
+		n = 2
+		while name in taken:
+			name = f"{base[: MAX_FIELDNAME - len(str(n)) - 1]}_{n}"
+			n += 1
+		taken.add(name)
+		return name
 
 	def _emit_nodes(self, nodes, doctype, repeat_scope, out, use_tabs, inherited, section_prefix) -> None:
 		after_group = False
@@ -430,7 +502,7 @@ class _Compiler:
 					"fieldtype": "Tab Break" if is_tab else "Section Break",
 				}
 				if conditions:
-					brk["depends_on"] = _eval_and(conditions)
+					self._set_live(brk, "depends_on", _eval_and(conditions), node, "relevant")
 				out.append(brk)
 				self._record_field(node, doctype, brk)
 				self._translate_label(node, brk, doctype)
@@ -444,7 +516,7 @@ class _Compiler:
 					"label": (_plain(self.form.title)[:LABEL_MAX] if use_tabs else (section_prefix or "")),
 				}
 				if inherited:
-					spacer["depends_on"] = _eval_and(inherited)
+					self._set_live(spacer, "depends_on", _eval_and(inherited), None, "relevant")
 				out.append(spacer)
 				after_group = False
 			if node.kind == REPEAT:
@@ -517,7 +589,7 @@ class _Compiler:
 			"options": self.repeats[node.path],
 		}
 		if conditions:
-			field["depends_on"] = _eval_and(conditions)
+			self._set_live(field, "depends_on", _eval_and(conditions), node, "relevant")
 		self._record_field(node, doctype, field)
 		self._translate_label(node, field, doctype)
 		return field
@@ -558,11 +630,11 @@ class _Compiler:
 		if qtype == "barcode":
 			field["length"] = 140
 		if qtype == "text" and "multiline" not in node.cell("appearance").split():
-			field["max_height"] = SHORT_TEXT_HEIGHT  # ODK shows one line unless appearance is multiline
+			field["max_height"] = SHORT_TEXT_HEIGHT
 		if qtype in ("calculate", "start", "end", "today", "username"):
 			field["read_only"] = 1
 		if qtype in ("start", "end", "today", "username"):
-			field["hidden"] = 1  # filled by the server; ODK never shows metadata
+			field["hidden"] = 1
 		if qtype == "calculate" and not label_text:
 			field["hidden"] = 1
 		if qtype == "hidden":
@@ -575,7 +647,7 @@ class _Compiler:
 		own = self._relevant_js(node)
 		conditions = [*inherited, *([own] if own else [])]
 		if conditions:
-			field["depends_on"] = _eval_and(conditions)
+			self._set_live(field, "depends_on", _eval_and(conditions), node, "relevant")
 
 		static = self.a.static.get(node.path, {})
 		required_ast = self.a.asts.get(node.path, {}).get("required")
@@ -589,16 +661,26 @@ class _Compiler:
 			if static.get("required") and not conditions:
 				field["reqd"] = 1
 			elif static.get("required"):
-				field["mandatory_depends_on"] = _eval_and(conditions)
+				self._set_live(field, "mandatory_depends_on", _eval_and(conditions), node, "required")
 			elif required_ast:
-				field["mandatory_depends_on"] = _eval_and(
-					[*conditions, emit_js.emit(required_ast, self._scope(node))]
+				self._set_live(
+					field,
+					"mandatory_depends_on",
+					_eval_and([*conditions, emit_js.emit(required_ast, self._scope(node))]),
+					node,
+					"required",
 				)
 		read_only_ast = self.a.asts.get(node.path, {}).get("read_only")
 		if static.get("read_only"):
 			field["read_only"] = 1
 		elif read_only_ast:
-			field["read_only_depends_on"] = "eval:" + emit_js.emit(read_only_ast, self._scope(node))
+			self._set_live(
+				field,
+				"read_only_depends_on",
+				"eval:" + emit_js.emit(read_only_ast, self._scope(node)),
+				node,
+				"read_only",
+			)
 
 		default = self.a.defaults.get(node.path)
 		if default is not None and qtype not in ("select_multiple", "select_multiple_from_file", "note"):
@@ -613,12 +695,21 @@ class _Compiler:
 		self._translate_label(node, field, doctype)
 		return field
 
+	def _set_live(self, field: dict, key: str, value: str, node: Node | None, column: str) -> None:
+		"""Ship an ``eval:`` property only when it is in the JavaScript profile.
+
+		Each part was checked when emitted; this catches what joining parts can add (nesting).
+		"""
+		if profile.is_valid(value.removeprefix("eval:")):
+			field[key] = value
+			return
+		where = {}
+		if node is not None and node.row:
+			where = dict(sheet="survey", row=node.row_number, column=column, col_index=node.col(column))
+		self.issues.append(issue("E-EXPR-TOO-COMPLEX", limit=emit_js.MAX_JS_LENGTH, **where))
+
 	def _filter_value(self, ast: dict, node: Node) -> str:
-		if "lit" in ast:
-			value = ast["lit"]
-			return emit_js.format_number(value) if isinstance(value, float) else value
-		js = emit_js.emit_value(ast, self._scope(node))
-		return "eval:" + (f"cstr({js.code})" if js.kind != "bool" else f'({js.code} ? "true" : "false")')
+		return emit_js.filter_value(ast, self._scope(node))
 
 	def _record_field(self, node: Node, doctype: str, field: dict) -> None:
 		entry = {
@@ -652,7 +743,6 @@ class _Compiler:
 				self.taken_fieldnames.setdefault(prev["doctype"], set(RESERVED_PARENT_FIELDS)).add(
 					prev["fieldname"]
 				)
-		# also reserve columns of questions whose type changed (they get a new column)
 		for path, prev in self.prev_fields.items():
 			if path in current_paths and not prev.get("retired_in"):
 				node = self.by_path[path]
@@ -666,6 +756,8 @@ class _Compiler:
 					)
 
 	def _append_retired_docfields(self, doctypes: list[dict]) -> None:
+		"""Keep retired questions as hidden columns. Their list, pick and repeat DocTypes carry over
+		from the previous meta, so a retired column keeps pointing at the same DocType."""
 		by_name = {d["name"]: d for d in doctypes}
 		for entry in self.retired:
 			dt = by_name.get(entry["doctype"])
@@ -679,8 +771,6 @@ class _Compiler:
 				"hidden": 1,
 				"read_only": 1,
 			}
-			# Targets are never dropped: list, pick and repeat DocTypes carry over from the
-			# previous meta, so a retired column keeps pointing at the same DocType.
 			if entry["fieldtype"] == "Link":
 				field["options"] = self.lists[entry["list"]]
 				field["length"] = self.list_lengths[entry["list"]]
@@ -719,8 +809,6 @@ class _Compiler:
 	def _default_autoname(self) -> str:
 		return "format:" + self.form.form_id.upper() + "-{#####}"
 
-	# ── translations, limits, web form ──────────────────────────────────────────
-
 	def _translate(self, language: str, source: str, translated: str, context: str | None) -> None:
 		if source and translated and source != translated:
 			self.translations.append(
@@ -746,10 +834,10 @@ class _Compiler:
 		if node.base_type == "note" and field.get("options"):
 			for language, text in labels.items():
 				if language != self.lang:
-					self._translate(language, field["options"], _note_html(text), context=doctype)
+					self._translate(language, field["options"], _note_html(text), context=None)
 
 	def _check_limits(self, doctypes: list[dict]) -> None:
-		count = sum(1 for n in self.form.nodes() if n.kind == QUESTION and n.base_type in SUPPORTED_TYPES)
+		count = question_count(self.form)
 		if count > self.s.max_questions:
 			self.issues.append(issue("E-LIMIT-QUESTIONS", count=count, limit=self.s.max_questions))
 		for dt in doctypes:
@@ -797,6 +885,11 @@ class _Compiler:
 			"fields": fields,
 			"custom_css": css,
 		}
+
+
+def question_count(form: Form) -> int:
+	"""Questions that become fields, as counted for E-LIMIT-QUESTIONS."""
+	return sum(1 for n in form.nodes() if n.kind == QUESTION and n.base_type in SUPPORTED_TYPES)
 
 
 def fieldtype_for(node: Node, ranges: dict) -> str:
@@ -856,11 +949,22 @@ def _plain(text: str) -> str:
 	return html.escape(" ".join(text.split()), quote=False)
 
 
+def _is_wide(f: dict) -> bool:
+	if f.get("hidden"):
+		return False
+	return f["fieldtype"] in WIDE_FIELDTYPES or (f["fieldtype"] == "Small Text" and not f.get("max_height"))
+
+
 def _note_html(text: str) -> str:
-	"""Safe HTML for a note: escape everything, then allow **bold**, *italic* and line breaks."""
+	"""Safe HTML for a note: escape everything, then allow **bold**, *italic* and line breaks.
+
+	Frappe's HTML control passes its content through ``frappe.render``, which runs ``{% %}`` and
+	``{{ }}`` as JavaScript, so braces are written as HTML entities.
+	"""
 	if not text:
 		return ""
 	safe = html.escape(TAGS.sub("", html.unescape(text)), quote=True)
+	safe = safe.replace("{", "&#123;").replace("}", "&#125;")
 	safe = MD_BOLD.sub(lambda m: f"<strong>{m.group(1) or m.group(2)}</strong>", safe)
 	safe = MD_ITALIC.sub(lambda m: f"<em>{m.group(1)}</em>", safe)
 	return "<p>" + safe.replace("\n", "<br>") + "</p>"

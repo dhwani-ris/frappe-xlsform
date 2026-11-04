@@ -32,7 +32,6 @@ def diff(form: Form, analysis: Analysis, prev_meta: dict | None) -> tuple[dict, 
 	def where(node: Node, column: str = "name") -> dict:
 		return dict(sheet="survey", row=node.row_number, column=column, col_index=node.col(column))
 
-	# moved into or out of a repeat: same name, different repeat
 	for r in list(removed):
 		name = prev[r]["name"]
 		match = next((a for a in added if cur[a].name == name), None)
@@ -50,7 +49,6 @@ def diff(form: Form, analysis: Analysis, prev_meta: dict | None) -> tuple[dict, 
 		removed.remove(r)
 		added.remove(match)
 
-	# renames: removed and added question of the same type with the same label
 	labels = prev_meta.get("labels", {})
 	for r in list(removed):
 		old_label = labels.get(r, {})

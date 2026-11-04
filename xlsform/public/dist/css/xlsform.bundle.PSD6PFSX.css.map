@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../tmp/tmp-56556-tQG9iYaLT2hA/xlsform/xlsform/public/css/xlsform.bundle.css"],
-  "sourcesContent": ["/* XLSForm Desk styles: validation report and preview. Uses Desk CSS variables, so light and dark themes both work. */\n.xf-report .xf-summary { margin-bottom: var(--margin-md); display: flex; gap: var(--margin-sm); flex-wrap: wrap; }\n.xf-report .xf-summary.xf-ok { color: var(--green-600); font-weight: 500; }\n.xf-report .xf-sheet { margin-top: var(--margin-lg); text-transform: lowercase; color: var(--text-muted); }\n.xf-report table.xf-issues td { vertical-align: top; }\n.xf-report table.xf-issues .indicator { margin-right: 6px; }\n.xf-report a.xf-copy { cursor: copy; font-family: var(--font-family-monospace, monospace); }\n.xf-preview-failures li { margin-bottom: 4px; }\n.xf-preview-note { color: var(--text-muted); font-size: var(--text-sm); margin-bottom: var(--margin-md); }\n"],
-  "mappings": ";AACA;AAAyB;AAAiC;AAAe;AAAuB;AAAA;AAChG;AAA+B;AAAyB;AAAA;AACxD;AAAuB;AAA8B;AAA2B;AAAA;AAChF;AAAgC;AAAA;AAChC;AAAwC;AAAA;AACxC;AAAuB;AAAc;AAAA;AACrC;AAA0B;AAAA;AAC1B;AAAmB;AAA0B;AAA2B;AAAA;",
-  "names": []
-}

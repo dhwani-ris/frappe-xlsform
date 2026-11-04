@@ -13,7 +13,6 @@ GROUP = "group"
 REPEAT = "repeat"
 QUESTION = "question"
 
-# Canonical XLSForm question types and how v1 treats them (REQUIREMENTS.md section 2).
 SUPPORTED_TYPES = {
 	"text",
 	"integer",
@@ -63,15 +62,11 @@ SELECT_TYPES = {"select_one", "select_multiple", "select_one_from_file", "select
 META_TYPES = {"start", "end", "today", "username"}
 NO_LABEL_OK = {"calculate", "hidden", "start", "end", "today", "username", *META_IGNORED_TYPES}
 
-# Every spelling pyxform 4.5 accepts (pyxform.question_type_dictionary and aliases), keyed by
-# the lower-cased type with spaces as underscores, mapped to the canonical v1 type.
 TYPE_ALIASES = {
-	# text
 	"string": "text",
 	"add_text_prompt": "text",
 	"q_string": "text",
 	"phone_number": "text",
-	# numbers
 	"int": "integer",
 	"add_integer_prompt": "integer",
 	"q_int": "integer",
@@ -82,7 +77,6 @@ TYPE_ALIASES = {
 	"float": "decimal",
 	"add_decimal_prompt": "decimal",
 	"q_decimal": "decimal",
-	# dates and times
 	"add_date_prompt": "date",
 	"q_date": "date",
 	"date_time": "datetime",
@@ -90,7 +84,6 @@ TYPE_ALIASES = {
 	"add_datetime_prompt": "datetime",
 	"q_date_time": "datetime",
 	"q_datetime": "datetime",
-	# location and media
 	"location": "geopoint",
 	"gps": "geopoint",
 	"add_location_prompt": "geopoint",
@@ -109,7 +102,6 @@ TYPE_ALIASES = {
 	"add_file_prompt": "file",
 	"add_barcode_prompt": "barcode",
 	"q_barcode": "barcode",
-	# display and computed
 	"add_note_prompt": "note",
 	"q_note": "note",
 	"add_acknowledge_prompt": "acknowledge",
@@ -117,7 +109,6 @@ TYPE_ALIASES = {
 	"trigger": "trigger",
 	"add_calculate_prompt": "calculate",
 	"q_calculate": "calculate",
-	# metadata
 	"start_time": "start",
 	"get_start_time": "start",
 	"end_time": "end",
@@ -137,7 +128,6 @@ TYPE_ALIASES = {
 	"uri:subscriberid": "subscriberid",
 	"uri:email": "email",
 	"uri:username": "username",
-	# structure: begin/end + group, lgroup, repeat, looped group, loop
 	"begin_lgroup": "begin_repeat",
 	"end_lgroup": "end_repeat",
 	"begin_looped_group": "begin_repeat",
@@ -149,8 +139,6 @@ TYPE_ALIASES = {
 	"select1": "select_one",
 }
 
-# Select spellings that take a list (or a file) after them, longest first so
-# "select one from file" wins over "select one from" and "select one".
 SELECT_PREFIXES = (
 	("add select multiple prompt using ", "select_multiple"),
 	("add select one prompt using ", "select_one"),
@@ -185,9 +173,9 @@ ALL_KNOWN_TYPES = SUPPORTED_TYPES | META_IGNORED_TYPES | set(UNSUPPORTED_TYPES) 
 
 @dataclass
 class TypeInfo:
-	base: str  # canonical type, e.g. select_one
-	list_name: str = ""  # select_one <list_name>
-	file_name: str = ""  # select_one_from_file <file>
+	base: str
+	list_name: str = ""
+	file_name: str = ""
 	raw: str = ""
 
 
@@ -215,7 +203,7 @@ def parse_type(raw: str) -> TypeInfo:
 
 @dataclass
 class Node:
-	kind: str  # group / repeat / question
+	kind: str
 	name: str
 	type: TypeInfo
 	row: Row | None
@@ -320,7 +308,7 @@ class Choice:
 class ChoiceList:
 	name: str
 	choices: list[Choice] = field(default_factory=list)
-	row: int = 0  # first row on the choices sheet
+	row: int = 0
 	from_file: str = ""
 
 
@@ -333,6 +321,8 @@ class Form:
 	default_language: str
 	languages: list[str]
 	choice_columns: set[str] = field(default_factory=set)
+	_by_path: dict[str, Node] | None = field(default=None, repr=False, compare=False)
+	_by_name: dict[str, Node] | None = field(default=None, repr=False, compare=False)
 
 	@property
 	def form_id(self) -> str:
@@ -354,10 +344,16 @@ class Form:
 		return [n for n in self.nodes() if n.kind == QUESTION]
 
 	def by_name(self) -> dict[str, Node]:
-		return {n.name: n for n in self.nodes()}
+		"""Nodes by name, built once: the tree is fixed after stage 2."""
+		if self._by_name is None:
+			self._by_name = {n.name: n for n in self.nodes()}
+		return self._by_name
 
 	def by_path(self) -> dict[str, Node]:
-		return {n.path: n for n in self.nodes()}
+		"""Nodes by path, built once: the tree is fixed after stage 2."""
+		if self._by_path is None:
+			self._by_path = {n.path: n for n in self.nodes()}
+		return self._by_path
 
 	def as_dict(self) -> dict:
 		return {

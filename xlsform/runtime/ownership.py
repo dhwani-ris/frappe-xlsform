@@ -23,6 +23,4 @@ def claim(form: str, names: set[str]) -> None:
 	if names <= current:
 		return
 	frappe.db.set_value("XLSForm", form, "generated_doctypes", json.dumps(sorted(current | names)))
-	# Committed before the DDL that follows, which MariaDB commits implicitly anyway; a failed
-	# publish must still know which DocTypes it created.
 	frappe.db.commit()  # nosemgrep

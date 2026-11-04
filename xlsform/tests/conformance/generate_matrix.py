@@ -11,7 +11,6 @@ import os
 
 OPS = ["=", "!=", "<", "<=", ">", ">="]
 FIELDS = {
-	# field -> (XLSForm kind, values as stored by Frappe; None = unanswered)
 	"n": ("number", [None, 0, 5, 7, -2]),
 	"d": ("number", [None, 2.5, 5.0]),
 	"t": ("text", [None, "", "5", "7", "abc", " 5", "5.0", "1,000", "5abc"]),
@@ -21,7 +20,6 @@ LITERALS = [("5", 5.0), ("0", 0.0), ("-2", -2.0), ("2.5", 2.5), ("'5'", "5"), ("
 
 
 def odk(op, kind, value, lit):
-	# the answer as XPath sees it: unanswered is "", numbers are numbers, text is text
 	a = "" if value is None or value == "" else (float(value) if kind == "number" else value)
 	b = lit
 

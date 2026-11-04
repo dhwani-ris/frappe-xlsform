@@ -5,16 +5,20 @@ Every problem the validator reports has a stable code. Errors block publishing; 
 | Code | Severity | Stage | Meaning |
 | --- | --- | --- | --- |
 | [E-FILE-PROTECTED](E-FILE-PROTECTED.md) | error | 1 | The workbook is password-protected, so it can't be read. |
+| [E-FILE-SHEET-SIZE](E-FILE-SHEET-SIZE.md) | error | 1 | The "‹sheet_name›" sheet has data outside the first ‹max_rows› rows and ‹max_columns› columns (A to ‹column_name›). |
 | [E-FILE-SIZE](E-FILE-SIZE.md) | error | 1 | The file is ‹size_mb› MB; the limit is ‹limit_mb› MB. |
 | [E-FILE-TYPE](E-FILE-TYPE.md) | error | 1 | This file is not an Excel workbook (.xlsx). |
+| [E-FILE-UNPACKED](E-FILE-UNPACKED.md) | error | 1 | The workbook unpacks to ‹size_mb› MB of data; the limit is ‹limit_mb› MB. |
 | [E-FILE-UNREADABLE](E-FILE-UNREADABLE.md) | error | 1 | The workbook can't be opened; it may be damaged. |
 | [E-SHEET-MISSING](E-SHEET-MISSING.md) | error | 1 | The workbook has no "‹sheet_name›" sheet. |
 | [E-SHEET-UNSUPPORTED](E-SHEET-UNSUPPORTED.md) | error | 1 | The "‹sheet_name›" sheet (entities) isn't supported yet. |
 | [W-SHEET-UNKNOWN](W-SHEET-UNKNOWN.md) | warning | 1 | The sheet "‹sheet_name›" isn't used, so anything on it will be ignored. |
 | [E-COL-MISSING](E-COL-MISSING.md) | error | 2 | The ‹sheet_name› sheet has no "‹column›" column. |
 | [E-COL-UNSUPPORTED](E-COL-UNSUPPORTED.md) | error | 2 | Column "‹column›" isn't supported. |
+| [E-FORM-TOO-COMPLEX](E-FORM-TOO-COMPLEX.md) | error | 2 | The form couldn't be checked completely: it is nested too deeply for the ‹stage› checks. |
 | [E-GROUP-EXTRA-END](E-GROUP-EXTRA-END.md) | error | 2 | Row ‹row› closes a ‹kind› that was never opened. |
 | [E-GROUP-MISMATCH](E-GROUP-MISMATCH.md) | error | 2 | Row ‹row› closes a ‹closing›, but the open block is a ‹open_kind› started in row ‹open_row›. |
+| [E-GROUP-TOO-DEEP](E-GROUP-TOO-DEEP.md) | error | 2 | Row ‹row› opens a ‹kind› inside ‹depth› other groups or repeats; the limit is ‹limit›. |
 | [E-GROUP-UNCLOSED](E-GROUP-UNCLOSED.md) | error | 2 | The ‹kind› started in row ‹row› (‹name›) is never closed. |
 | [E-NAME-DUPLICATE](E-NAME-DUPLICATE.md) | error | 2 | The name ‹name› is used in rows ‹rows›. |
 | [E-NAME-INVALID](E-NAME-INVALID.md) | error | 2 | "‹name›" can't be used as a name: ‹reason›. |
@@ -23,12 +27,13 @@ Every problem the validator reports has a stable code. Errors block publishing; 
 | [W-COL-UNKNOWN](W-COL-UNKNOWN.md) | warning | 2 | Column "‹column›" isn't recognised and will be ignored. |
 | [E-CALC-CYCLE](E-CALC-CYCLE.md) | error | 3 | These calculations depend on each other in a loop: ‹cycle›. |
 | [E-CALC-NOT-LIVE](E-CALC-NOT-LIVE.md) | error | 3 | "‹column›" uses ‹name›, whose calculation can only run when the form is saved. |
-| [E-CHOICE-DUPLICATE](E-CHOICE-DUPLICATE.md) | error | 3 | Choice "‹choice›" appears twice in list "‹list›" (choices rows ‹rows›). |
+| [E-CHOICE-DUPLICATE](E-CHOICE-DUPLICATE.md) | error | 3 | List "‹list›" has the choice name ‹choices› more than once (choices rows ‹rows›). Names that differ only in upper or lower case, accents or trailing spaces count as the same. |
 | [E-CHOICE-NAME](E-CHOICE-NAME.md) | error | 3 | Choice name "‹choice›" in list "‹list›" ‹reason›. |
 | [E-DEFAULT-DYNAMIC](E-DEFAULT-DYNAMIC.md) | error | 3 | The default "‹value›" can't be used; defaults must be fixed values, today() or now(). |
 | [E-EXPR-NOT-LIVE](E-EXPR-NOT-LIVE.md) | error | 3 | ‹what› can't be used in "‹column›": this rule is checked while the form is being filled, offline too. |
 | [E-EXPR-QUOTE](E-EXPR-QUOTE.md) | error | 3 | The formula uses curly quotes (‘ ’ or “ ”), which formulas don't accept. |
 | [E-EXPR-SYNTAX](E-EXPR-SYNTAX.md) | error | 3 | The formula can't be read: ‹reason›. |
+| [E-EXPR-TOO-COMPLEX](E-EXPR-TOO-COMPLEX.md) | error | 3 | The formula in "‹column›" is too complex to check while the form is being filled: written out with the calculations it uses, it is longer than ‹limit› characters or too deeply nested. |
 | [E-EXPR-TOO-LONG](E-EXPR-TOO-LONG.md) | error | 3 | The formula is ‹length› characters long; the limit is ‹limit›. |
 | [E-FILE-CSV-MISSING](E-FILE-CSV-MISSING.md) | error | 3 | Row ‹row› uses ‹file›, which wasn't uploaded with the form. |
 | [E-FILTER-COLUMN](E-FILTER-COLUMN.md) | error | 3 | choice_filter uses column "‹choice_column›", which isn't on the choices sheet for list "‹list›". |
@@ -43,6 +48,7 @@ Every problem the validator reports has a stable code. Errors block publishing; 
 | [E-REF-REPEAT](E-REF-REPEAT.md) | error | 3 | Row ‹row› (outside repeat ‹repeat›) uses ${‹name›} without count() or sum(). |
 | [E-REF-SELF](E-REF-SELF.md) | error | 3 | The ‹column› of ‹name› refers to its own name; use . for "this answer". |
 | [E-REF-UNKNOWN](E-REF-UNKNOWN.md) | error | 3 | The formula refers to ${‹name›}, which isn't a question in this form. |
+| [E-REGEX-UNSAFE](E-REGEX-UNSAFE.md) | error | 3 | The pattern in regex() can't be used: ‹reason›. |
 | [E-REPEAT-EMPTY](E-REPEAT-EMPTY.md) | error | 3 | Repeat ‹name› (row ‹row›) has no questions. |
 | [E-REPEAT-NESTED](E-REPEAT-NESTED.md) | error | 3 | Repeat ‹inner› (row ‹inner_row›) is inside repeat ‹outer› (row ‹outer_row›); repeats inside repeats aren't supported yet. |
 | [E-SETTING-ENCRYPTED](E-SETTING-ENCRYPTED.md) | error | 3 | Encrypted forms (public_key) aren't supported. |

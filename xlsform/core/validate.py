@@ -11,16 +11,19 @@ from dataclasses import dataclass, field
 from xlsform.core import compiler, diff, meaning, reader, structure
 from xlsform.core.form import Form
 from xlsform.core.i18n import N_, tr
-from xlsform.core.issues import ERROR, Issue, sort_key
+from xlsform.core.issues import ERROR, Issue, issue, sort_key
 
 
 @dataclass
 class ValidateOptions:
 	max_upload_mb: float = 5
+	max_unpacked_mb: float = reader.MAX_UNPACKED_MB
 	max_questions: int = 400
 	max_choices_per_list: int = 20000
 	max_expression_length: int = 2000
+	max_group_depth: int = structure.MAX_GROUP_DEPTH
 	row_budget_bytes: int = 60000
+	columns: int = 3
 	prefix: str = "XF"
 	published_version: str | None = None
 	previous_meta: dict | None = None
@@ -51,20 +54,40 @@ class Result:
 
 
 def validate(content: bytes, filename: str, opts: ValidateOptions | None = None) -> Result:
-	opts = opts or ValidateOptions()
+	"""Run every stage; a form too deep for the checks themselves becomes E-FORM-TOO-COMPLEX."""
 	result = Result()
+	stage = [1]
+	try:
+		return _validate(content, filename, opts or ValidateOptions(), result, stage)
+	except RecursionError:
+		result.plan = None
+		result.change_summary = None
+		result.issues.append(
+			issue("E-FORM-TOO-COMPLEX", sheet="survey", stage=tr(STAGE_NAMES.get(stage[0], STAGE_NAMES[2])))
+		)
+		return _finish(result, from_stage=stage[0] + 1)
 
-	wb, issues = reader.read_workbook(content, filename, opts.max_upload_mb)
+
+def _validate(
+	content: bytes, filename: str, opts: ValidateOptions, result: Result, stage: list[int]
+) -> Result:
+	wb, issues = reader.read_workbook(content, filename, opts.max_upload_mb, opts.max_unpacked_mb)
 	result.issues += issues
 	if wb is None:
 		return _finish(result, from_stage=2)
 
-	form, issues = structure.build_form(wb, filename)
+	stage[0] = 2
+	form, issues = structure.build_form(wb, filename, opts.max_group_depth)
 	result.issues += issues
 	if form is None or any(i.severity == ERROR for i in issues):
 		return _finish(result, from_stage=3)
 	result.form = form
+	count = compiler.question_count(form)
+	if count > opts.max_questions:
+		result.issues.append(issue("E-LIMIT-QUESTIONS", count=count, limit=opts.max_questions))
+		return _finish(result, from_stage=3)
 
+	stage[0] = 3
 	analysis, issues = meaning.check(
 		form,
 		meaning.Options(
@@ -80,6 +103,7 @@ def validate(content: bytes, filename: str, opts: ValidateOptions | None = None)
 	if any(i.severity == ERROR for i in issues):
 		return _finish(result, from_stage=4)
 
+	stage[0] = 4
 	plan = compiler.compile_form(
 		form,
 		analysis,
@@ -88,6 +112,7 @@ def validate(content: bytes, filename: str, opts: ValidateOptions | None = None)
 			prefix=opts.prefix,
 			row_budget_bytes=opts.row_budget_bytes,
 			max_questions=opts.max_questions,
+			columns=opts.columns,
 			taken_doctypes=opts.taken_doctypes,
 			reserved_fieldnames=opts.reserved_fieldnames,
 		),
@@ -95,6 +120,7 @@ def validate(content: bytes, filename: str, opts: ValidateOptions | None = None)
 	result.issues += plan.pop("issues")
 	result.plan = plan
 
+	stage[0] = 5
 	summary, issues = diff.diff(form, analysis, opts.previous_meta)
 	result.issues += issues
 	result.change_summary = summary
@@ -102,6 +128,7 @@ def validate(content: bytes, filename: str, opts: ValidateOptions | None = None)
 
 
 STAGE_NAMES = {
+	1: N_("file"),
 	2: N_("structure"),
 	3: N_("question types, choice lists and formulas"),
 	4: N_("Frappe limits"),

@@ -1,9 +1,9 @@
-"""Python, Frappe JavaScript and mForm SDK must agree with ODK on every case.
+"""Python and Frappe JavaScript must agree with ODK on every case, and every emitted string
+must be in the JavaScript profile the mForm SDK reads (``core/expr/profile.py``).
 
-Runtimes that aren't available are skipped with a reason, never silently passed:
-- Node needs ``FRAPPE_APP_PATH`` (the bench's ``apps/frappe``; set automatically inside the
-  dev container and CI).
-- Dart needs ``XLSFORM_SDK_RESULTS``: a JSON file produced by ``scripts/conformance-dart.sh``.
+Node needs ``FRAPPE_APP_PATH`` (the bench's ``apps/frappe``; set automatically inside the dev
+container and CI); without it the JavaScript run is skipped with a reason, never passed.
+The SDK repository can run the same cases itself: ``python -m xlsform.tests.conformance.export``.
 """
 
 import json
@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import unittest
 
+from xlsform.core.expr import profile
 from xlsform.tests.conformance import harness
 
 CASES = harness.load_cases()
@@ -71,12 +72,28 @@ class TestConformance(unittest.TestCase):
 		os.unlink(path)
 		self._compare(json.loads(out.stdout), "Frappe JS")
 
-	def test_mform_sdk_matches_odk(self):
-		path = os.environ.get("XLSFORM_SDK_RESULTS")
-		if not path or not os.path.exists(path):
-			self.skipTest("run scripts/conformance-dart.sh to produce XLSFORM_SDK_RESULTS")
-		with open(path) as f:
-			self._compare(json.load(f), "mForm SDK")
+	def test_filter_literals_evaluate_to_themselves_in_frappe(self):
+		"""link.js parse_filters runs value.split("eval:")[1] through frappe.utils.eval."""
+		app = _frappe_app_path()
+		node = shutil.which("node")
+		if not app or not node:
+			self.skipTest("node and the Frappe app source are needed (set FRAPPE_APP_PATH)")
+		cases = harness.filter_literal_cases()
+		with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+			json.dump(cases, f, ensure_ascii=False)
+			path = f.name
+		runner = os.path.join(harness.HERE, "run_js.js")
+		out = subprocess.run([node, runner, app, path], capture_output=True, text=True, check=True)
+		os.unlink(path)
+		got = {r["id"]: r.get("result", r.get("error")) for r in json.loads(out.stdout)}
+		self.assertEqual(got, {c["id"]: c["expected"] for c in cases})
+
+	def test_every_emitted_string_is_in_the_sdk_profile(self):
+		strings = [c["js"] for c in RESULTS["js_cases"]]
+		strings += [c["js"] for c in harness.filter_literal_cases()]
+		self.assertGreater(len(strings), 1000)
+		outside = [code for code in strings if not profile.is_valid(code)]
+		self.assertEqual(outside, [])
 
 	def _compare(self, results: list[dict], runtime: str):
 		failures = []

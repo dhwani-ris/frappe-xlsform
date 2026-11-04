@@ -13,7 +13,6 @@ TAG = re.compile(r"\s*\[xlsform:([^\]]+)\]")
 
 
 def execute():
-	frappe.reload_doc("xlsform", "doctype", "xlsform")
 	owned: dict[str, set[str]] = {}
 	for dt in frappe.get_all(
 		"DocType",

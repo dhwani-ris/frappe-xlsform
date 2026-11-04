@@ -12,6 +12,7 @@
   "max_expression_length",
   "row_budget_bytes",
   "behaviour_section",
+  "columns_per_section",
   "doctype_prefix",
   "default_language",
   "column_break_behaviour",
@@ -70,6 +71,14 @@
    "label": "Behaviour"
   },
   {
+   "default": "3",
+   "description": "Questions of a section are spread over this many columns on Desk and the web form. Tables, multi-selects and notes always use the full width.",
+   "fieldname": "columns_per_section",
+   "fieldtype": "Select",
+   "label": "Columns per section",
+   "options": "1\n2\n3"
+  },
+  {
    "fieldname": "doctype_prefix",
    "fieldtype": "Data",
    "label": "Prefix of generated DocTypes",
@@ -106,7 +115,7 @@
  "icon": "settings",
  "issingle": 1,
  "links": [],
- "modified": "2026-11-03 12:00:00.000000",
+ "modified": "2026-11-04 09:32:23.282119",
  "modified_by": "Administrator",
  "module": "XLSForm",
  "name": "XLSForm Settings",

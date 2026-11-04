@@ -27,17 +27,17 @@ class Failure:
 	path: str
 	label: str
 	message: str
-	row: int | None = None  # 0-based row inside a repeat
+	row: int | None = None
 	repeat_label: str | None = None
-	kind: str = "constraint"  # required / constraint / range / repeat_count / choice
+	kind: str = "constraint"
 
 
 @dataclass
 class Outcome:
-	parent_updates: dict = field(default_factory=dict)  # fieldname -> value
-	row_updates: dict = field(default_factory=dict)  # (table fieldname, row index) -> {fieldname: value}
+	parent_updates: dict = field(default_factory=dict)
+	row_updates: dict = field(default_factory=dict)
 	failures: list[Failure] = field(default_factory=list)
-	relevant: dict = field(default_factory=dict)  # (path, row) -> bool
+	relevant: dict = field(default_factory=dict)
 
 
 ChoiceLookup = Callable[[str, str], dict | None]
@@ -81,8 +81,6 @@ class _Engine:
 		self.lang = language or meta.get("default_language")
 		self.out = Outcome()
 
-	# ── helpers ─────────────────────────────────────────────────────────────
-
 	def label(self, path: str) -> str:
 		labels = self.labels.get(path) or {}
 		return (
@@ -105,7 +103,15 @@ class _Engine:
 	def eval(self, ast, path, row, scope_repeat):
 		try:
 			return evaluate(ast, self.ctx(path, row, scope_repeat))
-		except (EvalError, ZeroDivisionError, OverflowError, ValueError, IndexError, TypeError):
+		except (
+			EvalError,
+			ZeroDivisionError,
+			OverflowError,
+			ValueError,
+			IndexError,
+			TypeError,
+			RecursionError,
+		):
 			return ""
 
 	def value(self, path: str, row: int | None):
@@ -132,8 +138,6 @@ class _Engine:
 			return [None]
 		return list(range(len(self.data.get(repeat) or [])))
 
-	# ── steps ───────────────────────────────────────────────────────────────
-
 	def run(self) -> Outcome:
 		self.calculate()
 		self.relevance_and_clear()
@@ -157,6 +161,8 @@ class _Engine:
 				self.set_value(path, row, text, stored)
 
 	def is_relevant(self, path: str, row: int | None) -> bool:
+		"""A repeat's own relevant is evaluated in the scope around the repeat, which is what
+		``repeat_of`` gives for the repeat's path (repeats are not nested in v1)."""
 		key = (path, row)
 		if key in self.out.relevant:
 			return self.out.relevant[key]
@@ -169,8 +175,6 @@ class _Engine:
 				result = self.is_relevant(parent, None if parent_is_repeat else row)
 			ast = self.exprs.get(path, {}).get("relevant")
 			if result and ast:
-				# a repeat's own relevant is evaluated in the scope around it, which is also what
-				# repeat_of gives for the repeat's path (repeats aren't nested in v1)
 				scope = self.index.repeat_of.get(path)
 				result = to_bool(self.eval(ast, None, row if scope else None, scope))
 		self.out.relevant[key] = result
@@ -271,6 +275,9 @@ class _Engine:
 		if math.isnan(expected):
 			return
 		actual = len(self.data.get(path) or [])
+		if math.isinf(expected):
+			self.fail(path, None, None, "repeat_count")
+			return
 		if actual != int(expected):
 			self.fail(path, None, None, "repeat_count", detail=(int(expected), actual))
 
@@ -292,6 +299,10 @@ class _Engine:
 				)
 			elif kind == "choice":
 				message = tr(N_("{label}: this choice isn't allowed with the other answers."), label=label)
+			elif kind == "repeat_count" and detail is None:
+				message = tr(
+					N_("{label}: the number of rows can't be worked out from the answers."), label=label
+				)
 			elif kind == "repeat_count":
 				message = tr(
 					N_("{label} needs {expected} rows but has {actual}."),

@@ -1,5 +1,7 @@
 # Copyright (c) 2026, Dhwani RIS and contributors
-# For license information, please see license.txt
+# For license information, please see LICENSE
+
+import traceback
 
 import frappe
 from frappe import _
@@ -19,9 +21,7 @@ class XLSFormVersion(Document):
 			)
 
 	def validate(self):
-		if self.docstatus != 0:
-			return
-		if not self.source_file:
+		if self.docstatus != 0 or not self.source_file:
 			return
 		if self.is_new() or self.has_value_changed("source_file") or self.flags.xf_force_validation:
 			if self._size() > validation.ASYNC_BYTES and not frappe.flags.in_test:
@@ -35,7 +35,9 @@ class XLSFormVersion(Document):
 			frappe.enqueue(
 				"xlsform.xlsform.doctype.xlsform_version.xlsform_version.validate_in_background",
 				queue="long",
-				timeout=120,
+				timeout=300,
+				job_id=f"xlsform-validate-{self.name}",
+				deduplicate=True,
 				enqueue_after_commit=True,
 				version_name=self.name,
 			)
@@ -58,12 +60,22 @@ class XLSFormVersion(Document):
 
 
 def validate_in_background(version_name: str) -> None:
+	"""Check a large workbook outside the request. A failure marks the version Invalid with the reason."""
 	doc = frappe.get_doc("XLSForm Version", version_name)
 	if doc.docstatus != 0:
 		return
-	validation.run_for_version(doc)
+	try:
+		validation.run_for_version(doc)
+		doc.publish_error = None
+	except Exception:
+		frappe.log_error(title=f"XLSForm validation {version_name}", message=traceback.format_exc())
+		doc.reload()
+		doc.state = "Invalid"
+		doc.publish_error = _(
+			"The workbook could not be checked. Upload it again, or ask your administrator."
+		)
 	doc.flags.ignore_permissions = True
-	doc.db_update()
+	doc.save()
 	frappe.publish_realtime(
 		"xlsform_validated",
 		{"version": version_name},

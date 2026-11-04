@@ -4,7 +4,7 @@
 
 ## What it means
 
-Choice "‹choice›" appears twice in list "‹list›" (choices rows ‹rows›).
+List "‹list›" has the choice name ‹choices› more than once (choices rows ‹rows›). Names that differ only in upper or lower case, accents or trailing spaces count as the same.
 
 ## How to fix it
 
@@ -12,9 +12,9 @@ Remove or rename one.
 
 ## Example
 
-An upload that triggers it reports at `choices`:
+An upload that triggers it reports at `choices!B3`:
 
-> Choice "yes" appears twice in list "yn" (choices rows 2 and 3).
+> choices!B3: List "yn" has the choice name "yes" more than once (choices rows 2 and 3). Names that differ only in upper or lower case, accents or trailing spaces count as the same.
 >
 > → Remove or rename one.
 

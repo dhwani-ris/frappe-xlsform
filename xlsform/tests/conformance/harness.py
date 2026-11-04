@@ -5,7 +5,8 @@ Every case in ``cases/*.json`` is checked against the ODK result written in the 
 1. Python — the server evaluator, on the AST the validator stored in ``compiled_meta``;
 2. JavaScript — the ``depends_on`` string the compiler emitted, run by ``run_js.js``
    with Frappe's own ``cstr``/``cint``/``flt`` source, as Frappe Desk runs it;
-3. Dart — the same string run by the mForm SDK's interpreter (``dart/bin/run.dart``).
+3. the mForm SDK profile — the same string must parse in ``core/expr/profile.py``, the
+   subset of JavaScript that the SDK's ``js_expression.dart`` documents and Desk agrees on.
 
 Cases go through the real pipeline: each case becomes a probe question in a generated
 workbook (``relevant`` for Live cases, ``constraint``/``calculation`` for server-only ones),
@@ -179,6 +180,40 @@ def build(cases: list[dict]) -> dict:
 			codes = {i.code for i in result.issues}
 			results["validation"][case["id"]] = codes
 	return results
+
+
+FILTER_LITERALS = [
+	"d1",
+	"eval:window.x=1",
+	"a eval:b eval:c",
+	'say "hi" \\ bye',
+	"' + alert(1) + '",
+	"हाँ",
+	"eval:",
+]
+
+
+def filter_literal_cases() -> list[dict]:
+	"""Each literal in a choice_filter, as Frappe's link.js would evaluate the compiled value."""
+	survey = [["type", "name", "label", "choice_filter"]]
+	choices = [["list_name", "name", "label", "region"]]
+	for i, text in enumerate(FILTER_LITERALS):
+		quote = '"' if "'" in text else "'"
+		survey.append([f"select_one l{i}", f"q{i}", "Q", f"region = {quote}{text}{quote}"])
+		choices.append([f"l{i}", "c1", "C1", text])
+	content = make_xlsx(survey=survey, choices=choices, settings=[["form_id"], ["filters_form"]])
+	result = validate(content, "filters.xlsx", ValidateOptions(allow_web=False))
+	errors = [i.message for i in result.issues if i.severity == "error"]
+	if errors:
+		raise AssertionError("; ".join(errors))
+	parent = result.plan["doctypes"][-1]["fields"]
+	cases = []
+	for i, text in enumerate(FILTER_LITERALS):
+		field = next(f for f in parent if f["fieldname"] == f"q{i}")
+		value = json.loads(field["link_filters"])[1][3]
+		code = value.split("eval:")[1] if value.startswith("eval:") else None
+		cases.append({"id": f"filter-{i}", "js": code, "doc": {}, "value": True, "expected": text})
+	return cases
 
 
 def write_js_cases(results: dict, path: str) -> None:

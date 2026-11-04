@@ -33,7 +33,6 @@ def _e(code: str, stage: int, message: str, suggestion: str) -> Entry:
 CATALOGUE: dict[str, Entry] = {
 	e.code: e
 	for e in [
-		# Stage 1: file
 		_e(
 			"E-FILE-TYPE",
 			1,
@@ -45,6 +44,20 @@ CATALOGUE: dict[str, Entry] = {
 			1,
 			N_("The file is {size_mb} MB; the limit is {limit_mb} MB."),
 			N_("Remove embedded images or unused sheets."),
+		),
+		_e(
+			"E-FILE-UNPACKED",
+			1,
+			N_("The workbook unpacks to {size_mb} MB of data; the limit is {limit_mb} MB."),
+			N_("Remove embedded images and unused sheets, save it again as .xlsx and upload the new file."),
+		),
+		_e(
+			"E-FILE-SHEET-SIZE",
+			1,
+			N_(
+				'The "{sheet_name}" sheet has data outside the first {max_rows} rows and {max_columns} columns (A to {column_name}).'
+			),
+			N_("Delete everything after the form's last row and column, or split the form."),
 		),
 		_e(
 			"E-FILE-PROTECTED",
@@ -76,7 +89,6 @@ CATALOGUE: dict[str, Entry] = {
 			N_('The "{sheet_name}" sheet (entities) isn\'t supported yet.'),
 			N_("Remove the sheet; Frappe DocTypes already store each record."),
 		),
-		# Stage 2: structure
 		_e(
 			"E-COL-MISSING",
 			2,
@@ -139,7 +151,18 @@ CATALOGUE: dict[str, Entry] = {
 			N_("Row {row} closes a {kind} that was never opened."),
 			N_("Delete row {row}, or add the matching begin row above it."),
 		),
-		# Stage 3: meaning
+		_e(
+			"E-GROUP-TOO-DEEP",
+			2,
+			N_("Row {row} opens a {kind} inside {depth} other groups or repeats; the limit is {limit}."),
+			N_("Close some groups before opening new ones, so fewer groups are inside each other."),
+		),
+		_e(
+			"E-FORM-TOO-COMPLEX",
+			2,
+			N_("The form couldn't be checked completely: it is nested too deeply for the {stage} checks."),
+			N_("Use fewer groups inside groups and shorter formulas, then upload again."),
+		),
 		_e(
 			"E-TYPE-UNKNOWN",
 			3,
@@ -173,7 +196,9 @@ CATALOGUE: dict[str, Entry] = {
 		_e(
 			"E-CHOICE-DUPLICATE",
 			3,
-			N_('Choice "{choice}" appears twice in list "{list}" (choices rows {rows}).'),
+			N_(
+				'List "{list}" has the choice name {choices} more than once (choices rows {rows}). Names that differ only in upper or lower case, accents or trailing spaces count as the same.'
+			),
 			N_("Remove or rename one."),
 		),
 		_e(
@@ -247,6 +272,14 @@ CATALOGUE: dict[str, Entry] = {
 			N_("Split it into calculate questions."),
 		),
 		_e(
+			"E-REGEX-UNSAFE",
+			3,
+			N_("The pattern in regex() can't be used: {reason}."),
+			N_(
+				"Use a simpler pattern, e.g. ^[0-9]{{10}}$. Answers longer than {input_limit} characters never match a regex."
+			),
+		),
+		_e(
 			"E-FN-UNSUPPORTED",
 			3,
 			N_("{fn}() isn't supported yet."),
@@ -266,6 +299,16 @@ CATALOGUE: dict[str, Entry] = {
 			),
 			N_(
 				"Use a simpler condition here, or move the check into a constraint, which is checked on save."
+			),
+		),
+		_e(
+			"E-EXPR-TOO-COMPLEX",
+			3,
+			N_(
+				'The formula in "{column}" is too complex to check while the form is being filled: written out with the calculations it uses, it is longer than {limit} characters or too deeply nested.'
+			),
+			N_(
+				"Simplify it, or use fewer calculations that build on each other. A constraint has no such limit, because it is checked when the form is saved."
 			),
 		),
 		_e(
@@ -382,7 +425,6 @@ CATALOGUE: dict[str, Entry] = {
 			N_('Version "{version}" of this form is already published.'),
 			N_("Set a new, higher version in the settings sheet."),
 		),
-		# Stage 4: Frappe limits
 		_e(
 			"E-LIMIT-QUESTIONS",
 			4,
@@ -397,7 +439,6 @@ CATALOGUE: dict[str, Entry] = {
 			),
 			N_("Move some into a repeat, or shorten long choice names."),
 		),
-		# Stage 5: version diff
 		_e(
 			"W-RENAME",
 			5,
@@ -424,7 +465,6 @@ CATALOGUE: dict[str, Entry] = {
 			N_("{name} was removed; its earlier answers are kept but no longer shown on the form."),
 			N_("Confirm this is intended."),
 		),
-		# Info
 		_e(
 			"I-NO-LABEL",
 			3,

@@ -1,4 +1,6 @@
-"""Write the Live conformance cases as JSON for the Dart (mForm SDK) runner.
+"""Write the Live conformance cases as JSON, for the mForm SDK repository to run in Dart.
+
+Each entry is ``{id, js, doc, parent}``; the expected result is in ``cases/*.json``.
 
 usage: python -m xlsform.tests.conformance.export <out.json>
 """

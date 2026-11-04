@@ -67,6 +67,7 @@ def options(form: str | None, files: dict[str, bytes], allow_web: bool = True) -
 		max_choices_per_list=s.max_choices_per_list,
 		max_expression_length=s.max_expression_length,
 		row_budget_bytes=s.row_budget_bytes,
+		columns=frappe.utils.cint(s.columns_per_section) or 1,
 		prefix=s.doctype_prefix,
 		published_version=published_version,
 		previous_meta=prev,
@@ -78,8 +79,23 @@ def options(form: str | None, files: dict[str, bytes], allow_web: bool = True) -
 
 
 def file_content(file_url: str) -> tuple[bytes, str]:
+	"""Content of a file the app itself stored, such as a version's source workbook."""
 	file = frappe.get_doc("File", {"file_url": file_url})
-	return file.get_content(), file.file_name
+	return _as_bytes(file.get_content()), file.file_name
+
+
+def readable_file_content(file_url: str) -> tuple[bytes, str]:
+	"""Content of a file named by the caller, only if the caller may download it."""
+	from frappe.core.doctype.file.utils import find_file_by_url
+
+	file = find_file_by_url(file_url) if isinstance(file_url, str) and file_url else None
+	if not file:
+		frappe.throw(_("You don't have access to the file {0}.").format(file_url), frappe.PermissionError)
+	return _as_bytes(file.get_content()), file.file_name
+
+
+def _as_bytes(content: bytes | str) -> bytes:
+	return content.encode() if isinstance(content, str) else content
 
 
 def csv_attachments(version_name: str) -> dict[str, bytes]:
@@ -90,9 +106,7 @@ def csv_attachments(version_name: str) -> dict[str, bytes]:
 		fields=["name", "file_name"],
 	):
 		if (f.file_name or "").lower().endswith(".csv"):
-			files[f.file_name] = frappe.get_doc("File", f.name).get_content()
-			if isinstance(files[f.file_name], str):
-				files[f.file_name] = files[f.file_name].encode()
+			files[f.file_name] = _as_bytes(frappe.get_doc("File", f.name).get_content())
 	return files
 
 
