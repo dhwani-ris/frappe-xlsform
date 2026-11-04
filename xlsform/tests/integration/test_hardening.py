@@ -162,6 +162,51 @@ class TestRecordIntegrity(IntegrationTestCase):
 			frappe.get_doc({"doctype": dt, **GOOD, "xf_form": self.form_b}).insert()
 
 
+class TestTranslations(IntegrationTestCase):
+	def test_republish_does_not_duplicate_translations(self):
+		fid = f"hh_{uid()}"
+		publish(household(fid, "1"))
+		publish(household(fid, "2"))
+		count = frappe.db.count(
+			"Translation",
+			{"language": "hi", "source_text": "Yes", "translated_text": "हाँ", "context": ["is", "not set"]},
+		)
+		self.assertEqual(count, 1)
+
+	def test_patch_removes_duplicate_translations(self):
+		from xlsform.patches.v1_0 import dedupe_translations
+
+		source = f"dup-{uid()}"
+		for _ in range(3):
+			frappe.get_doc(
+				{"doctype": "Translation", "language": "hi", "source_text": source, "translated_text": "x"}
+			).insert(ignore_permissions=True)
+		dedupe_translations.execute()
+		self.assertEqual(frappe.db.count("Translation", {"source_text": source}), 1)
+		frappe.db.delete("Translation", {"source_text": source})
+
+
+class TestLayout(IntegrationTestCase):
+	def test_republish_removes_stale_layout_fields(self):
+		fid = f"lay_{uid()}"
+		many = make_xlsx(
+			survey=[["type", "name", "label"], *[["integer", f"q{i}", f"Q{i}"] for i in range(9)]],
+			settings=[["form_id", "version"], [fid, "1"]],
+		)
+		publish(many)
+		dt = frappe.db.get_value("XLSForm", fid, "data_doctype")
+		self.assertEqual(sum(1 for f in frappe.get_meta(dt).fields if f.fieldtype == "Column Break"), 2)
+		few = make_xlsx(
+			survey=[["type", "name", "label"], ["integer", "q0", "Q0"]],
+			settings=[["form_id", "version"], [fid, "2"]],
+		)
+		publish(few)
+		frappe.clear_cache(doctype=dt)
+		meta = frappe.get_meta(dt)
+		self.assertEqual([f for f in meta.fields if f.fieldtype == "Column Break"], [])
+		self.assertTrue(meta.get_field("q5").hidden)
+
+
 class TestAccessModel(IntegrationTestCase):
 	def tearDown(self):
 		frappe.set_user("Administrator")

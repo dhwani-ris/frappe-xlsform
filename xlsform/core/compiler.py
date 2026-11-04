@@ -76,6 +76,8 @@ ROW_BYTES = {
 	"Datetime": 8,
 }
 NO_COLUMN = {"HTML", "Section Break", "Tab Break", "Column Break", "Table", "Table MultiSelect"}
+WIDE_FIELDTYPES = {"Table", "Table MultiSelect", "HTML", "Geolocation", "Long Text", "Text Editor"}
+SECTION_FIELDTYPES = ("Section Break", "Tab Break")
 FIXED_ROW_BYTES = 3500
 SHORT_TEXT_HEIGHT = "4.5rem"
 
@@ -89,6 +91,7 @@ class CompileSettings:
 	row_budget_bytes: int = 60000
 	max_questions: int = 400
 	site_language: str = "en"
+	columns: int = 3
 	taken_doctypes: set[str] = field(default_factory=set)
 	reserved_fieldnames: set[str] = field(default_factory=set)
 
@@ -411,7 +414,75 @@ class _Compiler:
 		use_tabs = top and sum(1 for n in nodes if n.kind == GROUP) > TAB_THRESHOLD
 		out: list[dict] = []
 		self._emit_nodes(nodes, doctype, repeat_scope, out, use_tabs, inherited=[], section_prefix="")
+		return self._columns(out, doctype)
+
+	def _columns(self, fields: list[dict], doctype: str) -> list[dict]:
+		"""Spread each section's questions over ``columns`` columns, keeping their order.
+
+		Tables, multi-selects, notes and other wide fields get a full-width row of their own.
+		"""
+		if self.s.columns <= 1:
+			return fields
+		out: list[dict] = []
+		segment: list[dict] = []
+		key = "xf_main"
+		for f in fields:
+			if f["fieldtype"] in SECTION_FIELDTYPES:
+				out += self._lay_out(segment, key, doctype)
+				out.append(f)
+				segment, key = [], f["fieldname"]
+			else:
+				segment.append(f)
+		return out + self._lay_out(segment, key, doctype)
+
+	def _lay_out(self, segment: list[dict], key: str, doctype: str) -> list[dict]:
+		blocks: list[tuple[bool, list[dict]]] = []
+		for f in segment:
+			wide = _is_wide(f)
+			if wide or not blocks or blocks[-1][0]:
+				blocks.append((wide, [f]))
+			else:
+				blocks[-1][1].append(f)
+		out: list[dict] = []
+		for i, (wide, items) in enumerate(blocks):
+			if i:
+				out.append(
+					{"fieldname": self._layout_name(doctype, f"{key}_p{i}"), "fieldtype": "Section Break"}
+				)
+			out += items if wide else self._spread(items, f"{key}_p{i}", doctype)
 		return out
+
+	def _spread(self, items: list[dict], key: str, doctype: str) -> list[dict]:
+		visible = sum(1 for f in items if not f.get("hidden"))
+		count = min(self.s.columns, visible)
+		if count <= 1:
+			return items
+		per_column = -(-visible // count)
+		out: list[dict] = []
+		seen, column = 0, 1
+		for f in items:
+			if not f.get("hidden"):
+				if seen and seen % per_column == 0 and column < count:
+					column += 1
+					out.append(
+						{
+							"fieldname": self._layout_name(doctype, f"{key}_c{column}"),
+							"fieldtype": "Column Break",
+						}
+					)
+				seen += 1
+			out.append(f)
+		return out
+
+	def _layout_name(self, doctype: str, base: str) -> str:
+		taken = self.taken_fieldnames.setdefault(doctype, set(RESERVED_PARENT_FIELDS))
+		name = base[:MAX_FIELDNAME]
+		n = 2
+		while name in taken:
+			name = f"{base[: MAX_FIELDNAME - len(str(n)) - 1]}_{n}"
+			n += 1
+		taken.add(name)
+		return name
 
 	def _emit_nodes(self, nodes, doctype, repeat_scope, out, use_tabs, inherited, section_prefix) -> None:
 		after_group = False
@@ -762,7 +833,7 @@ class _Compiler:
 		if node.base_type == "note" and field.get("options"):
 			for language, text in labels.items():
 				if language != self.lang:
-					self._translate(language, field["options"], _note_html(text), context=doctype)
+					self._translate(language, field["options"], _note_html(text), context=None)
 
 	def _check_limits(self, doctypes: list[dict]) -> None:
 		count = question_count(self.form)
@@ -877,11 +948,20 @@ def _plain(text: str) -> str:
 	return html.escape(" ".join(text.split()), quote=False)
 
 
+def _is_wide(f: dict) -> bool:
+	return f["fieldtype"] in WIDE_FIELDTYPES or (f["fieldtype"] == "Small Text" and not f.get("max_height"))
+
+
 def _note_html(text: str) -> str:
-	"""Safe HTML for a note: escape everything, then allow **bold**, *italic* and line breaks."""
+	"""Safe HTML for a note: escape everything, then allow **bold**, *italic* and line breaks.
+
+	Frappe's HTML control passes its content through ``frappe.render``, which runs ``{% %}`` and
+	``{{ }}`` as JavaScript, so braces are written as HTML entities.
+	"""
 	if not text:
 		return ""
 	safe = html.escape(TAGS.sub("", html.unescape(text)), quote=True)
+	safe = safe.replace("{", "&#123;").replace("}", "&#125;")
 	safe = MD_BOLD.sub(lambda m: f"<strong>{m.group(1) or m.group(2)}</strong>", safe)
 	safe = MD_ITALIC.sub(lambda m: f"<em>{m.group(1)}</em>", safe)
 	return "<p>" + safe.replace("\n", "<br>") + "</p>"

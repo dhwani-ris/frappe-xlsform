@@ -23,6 +23,7 @@ class ValidateOptions:
 	max_expression_length: int = 2000
 	max_group_depth: int = structure.MAX_GROUP_DEPTH
 	row_budget_bytes: int = 60000
+	columns: int = 3
 	prefix: str = "XF"
 	published_version: str | None = None
 	previous_meta: dict | None = None
@@ -111,6 +112,7 @@ def _validate(
 			prefix=opts.prefix,
 			row_budget_bytes=opts.row_budget_bytes,
 			max_questions=opts.max_questions,
+			columns=opts.columns,
 			taken_doctypes=opts.taken_doctypes,
 			reserved_fieldnames=opts.reserved_fieldnames,
 		),

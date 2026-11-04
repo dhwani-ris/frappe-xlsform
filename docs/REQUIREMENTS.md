@@ -225,6 +225,7 @@ Uploading a workbook whose `version` matches an unpublished (draft) version of t
 | max_choices_per_list | Int | 20000 |
 | max_expression_length | Int | 2000 |
 | row_budget_bytes | Int | 60000 |
+| columns_per_section | Select 1/2/3 | 3 |
 | doctype_prefix | Data | XF |
 | designers_can_publish | Check | 1 |
 | default_language | Link Language | en |
@@ -280,7 +281,7 @@ System fields are at permlevel 1: on XLSForm `status`, `current_version`, `data_
 
 Exports always use the original XLSForm names.
 
-**Layout**: top-level groups → Section Breaks (Tab Breaks when there are more than 3); nested groups → Section Breaks labelled "Outer › Inner"; group `relevant` is ANDed into every descendant's `depends_on` and set on its section.
+**Layout**: top-level groups → Section Breaks (Tab Breaks when there are more than 3); nested groups → Section Breaks labelled "Outer › Inner"; group `relevant` is ANDed into every descendant's `depends_on` and set on its section. Inside each section the questions are spread over `columns_per_section` columns (default 3) with Column Breaks, in workbook order, filling each column before the next; hidden questions do not count. Tables, Table MultiSelects, notes, geolocation and multiline text get a full-width section of their own. Layout fields have stable names (`<section>_p<n>`, `<section>_p<n>_c<k>`), and a republish removes the layout fields the new version no longer has (they hold no data).
 
 **Selects**: `select_one` → Link with `length` 63, or the longest choice name when that is longer (at most 140, Frappe's name length; a length published earlier is never narrowed). 63 is the widest utf8mb4 VARCHAR with a one-byte length prefix: it keeps a select at 254 bytes of the row budget (about 230 selects fit the default budget), and MariaDB widens it in place unless a choice name passes 63 characters, which copies the table once, the same length for the list's `choice_name` and the pick table's Link, `link_filters` = the compiled `choice_filter` plus `xf_retired = 0`. Every non-numeric filter value is emitted as `eval:` code; a text value is a JavaScript string literal, never raw text, because Frappe's `link.js` evaluates any value that starts with `eval:`. Text containing `eval:` is written as `"ev" + "al:…"`, because `link.js` reads only the part between the first and the second `eval:`. `select_multiple` → Table MultiSelect to the list's pick table. Extra columns on the choices sheet or in a choices CSV (the columns a `choice_filter` uses) become Data fields of the list DocType, so their headers must match `^[A-Za-z_][A-Za-z0-9_]*$` (`E-NAME-INVALID` otherwise) and their labels are escaped like every other label. A choice list is loaded into its DocType as records; removed choices get `xf_retired = 1` and stay valid for old records.
 
@@ -535,7 +536,7 @@ Issue object:
 
 - Frappe **v16 only** (`frappe~=16.0`, Python 3.14); branches `version-16` and `develop`. Desk routes are `/desk/...`; the designer workspace is **Excel Forms** (`/desk/excel-forms`), because a workspace named XLSForm would take the XLSForm list's route; collectors use **Form Data**.
 - Extends only through hooks: `doc_events`, `fixtures`, `after_install`, `before_uninstall`, `add_to_apps_screen`.
-- Role fixture and standard Workspace; all strings in `_()` / `__()` (`N_()` markers in the framework-free core); Hindi in `xlsform/locale/hi.po` (all 343 strings; `scripts/generate_pot.py` regenerates `main.pot`).
+- Role fixture and standard Workspace; all strings in `_()` / `__()` (`N_()` markers in the framework-free core); Hindi in `xlsform/locale/hi.po` (all 386 strings). `bench generate-pot-file --app xlsform` regenerates `main.pot` and `bench update-po-files --app xlsform --locale hi` merges new strings into `hi.po`.
 - Dependencies: none beyond Frappe (openpyxl ships with it); no system packages, no Java, no Node at runtime. pyxform is used in CI only (section 7).
 - Lint: ruff, ruff-format, prettier, eslint (pre-commit) and Frappe semgrep rules in CI. Every workflow action is pinned to a commit SHA (org policy); `.semgrepignore` excludes only developer tools (`scripts/`).
 - Marketplace items needing people (logo, screenshots, video, privacy URL, listing, `frappe/marketplace` PR) are tracked in `docs/RELEASE.md`.

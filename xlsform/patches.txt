@@ -2,3 +2,4 @@
 
 [post_model_sync]
 xlsform.patches.v1_0.record_generated_doctypes
+xlsform.patches.v1_0.dedupe_translations

@@ -8,6 +8,7 @@ DEFAULTS = {
 	"max_choices_per_list": 20000,
 	"max_expression_length": 2000,
 	"row_budget_bytes": 60000,
+	"columns_per_section": 3,
 	"doctype_prefix": "XF",
 	"designers_can_publish": 1,
 	"default_language": "en",

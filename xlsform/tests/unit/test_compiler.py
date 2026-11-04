@@ -112,6 +112,65 @@ class TestCompiler(unittest.TestCase):
 		self.assertEqual(meta["calc_order"], ["/n_members", "/total_age"])
 		self.assertEqual(meta["languages"], ["English (en)", "Hindi (hi)"])
 
+	def test_note_text_cannot_carry_template_code(self):
+		survey = [
+			[*H, "label::Hindi (hi)"],
+			["note", "n", "Hi {% window.x=1 %} {{ window.y }}", "नमस्ते {% window.z=1 %}"],
+			["text", "t", "T", "टी"],
+		]
+		plan = plan_for(survey, settings=[["form_id", "version"], ["note_form", "1"]])
+		options = fields(plan)["n"]["options"]
+		for marker in ("{%", "%}", "{{", "}}"):
+			self.assertNotIn(marker, options)
+		note = next(t for t in plan["translations"] if t["source_text"] == options)
+		for marker in ("{%", "{{"):
+			self.assertNotIn(marker, note["translated_text"])
+
+	def test_note_translation_has_no_context(self):
+		survey = [[*H, "label::Hindi (hi)"], ["note", "n", "Welcome", "स्वागत"], ["text", "t", "T", "टी"]]
+		plan = plan_for(survey, settings=[["form_id", "version"], ["note_form", "1"]])
+		options = fields(plan)["n"]["options"]
+		note = next(t for t in plan["translations"] if t["source_text"] == options)
+		self.assertIsNone(note["context"])
+		label = next(t for t in plan["translations"] if t["source_text"] == "T")
+		self.assertTrue(label["context"])
+
+	def _layout(self, plan):
+		return [
+			(f["fieldtype"], f.get("fieldname"))
+			for f in plan["doctypes"][-1]["fields"]
+			if not f["fieldname"].startswith("xf_") or f["fieldtype"] in ("Column Break", "Section Break")
+		]
+
+	def test_three_columns_by_default(self):
+		survey = [H, *[["integer", f"q{i}", f"Q{i}"] for i in range(1, 7)]]
+		types = [t for t, _n in self._layout(plan_for(survey)) if t != "Section Break"]
+		self.assertEqual(types, ["Int", "Int", "Column Break", "Int", "Int", "Column Break", "Int", "Int"])
+
+	def test_wide_fields_get_their_own_row(self):
+		survey = [
+			H,
+			["integer", "a", "A"],
+			["integer", "b", "B"],
+			["select_multiple yn", "m", "M"],
+			["integer", "c", "C"],
+		]
+		plan = plan_for(survey, choices=[["list_name", "name", "label"], ["yn", "y", "Y"]])
+		layout = [t for t, n in self._layout(plan)]
+		m = layout.index("Table MultiSelect")
+		self.assertEqual(layout[m - 1], "Section Break")
+		self.assertEqual(layout[m + 1], "Section Break")
+		self.assertIn("Column Break", layout[:m])
+
+	def test_one_column_setting(self):
+		survey = [H, *[["integer", f"q{i}", f"Q{i}"] for i in range(1, 7)]]
+		layout = [t for t, _n in self._layout(plan_for(survey, columns=1))]
+		self.assertNotIn("Column Break", layout)
+
+	def test_layout_fieldnames_are_stable(self):
+		survey = [H, *[["integer", f"q{i}", f"Q{i}"] for i in range(1, 7)]]
+		self.assertEqual(self._layout(plan_for(survey)), self._layout(plan_for(survey)))
+
 	def test_tabs_for_many_groups(self):
 		survey = [H]
 		for g in range(4):
@@ -233,7 +292,11 @@ class TestCompiler(unittest.TestCase):
 			choices=[["list_name", "name", "label"], ["yn", "y", "Y"]],
 		)
 		types = {f["fieldname"]: f["fieldtype"] for f in plan["web_form"]["fields"]}
-		self.assertEqual(types, {"m": "Table", "t": "Small Text"})
+		layout = {"Section Break", "Column Break", "Page Break"}
+		self.assertEqual(
+			{k: v for k, v in types.items() if v not in layout}, {"m": "Table", "t": "Small Text"}
+		)
+		self.assertIn("Section Break", types.values())
 		self.assertEqual(plan["web_form"]["route"], "xf/test-form")
 
 

@@ -55,6 +55,7 @@ You cannot give access to Guest, All, Desk User or Administrator, because every 
 | Most questions per form | 400 | |
 | Most choices per list | 20,000 | |
 | Longest formula (characters) | 2,000 | |
+| Columns per section | 3 | Questions of a section are spread over 1, 2 or 3 columns. Wide fields use the full width |
 | Row size budget (bytes) | 60,000 | Must stay under the MariaDB row limit of 65,535 |
 | Prefix of generated DocTypes | `XF` | Cannot change after the first publish |
 | Default language | `en` | |

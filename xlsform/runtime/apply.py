@@ -182,13 +182,21 @@ def _build_doctype(spec: dict, form):
 				)
 			)
 		_update_field(row, f)
+	stale_layout = set()
 	for fieldname, row in existing.items():
-		if fieldname not in order:
-			if not fieldname.startswith("mobile_") and row.fieldtype not in LAYOUT_TYPES:
-				row.hidden = 1
-			order.append(fieldname)
+		if fieldname in order:
+			continue
+		if row.fieldtype in LAYOUT_TYPES and not fieldname.startswith("mobile_"):
+			stale_layout.add(fieldname)
+			continue
+		if not fieldname.startswith("mobile_"):
+			row.hidden = 1
+		order.append(fieldname)
 	position = {fn: i for i, fn in enumerate(order)}
-	doc.fields = sorted(doc.fields, key=lambda r: position.get(r.fieldname, len(position)))
+	doc.fields = sorted(
+		(r for r in doc.fields if r.fieldname not in stale_layout),
+		key=lambda r: position.get(r.fieldname, len(position)),
+	)
 	for i, row in enumerate(doc.fields, start=1):
 		row.idx = i
 	if not doc.istable and not doc.permissions:
@@ -278,7 +286,12 @@ def _sync_translations(translations: list[dict]) -> None:
 		lang = languages[spec]
 		if not lang:
 			continue
-		filters = {"language": lang, "source_text": t["source_text"], "context": t.get("context") or ""}
+		context = t.get("context") or None
+		filters = {
+			"language": lang,
+			"source_text": t["source_text"],
+			"context": context if context else ["is", "not set"],
+		}
 		name = frappe.db.get_value("Translation", filters)
 		if name:
 			if frappe.db.get_value("Translation", name, "translated_text") != t["translated_text"]:
@@ -291,7 +304,7 @@ def _sync_translations(translations: list[dict]) -> None:
 					"language": lang,
 					"source_text": t["source_text"],
 					"translated_text": t["translated_text"],
-					"context": t.get("context") or None,
+					"context": context,
 				}
 			).insert(ignore_permissions=True)
 			changed = True

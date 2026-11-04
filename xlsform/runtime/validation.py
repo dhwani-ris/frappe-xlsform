@@ -67,6 +67,7 @@ def options(form: str | None, files: dict[str, bytes], allow_web: bool = True) -
 		max_choices_per_list=s.max_choices_per_list,
 		max_expression_length=s.max_expression_length,
 		row_budget_bytes=s.row_budget_bytes,
+		columns=frappe.utils.cint(s.columns_per_section) or 1,
 		prefix=s.doctype_prefix,
 		published_version=published_version,
 		previous_meta=prev,
