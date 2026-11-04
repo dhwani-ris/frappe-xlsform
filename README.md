@@ -2,6 +2,10 @@
 
 Build data-collection forms in Excel and collect the answers into normal Frappe DocTypes. Collectors use Desk, the web or mForm offline.
 
+<p align="center">
+  <img src=".github/xlsform-intro.gif" alt="XLSForm for Frappe: upload a workbook, fix problems by cell, preview, publish and collect on Desk and the web" width="960" />
+</p>
+
 - Upload an `.xlsx` XLSForm, the standard of ODK, KoboToolbox and SurveyCTO. No developer is needed to make or change a form.
 - Every problem is listed with its sheet, row and cell, and a suggested fix. You can download your workbook with the problems marked in the cells.
 - Skip logic, required and read-only rules become standard `depends_on` properties. Desk, Web Forms and mForm apply them with no extra client code, offline too.
@@ -47,5 +51,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities as described in [
 AGPL-3.0. The pyxform example workbooks under `xlsform/tests/fixtures/corpus/pyxform` are BSD 2-Clause (see the license file there).
 
 <p align="center">
-  <img src="xlsform/public/images/logo.svg" alt="XLSForm for Frappe logo" width="120" />
+  <a href="https://www.dhwaniris.com"><img src=".github/dhwani-logo.png" alt="Dhwani Rural Information Systems" width="160" /></a>
 </p>
