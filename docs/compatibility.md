@@ -78,4 +78,4 @@ Not yet: `pulldata`, `indexed-repeat`, `instance()`, `search()`, `last-saved`, `
 
 ## Checked against
 
-Python (the server), Frappe's own JavaScript, and the mForm SDK's interpreter agree on 1,187 formula cases (`xlsform/tests/conformance`). Every pyxform example workbook is cross-checked nightly against pyxform itself (`scripts/pyxform_crosscheck.py`).
+Python (the server), Frappe's own JavaScript, and the mForm SDK's interpreter agree on 1,187 formula cases (`xlsform/tests/conformance`). Every pyxform example workbook is cross-checked against pyxform itself (`scripts/pyxform_crosscheck.py`) on each pull request that changes the validator.

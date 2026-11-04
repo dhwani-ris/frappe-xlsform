@@ -549,7 +549,7 @@ Issue object:
 | Expression conformance | pytest + Node | Python and Frappe's JavaScript agree with ODK on every case, and every emitted string is in the SDK profile (`core/expr/profile.py`) |
 | Compiler unit | pytest (no site) | Type mapping, sanitising, layout, selects, budget, diffs (snapshots) |
 | Server integration | `bench run-tests --app xlsform` | Upload → publish → DocTypes → valid/invalid records → republish → old records still valid → access per role → retire |
-| Corpus | `scripts/pyxform_crosscheck.py` (nightly) | Agreement with pyxform on real workbooks |
+| Corpus | `scripts/pyxform_crosscheck.py` (pull requests that change `core/` or the corpus, and on demand) | Agreement with pyxform on real workbooks |
 
 Security tests: `<script>` in labels is inert; quotes and backslashes in literals can't break out of `eval:` strings; a `choice_filter` literal never reaches `link_filters` as raw text; strings outside the JavaScript profile are rejected (`xlsform/tests/unit/test_profile.py`); hostile workbooks (deep nesting, exponential calculations, huge declared dimensions, zip bombs, slow regexes, huge function arguments) get located issues within bounded time (`TestHostileInput`, `TestCollectorDataCantSlowASave`); a non-designer gets 403 on upload/publish; `apply()` refuses a DocType outside `XLSForm Data`.
 

@@ -2,12 +2,16 @@ name: Real-world corpus
 
 # Every workbook in xlsform/tests/fixtures/corpus is checked by xlsform and by pyxform
 # (REQUIREMENTS.md section 13). pyxform runs from its own virtualenv: it pins xlrd==2.0.1,
-# which conflicts with Frappe v16, so it is never an app dependency.
+# which conflicts with Frappe v16, so it is never an app dependency. Both sides change only
+# through pull requests, so the check runs on those and on demand, not on a schedule.
 on:
   pull_request:
-    paths: ["xlsform/core/**", "xlsform/tests/fixtures/corpus/**", "scripts/pyxform_crosscheck.py"]
-  schedule:
-    - cron: "0 3 * * *"
+    paths:
+      - "xlsform/core/**"
+      - "xlsform/tests/fixtures/corpus/**"
+      - "scripts/pyxform_crosscheck.py"
+      - ".github/workflows/corpus.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
