@@ -1,0 +1,1832 @@
+# Translations template for XLSForm.
+# Copyright (C) 2026 Dhwani RIS
+# This file is distributed under the same license as the XLSForm project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: XLSForm VERSION\n"
+"Report-Msgid-Bugs-To: deepak.batra@dhwaniris.com\n"
+"POT-Creation-Date: 2026-11-04 09:33+0553\n"
+"PO-Revision-Date: 2026-11-04 09:33+0553\n"
+"Last-Translator: deepak.batra@dhwaniris.com\n"
+"Language-Team: deepak.batra@dhwaniris.com\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: xlsform/core/issues.py:317
+#, python-brace-format
+msgid "\"{column}\" uses {name}, whose calculation can only run when the form is saved."
+msgstr ""
+
+#: xlsform/core/issues.py:125
+#, python-brace-format
+msgid "\"{name}\" can't be used as a name: {reason}."
+msgstr ""
+
+#: xlsform/core/issues.py:181
+#, python-brace-format
+msgid "\"{type}\" (row {row}) can't be collected in this app and will be ignored."
+msgstr ""
+
+#: xlsform/core/issues.py:169
+#, python-brace-format
+msgid "\"{type}\" isn't a question type."
+msgstr ""
+
+#: xlsform/core/issues.py:175
+#, python-brace-format
+msgid "\"{type}\" questions aren't supported yet (row {row})."
+msgstr ""
+
+#: xlsform/core/meaning.py:171
+msgid ", or use select_multiple"
+msgstr ""
+
+#: xlsform/core/meaning.py:646
+msgid "1 value"
+msgstr ""
+
+#. Header text in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:3
+msgid "<span class=\"h4\"><b>Forms built in Excel</b></span>"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.py:53
+msgid "A published form can't be deleted, because its data would be lost. Retire it instead."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:55
+msgid "A published version can't be cancelled. Upload a new version, or retire the form."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:120
+msgid "A published version can't be edited; to change the form later, upload a new version."
+msgstr ""
+
+#. Label of the access (Table) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:123
+msgid "Access"
+msgstr ""
+
+#: xlsform/core/issues.py:338
+#, python-brace-format
+msgid "Add a \"{choice_column}\" column to the choices sheet."
+msgstr ""
+
+#: xlsform/core/issues.py:96
+#, python-brace-format
+msgid "Add a column named {column} in row 1."
+msgstr ""
+
+#: xlsform/core/issues.py:472
+msgid "Add a label."
+msgstr ""
+
+#: xlsform/core/structure.py:104
+#, python-brace-format
+msgid "Add a question type for {name} in the type column."
+msgstr ""
+
+#: xlsform/core/issues.py:120
+#, python-brace-format
+msgid "Add a short name, e.g. {example}."
+msgstr ""
+
+#: xlsform/core/issues.py:138
+#, python-brace-format
+msgid "Add an {end} row where the {kind} should end."
+msgstr ""
+
+#: xlsform/core/issues.py:194
+msgid "Add choices for it on the choices sheet."
+msgstr ""
+
+#: xlsform/core/meaning.py:250
+#, python-brace-format
+msgid "Add it to the choices sheet, or fix the list name after {type}."
+msgstr ""
+
+#: xlsform/core/meaning.py:247
+#, python-brace-format
+msgid "Add it to the choices sheet, or fix the spelling (found: \"{guess}\")."
+msgstr ""
+
+#: xlsform/core/issues.py:236
+msgid "Add questions between begin_repeat and end_repeat, or remove the repeat."
+msgstr ""
+
+#. Label of the info_count (Int) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:136
+msgid "Advice"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:203
+msgid "All answers pass"
+msgstr ""
+
+#. Label of the allow_web (Check) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:99
+msgid "Allow Web Form"
+msgstr ""
+
+#. Label of the allow_mobile (Check) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:110
+msgid "Allow mForm"
+msgstr ""
+
+#. Label of the allow_data_removal_on_uninstall (Check) field in DocType
+#. 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:110
+msgid "Allow uninstall to delete form data"
+msgstr ""
+
+#. Label of the amended_from (Link) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:233
+msgid "Amended From"
+msgstr ""
+
+#. Description of a DocType
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:6
+msgid "An XLSForm: the stable identity of a form across all of its versions."
+msgstr ""
+
+#: xlsform/api/forms.py:65
+msgid "Another upload of this form is in progress. Wait a moment and upload again."
+msgstr ""
+
+#: xlsform/api/forms.py:301
+msgid "Answers must be an object of question names and values."
+msgstr ""
+
+#: xlsform/core/issues.py:369
+#, python-brace-format
+msgid "Appearance \"{appearance}\" (row {row}) isn't supported and will be ignored."
+msgstr ""
+
+#: xlsform/api/forms.py:119
+msgid "Attach an .xlsx workbook."
+msgstr ""
+
+#. Label of the behaviour_section (Section Break) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:71
+msgid "Behaviour"
+msgstr ""
+
+#: xlsform/core/issues.py:324
+msgid "Break the loop so one of them doesn't use the other."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:130
+msgid "Building the form…"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:206
+msgid "Calculated values:"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:131 xlsform/runtime/validation.py:182
+msgid "Cell"
+msgstr ""
+
+#. Label of the change_summary (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:198
+msgid "Change Summary"
+msgstr ""
+
+#: xlsform/core/issues.py:396
+#, python-brace-format
+msgid "Change form_id to {fixed} in the settings sheet to keep them the same."
+msgstr ""
+
+#: xlsform/core/issues.py:146
+#, python-brace-format
+msgid "Change row {row} to {expected}, or add the missing {closing_end}."
+msgstr ""
+
+#. Label of the change_view (HTML) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:165
+msgid "Changes"
+msgstr ""
+
+#. Label of the change_html (Long Text) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:191
+msgid "Changes HTML"
+msgstr ""
+
+#. Label of the changes_section (Section Break) field in DocType 'XLSForm
+#. Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:159
+msgid "Changes from the published version"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.py:32
+msgid "Channel changes take effect when the next version is published."
+msgstr ""
+
+#. Label of the channels_section (Section Break) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:94
+msgid "Channels"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:171
+msgid "Check answers"
+msgstr ""
+
+#. Label of the report_section (Section Break) field in DocType 'XLSForm
+#. Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:109
+msgid "Check results"
+msgstr ""
+
+#: xlsform/core/issues.py:260
+#, python-brace-format
+msgid "Check the formula: {expr}"
+msgstr ""
+
+#: xlsform/core/meaning.py:596
+msgid "Check the spelling of the question name."
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:88
+msgid "Checking the workbook…"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:64
+msgid "Checking the workbook… this page updates when it's done."
+msgstr ""
+
+#: xlsform/core/validate.py:147
+#, python-brace-format
+msgid "Checks for {what} will run after the errors above are fixed."
+msgstr ""
+
+#: xlsform/core/issues.py:193
+#, python-brace-format
+msgid "Choice list \"{list}\" has no choices."
+msgstr ""
+
+#: xlsform/core/issues.py:213
+#, python-brace-format
+msgid "Choice list \"{list}\" has {count} choices; the limit is {limit}."
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:72
+msgid "Choice list CSV (only for select_one_from_file)"
+msgstr ""
+
+#: xlsform/core/issues.py:207
+#, python-brace-format
+msgid "Choice name \"{choice}\" in list \"{list}\" {reason}."
+msgstr ""
+
+#: xlsform/runtime/validation.py:188
+msgid "Click to copy"
+msgstr ""
+
+#: xlsform/core/issues.py:158
+msgid "Close some groups before opening new ones, so fewer groups are inside each other."
+msgstr ""
+
+#: xlsform/core/annotate.py:68 xlsform/runtime/validation.py:182
+msgid "Code"
+msgstr ""
+
+#: xlsform/core/issues.py:101
+#, python-brace-format
+msgid "Column \"{column}\" isn't recognised and will be ignored."
+msgstr ""
+
+#: xlsform/core/issues.py:107
+#, python-brace-format
+msgid "Column \"{column}\" isn't supported yet and will be ignored."
+msgstr ""
+
+#: xlsform/core/issues.py:113
+#, python-brace-format
+msgid "Column \"{column}\" isn't supported."
+msgstr ""
+
+#. Label of the columns_per_section (Select) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:78
+msgid "Columns per section"
+msgstr ""
+
+#. Label of the compiled_meta (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:212
+msgid "Compiled Meta"
+msgstr ""
+
+#: xlsform/core/issues.py:454 xlsform/core/issues.py:460
+#: xlsform/core/issues.py:466
+msgid "Confirm this is intended."
+msgstr ""
+
+#. Label of the can_create (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:39
+msgid "Create"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:131
+msgid "Creating the data tables…"
+msgstr ""
+
+#. Label of the current_version (Link) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:63
+msgid "Current Version"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:21
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:26
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:33
+msgid "Data"
+msgstr ""
+
+#. Label of the data_doctype (Link) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:72
+msgid "Data DocType"
+msgstr ""
+
+#. Label of the default_language (Link) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:80
+msgid "Default Language"
+msgstr ""
+
+#. Label of the default_language (Link) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:92
+msgid "Default language"
+msgstr ""
+
+#. Label of the can_delete (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:53
+msgid "Delete"
+msgstr ""
+
+#: xlsform/core/issues.py:60
+msgid "Delete everything after the form's last row and column, or split the form."
+msgstr ""
+
+#: xlsform/core/issues.py:152
+#, python-brace-format
+msgid "Delete row {row}, or add the matching begin row above it."
+msgstr ""
+
+#. Label of the designers_can_publish (Check) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:103
+msgid "Designers can publish"
+msgstr ""
+
+#: xlsform/core/structure.py:227
+#, python-brace-format
+msgid "Did you mean \"{guess}\"?"
+msgstr ""
+
+#: xlsform/core/issues.py:84
+#, python-brace-format
+msgid "Did you mean \"{guess}\"? Rename the sheet if so."
+msgstr ""
+
+#: xlsform/core/meaning.py:594
+#, python-brace-format
+msgid "Did you mean ${{{guess}}}?"
+msgstr ""
+
+#: xlsform/core/meaning.py:176
+#, python-brace-format
+msgid "Did you mean {guess}?"
+msgstr ""
+
+#. Description of the 'Generated DocTypes' (Long Text) field in DocType
+#. 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:133
+msgid "DocTypes created for this form. Only these may be changed when it is published."
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:138
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:29
+msgid "Download highlighted workbook"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:45
+#, python-brace-format
+msgid "Download the export of {0}"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:58
+msgid "Download the starter workbook"
+msgstr ""
+
+#. Option for the 'Status' (Select) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:49
+msgid "Draft"
+msgstr ""
+
+#. Label of the can_write (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:46
+msgid "Edit"
+msgstr ""
+
+#: xlsform/core/issues.py:401
+msgid "Encrypted forms (public_key) aren't supported."
+msgstr ""
+
+#. Label of the error_count (Int) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:114
+msgid "Errors"
+msgstr ""
+
+#: xlsform/www/xlsform-docs/errors.html:7
+msgid "Every problem found in an uploaded workbook has a code. Errors block publishing; warnings need “I understand the warnings”; advice is optional. Download the highlighted copy of your workbook to see each problem in its cell."
+msgstr ""
+
+#: xlsform/core/issues.py:414
+msgid "Example: concat(${{village}}, '-', ${{hh_head}})"
+msgstr ""
+
+#: xlsform/core/issues.py:292
+#, python-brace-format
+msgid "Example: {example}"
+msgstr ""
+
+#. Name of a Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:14
+msgid "Excel Forms"
+msgstr ""
+
+#. Label of the can_export (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:60
+msgid "Export"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:24
+msgid "Export CSV"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:19
+msgid "Export Excel"
+msgstr ""
+
+#: xlsform/api/data.py:33
+msgid "Export format must be xlsx or csv."
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:41
+msgid "Export ready"
+msgstr ""
+
+#: xlsform/runtime/apply.py:180
+#, python-brace-format
+msgid "Field {0} of {1} is a {2} on the site but the form needs a {3}."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:67
+msgid "Fix the errors below in Excel, then upload the corrected workbook."
+msgstr ""
+
+#: xlsform/api/forms.py:297
+msgid "Fix the errors first; answers can only be checked on a form without errors."
+msgstr ""
+
+#: xlsform/api/forms.py:284
+msgid "Fix the errors first; the preview needs a form without errors."
+msgstr ""
+
+#. Label of the form (Link) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:50
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:43
+msgid "Form"
+msgstr ""
+
+#. Label of the form_id (Data) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:30
+msgid "Form ID"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.py:17
+msgid "Form ID must start with a letter and use only a-z, 0-9 and _ (3 to 41 characters)."
+msgstr ""
+
+#: xlsform/api/forms.py:353
+#, python-brace-format
+msgid "Form version {0} not found."
+msgstr ""
+
+#. Label of a Card Break in the Excel Forms Workspace
+#. Label of a shortcut in the Excel Forms Workspace
+#: xlsform/runtime/navigation.py:78 xlsform/runtime/navigation.py:89
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:20
+msgid "Forms"
+msgstr ""
+
+#: xlsform/core/validate.py:134
+msgid "Frappe limits"
+msgstr ""
+
+#. Description of the 'Form ID' (Data) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:35
+msgid "From the settings sheet; lower-case letters, numbers and _"
+msgstr ""
+
+#. Label of the generated_doctypes (Long Text) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:129
+msgid "Generated DocTypes"
+msgstr ""
+
+#: xlsform/api/forms.py:243
+msgid "Give a version or a report token."
+msgstr ""
+
+#: xlsform/www/xlsform-docs/errors.html:15
+msgid "How to fix it"
+msgstr ""
+
+#. Label of the warnings_accepted (Check) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:143
+msgid "I understand the warnings"
+msgstr ""
+
+#. Label of the data_section (Section Break) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:170
+msgid "Internal"
+msgstr ""
+
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:62
+msgid "Invalid"
+msgstr ""
+
+#: xlsform/core/issues.py:448
+msgid "Keep the old name if it's the same question."
+msgstr ""
+
+#. Label of the max_upload_mb (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:31
+msgid "Largest workbook (MB)"
+msgstr ""
+
+#. Label of the limits_section (Section Break) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:26
+msgid "Limits"
+msgstr ""
+
+#: xlsform/core/issues.py:200
+#, python-brace-format
+msgid "List \"{list}\" has the choice name {choices} more than once (choices rows {rows}). Names that differ only in upper or lower case, accents or trailing spaces count as the same."
+msgstr ""
+
+#. Description of the 'Allow mForm' (Check) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:112
+msgid "Listed in the mForm app when Mobile Control is installed"
+msgstr ""
+
+#. Description of the 'Allow Web Form' (Check) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:101
+msgid "Logged-in users with access fill it at /xf/your-form-id"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:164
+msgid "Long choice lists show their first 1,000 choices here."
+msgstr ""
+
+#. Label of the max_expression_length (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:56
+msgid "Longest formula (characters)"
+msgstr ""
+
+#. Label of the max_choices_per_list (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:45
+msgid "Most choices per list"
+msgstr ""
+
+#. Label of the max_questions (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:38
+msgid "Most questions per form"
+msgstr ""
+
+#: xlsform/core/issues.py:440
+msgid "Move some into a repeat, or shorten long choice names."
+msgstr ""
+
+#: xlsform/core/issues.py:230
+#, python-brace-format
+msgid "Move {inner} out, or flatten it into the outer repeat."
+msgstr ""
+
+#: xlsform/runtime/validation.py:215
+msgid "Moved into or out of a repeat (answers do not move)"
+msgstr ""
+
+#. Description of the 'I understand the warnings' (Check) field in DocType
+#. 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:145
+msgid "Needed before publishing a version that has warnings"
+msgstr ""
+
+#: xlsform/runtime/validation.py:212
+msgid "New questions"
+msgstr ""
+
+#: xlsform/core/issues.py:358
+msgid "No change needed, or untick Allow Web Form on the form."
+msgstr ""
+
+#: xlsform/core/issues.py:352
+msgid "No change needed; the filter works on Desk and mForm."
+msgstr ""
+
+#: xlsform/runtime/validation.py:224
+msgid "No changes to questions."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:76
+msgid "No errors. Preview it, then publish."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:73
+msgid "No errors. Read the warnings, tick “I understand the warnings”, preview, then publish."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:207
+msgid "No problems found."
+msgstr ""
+
+#: xlsform/runtime/validation.py:165
+msgid "No problems found. This version is ready to preview and publish."
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:7
+msgid "Not published yet. Upload a workbook, fix any problems, preview it, then publish."
+msgstr ""
+
+#. Description of the 'Designers can publish' (Check) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:105
+msgid "Off: only a System Manager can publish"
+msgstr ""
+
+#: xlsform/core/issues.py:350
+#, python-brace-format
+msgid "On the web form, {name} will list all choices of \"{list}\"; answers that don't match the filter are rejected when saved."
+msgstr ""
+
+#. Description of a DocType
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:5
+msgid "One uploaded workbook. Publishing (submitting) it is final; upload a new version to change the form."
+msgstr ""
+
+#: xlsform/runtime/settings.py:43
+msgid "Only XLSForm Designers can do this."
+msgstr ""
+
+#: xlsform/runtime/publish.py:30
+msgid "Only a System Manager can publish forms on this site."
+msgstr ""
+
+#: xlsform/api/forms.py:369
+msgid "Only a published form can be retired."
+msgstr ""
+
+#: xlsform/runtime/publish.py:35
+msgid "Only a version without errors can be published. Fix the workbook and upload it again."
+msgstr ""
+
+#. Label of the only_own (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:81
+msgid "Only their own records"
+msgstr ""
+
+#: xlsform/core/issues.py:72
+msgid "Open it in Excel, save it again as .xlsx and upload the new file."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:15
+msgid "Open records"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:31
+msgid "Open web form"
+msgstr ""
+
+#: xlsform/core/issues.py:381
+#, python-brace-format
+msgid "Parameter \"{parameter}\" (row {row}) has the value \"{value}\", which isn't a number."
+msgstr ""
+
+#: xlsform/core/issues.py:375
+#, python-brace-format
+msgid "Parameter \"{parameter}\" (row {row}) isn't supported and will be ignored."
+msgstr ""
+
+#. Label of the parsed_json (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:205
+msgid "Parsed Form"
+msgstr ""
+
+#. Description of the 'Who can use the data' (Section Break) field in DocType
+#. 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:118
+msgid "Pick roles and what they may do. Users get roles from your administrator. Changes apply as soon as you save."
+msgstr ""
+
+#. Label of the doctype_prefix (Data) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:84
+msgid "Prefix of generated DocTypes"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:22
+msgid "Preparing the export…"
+msgstr ""
+
+#. Label of the preview_json (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:42
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:219
+msgid "Preview"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:168
+#, python-brace-format
+msgid "Preview: {0}"
+msgstr ""
+
+#. Label of the can_print (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:74
+msgid "Print"
+msgstr ""
+
+#: xlsform/core/annotate.py:70 xlsform/public/js/xlsform.bundle.js:133
+#: xlsform/runtime/validation.py:182
+msgid "Problem"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:45
+msgid "Publish"
+msgstr ""
+
+#. Label of the publish_error (Small Text) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:101
+msgid "Publish Error"
+msgstr ""
+
+#. Label of the publish_status (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:92
+msgid "Publish Status"
+msgstr ""
+
+#. Option for the 'Status' (Select) field in DocType 'XLSForm'
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:49
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:140
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:62
+msgid "Published"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:10
+msgid "Published. Collectors can fill it on Desk, the web and mForm."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:80
+msgid "Published: this is the version collectors use."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:147
+msgid "Publishing"
+msgstr ""
+
+#: xlsform/runtime/publish.py:74
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:88
+#, python-brace-format
+msgid "Publishing failed: {0}"
+msgstr ""
+
+#. Description of the 'Columns per section' (Select) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:75
+msgid "Questions of a section are spread over this many columns on Desk and the web form. Tables, multi-selects and notes always use the full width."
+msgstr ""
+
+#. Label of the can_read (Check) field in DocType 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:31
+msgid "Read"
+msgstr ""
+
+#: xlsform/runtime/navigation.py:65
+msgid "Records collected with your forms"
+msgstr ""
+
+#: xlsform/runtime/apply.py:165
+#, python-brace-format
+msgid "Records of the form {0}, created by XLSForm. Change the form, not this DocType."
+msgstr ""
+
+#: xlsform/runtime/apply.py:85
+#, python-brace-format
+msgid "Refusing to change DocType {0}: it belongs to another form."
+msgstr ""
+
+#: xlsform/runtime/apply.py:82
+#, python-brace-format
+msgid "Refusing to change DocType {0}: it belongs to module {1}."
+msgstr ""
+
+#: xlsform/runtime/apply.py:77
+#, python-brace-format
+msgid "Refusing to change DocType {0}: it isn't an XLSForm DocType."
+msgstr ""
+
+#: xlsform/core/issues.py:52
+msgid "Remove embedded images and unused sheets, save it again as .xlsx and upload the new file."
+msgstr ""
+
+#: xlsform/core/issues.py:46
+msgid "Remove embedded images or unused sheets."
+msgstr ""
+
+#: xlsform/core/issues.py:108 xlsform/core/issues.py:370
+#: xlsform/core/issues.py:376 xlsform/core/issues.py:408
+msgid "Remove it, or keep it for use in ODK."
+msgstr ""
+
+#: xlsform/core/issues.py:202
+msgid "Remove or rename one."
+msgstr ""
+
+#: xlsform/core/structure.py:229
+msgid "Remove the column if you don't need it."
+msgstr ""
+
+#: xlsform/core/issues.py:114
+msgid "Remove the column; it changes how answers are stored, so it can't be ignored."
+msgstr ""
+
+#: xlsform/core/issues.py:66
+msgid "Remove the password and upload again."
+msgstr ""
+
+#: xlsform/core/issues.py:402
+msgid "Remove the public_key setting."
+msgstr ""
+
+#: xlsform/core/issues.py:182
+msgid "Remove the row, or keep it for use in ODK."
+msgstr ""
+
+#: xlsform/core/issues.py:90
+msgid "Remove the sheet; Frappe DocTypes already store each record."
+msgstr ""
+
+#: xlsform/runtime/validation.py:213
+msgid "Removed (answers kept, question hidden)"
+msgstr ""
+
+#: xlsform/core/issues.py:132
+#, python-brace-format
+msgid "Rename one, e.g. {example}."
+msgstr ""
+
+#: xlsform/core/issues.py:78
+#, python-brace-format
+msgid "Rename your {purpose} sheet to \"{sheet_name}\" (lower case)."
+msgstr ""
+
+#: xlsform/runtime/validation.py:214
+msgid "Renamed (answers do not move)"
+msgstr ""
+
+#: xlsform/core/issues.py:228
+#, python-brace-format
+msgid "Repeat {inner} (row {inner_row}) is inside repeat {outer} (row {outer_row}); repeats inside repeats aren't supported yet."
+msgstr ""
+
+#: xlsform/core/issues.py:235
+#, python-brace-format
+msgid "Repeat {name} (row {row}) has no questions."
+msgstr ""
+
+#: xlsform/core/issues.py:248
+#, python-brace-format
+msgid "Replace ${{{name}}} with ."
+msgstr ""
+
+#: xlsform/core/issues.py:266
+msgid "Replace them with straight quotes (' or \")."
+msgstr ""
+
+#. Label of the can_report (Check) field in DocType 'XLSForm Access'
+#. Label of the report_view (HTML) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:67
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:154
+msgid "Report"
+msgstr ""
+
+#. Label of the report_html (Long Text) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:184
+msgid "Report HTML"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:38
+msgid "Retire form"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:42
+#, python-brace-format
+msgid "Retire {0}? New records are refused on every channel; existing data, reports and exports stay. Publishing a new version re-opens it."
+msgstr ""
+
+#. Option for the 'Status' (Select) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:49
+msgid "Retired"
+msgstr ""
+
+#. Label of the retired_on (Datetime) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:86
+msgid "Retired On"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:11
+msgid "Retired. New records are refused; publish a new version to re-open it."
+msgstr ""
+
+#. Label of the role (Link) field in DocType 'XLSForm Access'
+#. Label of a Link in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:22
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:66
+msgid "Role"
+msgstr ""
+
+#. Label of the row_budget_bytes (Int) field in DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:63
+msgid "Row size budget (bytes)"
+msgstr ""
+
+#: xlsform/runtime/access.py:46
+#, python-brace-format
+msgid "Row {0}: the role {1} is given to every user, so it can't be given access to form data."
+msgstr ""
+
+#: xlsform/runtime/access.py:50
+#, python-brace-format
+msgid "Row {0}: the role {1} is listed twice."
+msgstr ""
+
+#: xlsform/core/issues.py:253
+#, python-brace-format
+msgid "Row {row} (outside repeat {repeat}) uses ${{{name}}} without count() or sum()."
+msgstr ""
+
+#: xlsform/core/issues.py:471
+#, python-brace-format
+msgid "Row {row} ({name}) has no label, so collectors will see only its name."
+msgstr ""
+
+#: xlsform/core/issues.py:144
+#, python-brace-format
+msgid "Row {row} closes a {closing}, but the open block is a {open_kind} started in row {open_row}."
+msgstr ""
+
+#: xlsform/core/issues.py:151
+#, python-brace-format
+msgid "Row {row} closes a {kind} that was never opened."
+msgstr ""
+
+#: xlsform/core/issues.py:119
+#, python-brace-format
+msgid "Row {row} has a question type but no name."
+msgstr ""
+
+#: xlsform/core/issues.py:157
+#, python-brace-format
+msgid "Row {row} opens a {kind} inside {depth} other groups or repeats; the limit is {limit}."
+msgstr ""
+
+#: xlsform/core/issues.py:187
+#, python-brace-format
+msgid "Row {row} uses choice list \"{list}\", but the choices sheet has no list with that name."
+msgstr ""
+
+#: xlsform/core/issues.py:221
+#, python-brace-format
+msgid "Row {row} uses {file}, which wasn't uploaded with the form."
+msgstr ""
+
+#. Description of the 'Row size budget (bytes)' (Int) field in DocType 'XLSForm
+#. Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:66
+msgid "Safety margin under MariaDB's 65,535-byte row limit"
+msgstr ""
+
+#: xlsform/core/issues.py:40
+msgid "Save it as .xlsx from Excel or Google Sheets and upload again."
+msgstr ""
+
+#: xlsform/core/meaning.py:178
+msgid "See the list of question types in the docs."
+msgstr ""
+
+#: xlsform/core/issues.py:286
+msgid "See the supported function list in the docs."
+msgstr ""
+
+#: xlsform/core/issues.py:176
+#, python-brace-format
+msgid "See the supported list in the docs{alternative}."
+msgstr ""
+
+#: xlsform/core/issues.py:420
+msgid "Set a higher value in the version setting."
+msgstr ""
+
+#: xlsform/core/issues.py:426
+msgid "Set a new, higher version in the settings sheet."
+msgstr ""
+
+#. Label of a shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:114
+msgid "Settings"
+msgstr ""
+
+#. Label of a Card Break in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:48
+msgid "Setup"
+msgstr ""
+
+#: xlsform/core/annotate.py:67
+msgid "Severity"
+msgstr ""
+
+#: xlsform/core/issues.py:311
+msgid "Simplify it, or use fewer calculations that build on each other. A constraint has no such limit, because it is checked when the form is saved."
+msgstr ""
+
+#. Label of the source_hash (Data) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:84
+msgid "Source Hash"
+msgstr ""
+
+#: xlsform/core/issues.py:272
+msgid "Split it into calculate questions."
+msgstr ""
+
+#: xlsform/core/issues.py:432
+msgid "Split it into two forms, or ask your administrator to raise the limit."
+msgstr ""
+
+#: xlsform/core/issues.py:215
+msgid "Split it with a cascading filter (district, then village), or ask your administrator about larger lists."
+msgstr ""
+
+#. Label of a shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:108
+msgid "Starter Workbook"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform_list.js:9
+msgid "Starter workbook"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:111
+msgid "Starting…"
+msgstr ""
+
+#. Label of the state (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:61
+msgid "State"
+msgstr ""
+
+#. Label of the status (Select) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:48
+msgid "Status"
+msgstr ""
+
+#: xlsform/core/annotate.py:71 xlsform/public/js/xlsform.bundle.js:133
+#: xlsform/runtime/validation.py:182
+msgid "Suggested fix"
+msgstr ""
+
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:62
+msgid "Superseded"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:83
+msgid "Superseded by a newer version. Records collected on it stay valid."
+msgstr ""
+
+#. Name of a role
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:147
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:125
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:252
+msgid "System Manager"
+msgstr ""
+
+#. Label of the test_results (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:226
+msgid "Test Results"
+msgstr ""
+
+#: xlsform/core/issues.py:89
+#, python-brace-format
+msgid "The \"{sheet_name}\" sheet (entities) isn't supported yet."
+msgstr ""
+
+#: xlsform/core/issues.py:58
+#, python-brace-format
+msgid "The \"{sheet_name}\" sheet has data outside the first {max_rows} rows and {max_columns} columns (A to {column_name})."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:59
+msgid "The current version of a form can't be deleted."
+msgstr ""
+
+#: xlsform/core/issues.py:363
+#, python-brace-format
+msgid "The default \"{value}\" can't be used; defaults must be fixed values, today() or now()."
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:30
+msgid "The export is large, so it runs in the background. You will get a link when it is ready."
+msgstr ""
+
+#: xlsform/core/issues.py:45
+#, python-brace-format
+msgid "The file is {size_mb} MB; the limit is {limit_mb} MB."
+msgstr ""
+
+#: xlsform/core/issues.py:394
+#, python-brace-format
+msgid "The form ID \"{value}\" will be used as {fixed}, because form IDs may only use a-z, 0-9 and _."
+msgstr ""
+
+#: xlsform/core/issues.py:163
+#, python-brace-format
+msgid "The form couldn't be checked completely: it is nested too deeply for the {stage} checks."
+msgstr ""
+
+#: xlsform/core/issues.py:438
+#, python-brace-format
+msgid "The form has too many short-answer questions outside repeats to store in one record ({bytes} of {limit} bytes)."
+msgstr ""
+
+#: xlsform/core/issues.py:431
+#, python-brace-format
+msgid "The form has {count} questions; the limit is {limit}."
+msgstr ""
+
+#: xlsform/runtime/publish.py:103
+#, python-brace-format
+msgid "The form no longer passes its checks: {0}"
+msgstr ""
+
+#: xlsform/core/issues.py:259
+#, python-brace-format
+msgid "The formula can't be read: {reason}."
+msgstr ""
+
+#: xlsform/core/issues.py:308
+#, python-brace-format
+msgid "The formula in \"{column}\" is too complex to check while the form is being filled: written out with the calculations it uses, it is longer than {limit} characters or too deeply nested."
+msgstr ""
+
+#: xlsform/core/issues.py:271
+#, python-brace-format
+msgid "The formula is {length} characters long; the limit is {limit}."
+msgstr ""
+
+#: xlsform/core/issues.py:241
+#, python-brace-format
+msgid "The formula refers to ${{{name}}}, which isn't a question in this form."
+msgstr ""
+
+#: xlsform/core/issues.py:265
+msgid "The formula uses curly quotes (‘ ’ or “ ”), which formulas don't accept."
+msgstr ""
+
+#: xlsform/core/issues.py:131
+#, python-brace-format
+msgid "The name {name} is used in rows {rows}."
+msgstr ""
+
+#: xlsform/core/issues.py:277
+#, python-brace-format
+msgid "The pattern in regex() can't be used: {reason}."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.py:20
+msgid "The prefix can't change once forms are published."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.py:15
+msgid "The prefix must start with a capital letter and use only letters and numbers (up to 8)."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.py:22
+msgid "The row size budget must stay under MariaDB's limit of 65,535 bytes."
+msgstr ""
+
+#: xlsform/core/issues.py:407
+#, python-brace-format
+msgid "The setting \"{setting}\" is ignored by this app."
+msgstr ""
+
+#: xlsform/core/issues.py:387
+#, python-brace-format
+msgid "The setting {setting} = \"{value}\" isn't valid: {reason}."
+msgstr ""
+
+#: xlsform/core/issues.py:83
+#, python-brace-format
+msgid "The sheet \"{sheet_name}\" isn't used, so anything on it will be ignored."
+msgstr ""
+
+#: xlsform/core/issues.py:71
+msgid "The workbook can't be opened; it may be damaged."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:75
+msgid "The workbook could not be checked. Upload it again, or ask your administrator."
+msgstr ""
+
+#: xlsform/core/issues.py:77
+#, python-brace-format
+msgid "The workbook has no \"{sheet_name}\" sheet."
+msgstr ""
+
+#: xlsform/core/issues.py:65
+msgid "The workbook is password-protected, so it can't be read."
+msgstr ""
+
+#: xlsform/core/issues.py:51
+#, python-brace-format
+msgid "The workbook unpacks to {size_mb} MB of data; the limit is {limit_mb} MB."
+msgstr ""
+
+#: xlsform/core/issues.py:247
+#, python-brace-format
+msgid "The {column} of {name} refers to its own name; use . for \"this answer\"."
+msgstr ""
+
+#: xlsform/core/issues.py:137
+#, python-brace-format
+msgid "The {kind} started in row {row} ({name}) is never closed."
+msgstr ""
+
+#: xlsform/core/issues.py:95
+#, python-brace-format
+msgid "The {sheet_name} sheet has no \"{column}\" column."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:220
+msgid "These answers would be refused"
+msgstr ""
+
+#: xlsform/core/issues.py:323
+#, python-brace-format
+msgid "These calculations depend on each other in a loop: {cycle}."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:115
+msgid "These changes will be made to the form's data table:"
+msgstr ""
+
+#: xlsform/core/issues.py:329
+#, python-brace-format
+msgid "This choice_filter can't be applied: {reason}."
+msgstr ""
+
+#: xlsform/core/issues.py:39
+msgid "This file is not an Excel workbook (.xlsx)."
+msgstr ""
+
+#: xlsform/api/forms.py:247
+msgid "This file isn't an Excel workbook, so it can't be annotated."
+msgstr ""
+
+#: xlsform/api/data.py:36
+msgid "This form has not been published yet."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:160
+msgid "This is how collectors will see the form. Skip logic works as you type. Use “Check answers” to run the constraints, calculations and other checks done on save."
+msgstr ""
+
+#: xlsform/api/forms.py:231
+msgid "This report has expired. Upload the workbook again."
+msgstr ""
+
+#: xlsform/runtime/publish.py:38
+msgid "This version has warnings. Tick \"I understand the warnings\" first."
+msgstr ""
+
+#: xlsform/runtime/publish.py:32
+msgid "This version is already published."
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:126
+msgid "This workbook can't be used yet"
+msgstr ""
+
+#: xlsform/api/forms.py:44
+#, python-brace-format
+msgid "This workbook is for form {0} (settings sheet), not {1}."
+msgstr ""
+
+#. Label of the title (Data) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:40
+msgid "Title"
+msgstr ""
+
+#: xlsform/runtime/validation.py:216
+msgid "Type changed (new column; earlier answers stay in the old one)"
+msgstr ""
+
+#. Description of the 'Allow uninstall to delete form data' (Check) field in
+#. DocType 'XLSForm Settings'
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:112
+msgid "Uninstalling removes every generated DocType and its records. Leave off unless you mean it."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:37
+msgid "Upload a corrected workbook"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:52
+#: xlsform/xlsform/doctype/xlsform/xlsform_list.js:8
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version_list.js:15
+msgid "Upload a workbook"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:76
+msgid "Upload and check"
+msgstr ""
+
+#: xlsform/api/forms.py:66
+msgid "Upload in progress"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:8
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:12
+msgid "Upload new version"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:56
+msgid "Upload the .xlsx you edited in Excel. Every problem is listed with the sheet, row and cell, and you can download your workbook with the problems highlighted."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:19
+msgid "Upload workbooks with the Upload button on the XLSForm, so the form and version are read from it."
+msgstr ""
+
+#: xlsform/core/issues.py:222
+#, python-brace-format
+msgid "Upload {file} together with the workbook."
+msgstr ""
+
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:62
+msgid "Uploaded"
+msgstr ""
+
+#: xlsform/core/issues.py:364
+msgid "Use a fixed value, or a calculate question."
+msgstr ""
+
+#: xlsform/core/issues.py:382
+#, python-brace-format
+msgid "Use a number, e.g. {parameter}=10."
+msgstr ""
+
+#: xlsform/core/issues.py:301
+msgid "Use a simpler condition here, or move the check into a constraint, which is checked on save."
+msgstr ""
+
+#: xlsform/core/issues.py:279
+#, python-brace-format
+msgid "Use a simpler pattern, e.g. ^[0-9]{{10}}$. Answers longer than {input_limit} characters never match a regex."
+msgstr ""
+
+#: xlsform/core/issues.py:330
+msgid "Use conditions like district = ${{district}}, joined by and."
+msgstr ""
+
+#: xlsform/core/issues.py:164
+msgid "Use fewer groups inside groups and shorter formulas, then upload again."
+msgstr ""
+
+#: xlsform/core/meaning.py:416
+msgid "Use lower-case letters, numbers and _, e.g. household_survey."
+msgstr ""
+
+#: xlsform/core/issues.py:344
+msgid "Use select_one, or remove the filter."
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.py:51
+msgid "Use the Publish button: it checks the form and creates its DocTypes before publishing."
+msgstr ""
+
+#: xlsform/core/meaning.py:437
+msgid "Use up to 40 letters, numbers, dots, dashes and _, starting with a letter or number, e.g. 2026110301."
+msgstr ""
+
+#: xlsform/core/issues.py:126
+#, python-brace-format
+msgid "Use {fixed}."
+msgstr ""
+
+#: xlsform/core/issues.py:208
+#, python-brace-format
+msgid "Use {fixed}; the label can keep any text."
+msgstr ""
+
+#. Description of the 'Only their own records' (Check) field in DocType
+#. 'XLSForm Access'
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:84
+msgid "Users see only records they created"
+msgstr ""
+
+#. Option for the 'State' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:62
+msgid "Valid"
+msgstr ""
+
+#. Label of the validation_report (JSON) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:177
+msgid "Validation Report"
+msgstr ""
+
+#. Label of the version (Data) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:53
+msgid "Version"
+msgstr ""
+
+#: xlsform/core/issues.py:419
+#, python-brace-format
+msgid "Version \"{version}\" is not newer than the published version \"{published}\"."
+msgstr ""
+
+#: xlsform/core/issues.py:425
+#, python-brace-format
+msgid "Version \"{version}\" of this form is already published."
+msgstr ""
+
+#. Label of a shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform/xlsform.js:51
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:102
+msgid "Versions"
+msgstr ""
+
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:129
+msgid "Waiting to publish…"
+msgstr ""
+
+#. Label of the warning_count (Int) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:125
+msgid "Warnings"
+msgstr ""
+
+#: xlsform/www/xlsform-docs/errors.html:14
+msgid "What it means"
+msgstr ""
+
+#: xlsform/core/annotate.py:69
+msgid "Where"
+msgstr ""
+
+#. Label of the access_section (Section Break) field in DocType 'XLSForm'
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:117
+msgid "Who can use the data"
+msgstr ""
+
+#. Label of the source_file (Attach) field in DocType 'XLSForm Version'
+#: xlsform/runtime/validation.py:178
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:76
+msgid "Workbook"
+msgstr ""
+
+#: xlsform/public/js/xlsform.bundle.js:65
+msgid "Workbook (.xlsx)"
+msgstr ""
+
+#: xlsform/core/issues.py:254
+#, python-brace-format
+msgid "Wrap it, e.g. sum(${{{name}}})."
+msgstr ""
+
+#: xlsform/core/issues.py:318
+#, python-brace-format
+msgid "Write the condition without {name}, or simplify its calculation."
+msgstr ""
+
+#. Name of a DocType
+#. Label of a Link in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:142
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:28
+msgid "XLSForm"
+msgstr ""
+
+#. Name of a DocType
+#: xlsform/xlsform/doctype/xlsform_access/xlsform_access.json:92
+msgid "XLSForm Access"
+msgstr ""
+
+#. Name of a role
+#: xlsform/xlsform/doctype/xlsform/xlsform.json:159
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:135
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:265
+msgid "XLSForm Designer"
+msgstr ""
+
+#. Name of a DocType
+#. Label of a Link in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform_settings/xlsform_settings.json:121
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:56
+msgid "XLSForm Settings"
+msgstr ""
+
+#. Name of a DocType
+#. Label of a Link in the Excel Forms Workspace
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:247
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:38
+msgid "XLSForm Version"
+msgstr ""
+
+#: xlsform/www/xlsform-docs/errors.html:5 xlsform/www/xlsform-docs/errors.py:23
+msgid "XLSForm issue codes"
+msgstr ""
+
+#: xlsform/api/forms.py:89
+msgid "You can't create form versions."
+msgstr ""
+
+#: xlsform/api/forms.py:168
+msgid "You can't create forms."
+msgstr ""
+
+#: xlsform/runtime/validation.py:93
+#, python-brace-format
+msgid "You don't have access to the file {0}."
+msgstr ""
+
+#: xlsform/api/data.py:38
+msgid "You don't have permission to export this form's data."
+msgstr ""
+
+#: xlsform/core/expr/regex_safety.py:32
+msgid "a repeated part contains another repeat, as in (a+)*"
+msgstr ""
+
+#: xlsform/core/expr/regex_safety.py:33
+msgid "a repeated part has alternatives that can start with the same character"
+msgstr ""
+
+#: xlsform/core/meaning.py:644
+#, python-brace-format
+msgid "at least {n} values"
+msgstr ""
+
+#: xlsform/core/expr/regex_safety.py:31
+msgid "back-references, look-arounds, flags and conditionals can't be used"
+msgstr ""
+
+#: xlsform/core/validate.py:135
+msgid "changes from the published version"
+msgstr ""
+
+#: xlsform/core/structure.py:262
+msgid "choice column names can only use letters, numbers and _"
+msgstr ""
+
+#: xlsform/core/issues.py:343
+#, python-brace-format
+msgid "choice_filter on select_multiple questions isn't supported yet (row {row})."
+msgstr ""
+
+#: xlsform/core/issues.py:336
+#, python-brace-format
+msgid "choice_filter uses column \"{choice_column}\", which isn't on the choices sheet for list \"{list}\"."
+msgstr ""
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:93
+msgid "compiling"
+msgstr ""
+
+#: xlsform/core/meaning.py:288
+msgid "contains a space"
+msgstr ""
+
+#: xlsform/api/forms.py:132
+msgid "csv_urls must be a list of file URLs."
+msgstr ""
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:93
+msgid "done"
+msgstr ""
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:93
+msgid "failed"
+msgstr ""
+
+#: xlsform/core/validate.py:131
+msgid "file"
+msgstr ""
+
+#: xlsform/core/issues.py:413
+msgid "instance_name can only combine questions and fixed text with concat(); it will be ignored."
+msgstr ""
+
+#: xlsform/core/meaning.py:280
+msgid "is empty"
+msgstr ""
+
+#: xlsform/core/meaning.py:290
+msgid "is too long or contains one of < > % \" # * ? \\ /"
+msgstr ""
+
+#: xlsform/core/meaning.py:434
+msgid "it becomes part of the version's document name"
+msgstr ""
+
+#: xlsform/core/meaning.py:415
+msgid "it has no letters or numbers to build a form ID from"
+msgstr ""
+
+#: xlsform/core/expr/regex_safety.py:29
+#, python-brace-format
+msgid "it is longer than {limit} characters"
+msgstr ""
+
+#: xlsform/core/expr/regex_safety.py:30
+msgid "it isn't a valid pattern"
+msgstr ""
+
+#: xlsform/www/xlsform-docs/errors.py:15
+msgid "message"
+msgstr ""
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:93
+msgid "migrating"
+msgstr ""
+
+#: xlsform/core/structure.py:369
+msgid "names can only use letters, numbers, _ . and -"
+msgstr ""
+
+#: xlsform/core/structure.py:364
+msgid "names can't contain spaces"
+msgstr ""
+
+#: xlsform/core/structure.py:368
+msgid "names can't start with \"xml\""
+msgstr ""
+
+#: xlsform/core/structure.py:366
+msgid "names can't start with a number"
+msgstr ""
+
+#: xlsform/core/meaning.py:778
+msgid "only conditions of the form column = ${{question}} joined by and can be used"
+msgstr ""
+
+#: xlsform/core/validate.py:133
+msgid "question types, choice lists and formulas"
+msgstr ""
+
+#. Option for the 'Publish Status' (Select) field in DocType 'XLSForm Version'
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.json:93
+msgid "queued"
+msgstr ""
+
+#: xlsform/runtime/validation.py:186
+#: xlsform/xlsform/doctype/xlsform_version/xlsform_version.js:214
+msgid "row"
+msgstr ""
+
+#: xlsform/core/validate.py:132
+msgid "structure"
+msgstr ""
+
+#: xlsform/www/xlsform-docs/errors.py:16
+msgid "suggestion"
+msgstr ""
+
+#: xlsform/core/expr/regex_safety.py:34
+msgid "the pattern must be fixed text in quotes"
+msgstr ""
+
+#: xlsform/runtime/validation.py:171
+#, python-brace-format
+msgid "{0} advice"
+msgstr ""
+
+#: xlsform/runtime/validation.py:171
+#, python-brace-format
+msgid "{0} errors"
+msgstr ""
+
+#: xlsform/runtime/validation.py:171
+#, python-brace-format
+msgid "{0} warnings"
+msgstr ""
+
+#: xlsform/core/issues.py:285
+#, python-brace-format
+msgid "{fn}() isn't supported yet."
+msgstr ""
+
+#: xlsform/core/issues.py:291
+#, python-brace-format
+msgid "{fn}() needs {expected} but got {got}."
+msgstr ""
+
+#: xlsform/core/issues.py:102 xlsform/core/issues.py:170
+#: xlsform/core/issues.py:188 xlsform/core/issues.py:242
+#: xlsform/core/issues.py:388
+#, python-brace-format
+msgid "{hint}"
+msgstr ""
+
+#: xlsform/core/engine.py:290
+#, python-brace-format
+msgid "{label} is required."
+msgstr ""
+
+#: xlsform/core/engine.py:294
+#, python-brace-format
+msgid "{label} must be between {lo} and {hi} in steps of {step}."
+msgstr ""
+
+#: xlsform/core/engine.py:308
+#, python-brace-format
+msgid "{label} needs {expected} rows but has {actual}."
+msgstr ""
+
+#: xlsform/core/engine.py:304
+#, python-brace-format
+msgid "{label}: the number of rows can't be worked out from the answers."
+msgstr ""
+
+#: xlsform/core/engine.py:314
+#, python-brace-format
+msgid "{label}: this answer isn't valid."
+msgstr ""
+
+#: xlsform/core/engine.py:301
+#, python-brace-format
+msgid "{label}: this choice isn't allowed with the other answers."
+msgstr ""
+
+#: xlsform/core/meaning.py:647
+#, python-brace-format
+msgid "{lo} to {hi} values"
+msgstr ""
+
+#: xlsform/core/issues.py:357
+#, python-brace-format
+msgid "{name} ({type}) can't be shown on the web form; it can be answered on Desk and mForm."
+msgstr ""
+
+#: xlsform/core/issues.py:459
+#, python-brace-format
+msgid "{name} changed from {old} to {new}; earlier answers stay in the old column."
+msgstr ""
+
+#: xlsform/core/issues.py:453
+#, python-brace-format
+msgid "{name} moved {direction} repeat {repeat}; existing answers won't move."
+msgstr ""
+
+#: xlsform/core/issues.py:465
+#, python-brace-format
+msgid "{name} was removed; its earlier answers are kept but no longer shown on the form."
+msgstr ""
+
+#: xlsform/core/meaning.py:646
+#, python-brace-format
+msgid "{n} values"
+msgstr ""
+
+#: xlsform/core/issues.py:446
+#, python-brace-format
+msgid "{old} was removed and {new} added; existing answers to {old} won't move to the new question."
+msgstr ""
+
+#: xlsform/core/issues.py:298
+#, python-brace-format
+msgid "{what} can't be used in \"{column}\": this rule is checked while the form is being filled, offline too."
+msgstr ""
+
+#. Count format of shortcut in the Excel Forms Workspace
+#: xlsform/xlsform/workspace/excel_forms/excel_forms.json:94
+#, python-brace-format
+msgid "{} Published"
+msgstr ""
+

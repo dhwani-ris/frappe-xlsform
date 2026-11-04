@@ -1,0 +1,551 @@
+{
+ "group": "Numbers and blanks",
+ "cases": [
+  {
+   "id": "num-gt-1",
+   "expr": "${n} > 5",
+   "doc": {
+    "n": 7
+   },
+   "expected": true
+  },
+  {
+   "id": "num-gt-2",
+   "expr": "${n} > 5",
+   "doc": {
+    "n": 5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-gt-blank",
+   "expr": "${n} > 5",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-gt-zero",
+   "expr": "${n} > -1",
+   "doc": {
+    "n": 0
+   },
+   "expected": true
+  },
+  {
+   "id": "num-lt-blank",
+   "expr": "${n} < 5",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-lt-1",
+   "expr": "${n} < 5",
+   "doc": {
+    "n": 3
+   },
+   "expected": true
+  },
+  {
+   "id": "num-le-zero",
+   "expr": "${n} <= 0",
+   "doc": {
+    "n": 0
+   },
+   "expected": true
+  },
+  {
+   "id": "num-le-blank",
+   "expr": "${n} <= 0",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-eq-1",
+   "expr": "${n} = 5",
+   "doc": {
+    "n": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-eq-blank",
+   "expr": "${n} = 5",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-ne-blank",
+   "expr": "${n} != 5",
+   "doc": {
+    "n": null
+   },
+   "expected": true
+  },
+  {
+   "id": "num-ne-same",
+   "expr": "${n} != 5",
+   "doc": {
+    "n": 5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-ne-diff",
+   "expr": "${n} != 5",
+   "doc": {
+    "n": 6
+   },
+   "expected": true
+  },
+  {
+   "id": "num-eq-empty-blank",
+   "expr": "${n} = ''",
+   "doc": {
+    "n": null
+   },
+   "expected": true
+  },
+  {
+   "id": "num-eq-empty-zero",
+   "expr": "${n} = ''",
+   "doc": {
+    "n": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "num-ne-empty-blank",
+   "expr": "${n} != ''",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-ne-empty-answered",
+   "expr": "${n} != ''",
+   "doc": {
+    "n": 3
+   },
+   "expected": true
+  },
+  {
+   "id": "num-eq-field-blank",
+   "expr": "${n} = ${n2}",
+   "doc": {
+    "n": null,
+    "n2": null
+   },
+   "expected": true
+  },
+  {
+   "id": "num-eq-field-same",
+   "expr": "${n} = ${n2}",
+   "doc": {
+    "n": 7,
+    "n2": 7
+   },
+   "expected": true
+  },
+  {
+   "id": "num-eq-field-oneblank",
+   "expr": "${n} = ${n2}",
+   "doc": {
+    "n": 7,
+    "n2": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-eq-field-diff",
+   "expr": "${n} = ${n2}",
+   "doc": {
+    "n": 7,
+    "n2": 8
+   },
+   "expected": false
+  },
+  {
+   "id": "num-ne-field-oneblank",
+   "expr": "${n} != ${n2}",
+   "doc": {
+    "n": 7,
+    "n2": null
+   },
+   "expected": true
+  },
+  {
+   "id": "num-dec-gt",
+   "expr": "${d} > 2.5",
+   "doc": {
+    "d": 2.6
+   },
+   "expected": true
+  },
+  {
+   "id": "num-dec-eq",
+   "expr": "${d} > 2.5",
+   "doc": {
+    "d": 2.5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-dec-blank",
+   "expr": "${d} > 2.5",
+   "doc": {
+    "d": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-dec-eq-int",
+   "expr": "${d} = 3",
+   "doc": {
+    "d": 3.0
+   },
+   "expected": true
+  },
+  {
+   "id": "num-add",
+   "expr": "${n} + ${n2} > 10",
+   "doc": {
+    "n": 6,
+    "n2": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-add-blank",
+   "expr": "${n} + ${n2} > 10",
+   "doc": {
+    "n": 6,
+    "n2": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-add-both-blank",
+   "expr": "${n} + ${n2} > 10",
+   "doc": {
+    "n": null,
+    "n2": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-add-ne-blank",
+   "expr": "${n} + ${n2} != 10",
+   "doc": {
+    "n": 6,
+    "n2": null
+   },
+   "expected": true
+  },
+  {
+   "id": "num-mul",
+   "expr": "${n} * 2 = 10",
+   "doc": {
+    "n": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-div",
+   "expr": "${n} div 2 = 2.5",
+   "doc": {
+    "n": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-mod",
+   "expr": "${n} mod 3 = 1",
+   "doc": {
+    "n": 7
+   },
+   "expected": true
+  },
+  {
+   "id": "num-mod-neg",
+   "expr": "${n} mod 3 = -1",
+   "doc": {
+    "n": -7
+   },
+   "expected": true
+  },
+  {
+   "id": "num-neg",
+   "expr": "-${n} < 0",
+   "doc": {
+    "n": 3
+   },
+   "expected": true
+  },
+  {
+   "id": "num-neg-blank",
+   "expr": "-${n} < 0",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-sub",
+   "expr": "${n} - ${n2} = 0",
+   "doc": {
+    "n": 4,
+    "n2": 4
+   },
+   "expected": true
+  },
+  {
+   "id": "num-precedence",
+   "expr": "${n} + 2 * 3 = 10",
+   "doc": {
+    "n": 4
+   },
+   "expected": true
+  },
+  {
+   "id": "num-parens",
+   "expr": "(${n} + 2) * 3 = 18",
+   "doc": {
+    "n": 4
+   },
+   "expected": true
+  },
+  {
+   "id": "num-div-zero",
+   "expr": "${n} div 0 > 1000",
+   "doc": {
+    "n": 4
+   },
+   "expected": true
+  },
+  {
+   "id": "num-literal-only",
+   "expr": "3 > 2",
+   "doc": {},
+   "expected": true
+  },
+  {
+   "id": "num-decimal-literal",
+   "expr": ".5 < 1",
+   "doc": {},
+   "expected": true
+  },
+  {
+   "id": "num-neg-literal",
+   "expr": "${n} > -2.5",
+   "doc": {
+    "n": -2
+   },
+   "expected": true
+  },
+  {
+   "id": "num-str-literal",
+   "expr": "${n} = '5'",
+   "doc": {
+    "n": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-str-literal-blank",
+   "expr": "${n} = '5'",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-chain",
+   "expr": "${n} > 1 and ${n} < 10",
+   "doc": {
+    "n": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-chain-blank",
+   "expr": "${n} > 1 or ${n} < 10",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-text-gt",
+   "expr": "${t} > 5",
+   "doc": {
+    "t": "7"
+   },
+   "expected": true
+  },
+  {
+   "id": "num-text-eq",
+   "expr": "${t} = 5",
+   "doc": {
+    "t": "5"
+   },
+   "expected": true
+  },
+  {
+   "id": "num-text-eq-decimal",
+   "expr": "${t} = 5",
+   "doc": {
+    "t": "5.0"
+   },
+   "expected": true
+  },
+  {
+   "id": "num-text-eq-blank",
+   "expr": "${t} = 5",
+   "doc": {
+    "t": ""
+   },
+   "expected": false
+  },
+  {
+   "id": "num-text-gt-blank",
+   "expr": "${t} > 0",
+   "doc": {
+    "t": null
+   },
+   "expected": false
+  },
+  {
+   "id": "num-zero-answered-gt",
+   "expr": "${n} >= 0",
+   "doc": {
+    "n": 0
+   },
+   "expected": true
+  },
+  {
+   "id": "num-tiny-literal-gt",
+   "expr": "${d} > 0.0000001",
+   "doc": {
+    "d": 0.5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-tiny-literal-lt",
+   "expr": "${d} < 0.0000001",
+   "doc": {
+    "d": 0.5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-huge-literal",
+   "expr": "${d} < 100000000000000000000",
+   "doc": {
+    "d": 2.5
+   },
+   "expected": true
+  },
+  {
+   "id": "num-huge-literal-eq",
+   "expr": "${n} = 100000000000000000000",
+   "doc": {
+    "n": 5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-zero-div-zero",
+   "expr": "${n} div ${n2}",
+   "doc": {
+    "n": 0,
+    "n2": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "num-one-div-zero",
+   "expr": "${n} div ${n2}",
+   "doc": {
+    "n": 1,
+    "n2": 0
+   },
+   "expected": true
+  },
+  {
+   "id": "num-mod-zero-literal",
+   "expr": "${n} mod 0",
+   "doc": {
+    "n": 5
+   },
+   "expected": false
+  },
+  {
+   "id": "num-mod-zero-ref",
+   "expr": "${n} mod ${n2}",
+   "doc": {
+    "n": 5,
+    "n2": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "num-nan-not",
+   "expr": "not(${n} div ${n2})",
+   "doc": {
+    "n": 0,
+    "n2": 0
+   },
+   "expected": true
+  },
+  {
+   "id": "num-text-infinity",
+   "expr": "${t} > 5",
+   "doc": {
+    "t": "Infinity"
+   },
+   "expected": false
+  },
+  {
+   "id": "num-text-infinity-lower",
+   "expr": "${t} > 5",
+   "doc": {
+    "t": "infinity"
+   },
+   "expected": false
+  },
+  {
+   "id": "num-text-underscore",
+   "expr": "${t} = 1000",
+   "doc": {
+    "t": "1_000"
+   },
+   "expected": false
+  },
+  {
+   "id": "num-text-nan",
+   "expr": "${t} != 5",
+   "doc": {
+    "t": "nan"
+   },
+   "expected": true
+  },
+  {
+   "id": "num-text-nan-eq",
+   "expr": "${t} = 5",
+   "doc": {
+    "t": "nan"
+   },
+   "expected": false
+  }
+ ]
+}

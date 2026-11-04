@@ -1,0 +1,315 @@
+{
+ "group": "Truth values",
+ "cases": [
+  {
+   "id": "bool-text",
+   "expr": "${t}",
+   "doc": {
+    "t": "x"
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-text-blank",
+   "expr": "${t}",
+   "doc": {
+    "t": null
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-text-zero-string",
+   "expr": "${t}",
+   "doc": {
+    "t": "0"
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-num",
+   "expr": "${n}",
+   "doc": {
+    "n": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-num-zero",
+   "expr": "${n}",
+   "doc": {
+    "n": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-num-blank",
+   "expr": "${n}",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-not",
+   "expr": "not(${t})",
+   "doc": {
+    "t": null
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-not-set",
+   "expr": "not(${t})",
+   "doc": {
+    "t": "a"
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-true",
+   "expr": "true()",
+   "doc": {},
+   "expected": true
+  },
+  {
+   "id": "bool-false",
+   "expr": "false()",
+   "doc": {},
+   "expected": false
+  },
+  {
+   "id": "bool-not-false",
+   "expr": "not(false())",
+   "doc": {},
+   "expected": true
+  },
+  {
+   "id": "bool-boolean",
+   "expr": "boolean(${t})",
+   "doc": {
+    "t": "a"
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-boolean-blank",
+   "expr": "boolean(${t})",
+   "doc": {
+    "t": ""
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-and-tt",
+   "expr": "${s} = 'yes' and ${n} > 1",
+   "doc": {
+    "s": "yes",
+    "n": 2
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-and-tf",
+   "expr": "${s} = 'yes' and ${n} > 1",
+   "doc": {
+    "s": "yes",
+    "n": 1
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-and-ft",
+   "expr": "${s} = 'yes' and ${n} > 1",
+   "doc": {
+    "s": "no",
+    "n": 2
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-or-ft",
+   "expr": "${s} = 'yes' or ${n} > 1",
+   "doc": {
+    "s": "no",
+    "n": 2
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-or-ff",
+   "expr": "${s} = 'yes' or ${n} > 1",
+   "doc": {
+    "s": "no",
+    "n": 1
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-or-blank",
+   "expr": "${s} = 'yes' or ${n} > 1",
+   "doc": {
+    "s": null,
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-and-or-precedence",
+   "expr": "${n} = 1 or ${n} = 2 and ${s} = 'yes'",
+   "doc": {
+    "n": 1,
+    "s": "no"
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-parens",
+   "expr": "(${n} = 1 or ${n} = 2) and ${s} = 'yes'",
+   "doc": {
+    "n": 1,
+    "s": "no"
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-if-true",
+   "expr": "if(${n} > 5, true(), false())",
+   "doc": {
+    "n": 6
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-if-blank",
+   "expr": "if(${n} > 5, true(), false())",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-if-str",
+   "expr": "if(${t} = 'a', 'x', 'y') = 'x'",
+   "doc": {
+    "t": "a"
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-if-str-else",
+   "expr": "if(${t} = 'a', 'x', 'y') = 'x'",
+   "doc": {
+    "t": "b"
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-if-num",
+   "expr": "if(${n} > 5, ${n}, 0) > 6",
+   "doc": {
+    "n": 7
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-if-num-else",
+   "expr": "if(${n} > 5, ${n}, 0) > 6",
+   "doc": {
+    "n": 3
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-if-mixed",
+   "expr": "if(${n} > 5, ${n}, '') = ''",
+   "doc": {
+    "n": 3
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-true-eq-str",
+   "expr": "true() = 'false'",
+   "doc": {},
+   "expected": true
+  },
+  {
+   "id": "bool-eq-bools",
+   "expr": "(${n} > 1) = (${n2} > 1)",
+   "doc": {
+    "n": 2,
+    "n2": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-eq-bools-same",
+   "expr": "(${n} > 1) = (${n2} > 1)",
+   "doc": {
+    "n": 2,
+    "n2": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-ack",
+   "expr": "${ack} = 'OK'",
+   "doc": {
+    "ack": 1
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-ack-no",
+   "expr": "${ack} = 'OK'",
+   "doc": {
+    "ack": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-ack-bare",
+   "expr": "${ack}",
+   "doc": {
+    "ack": 1
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-ack-bare-no",
+   "expr": "${ack}",
+   "doc": {
+    "ack": 0
+   },
+   "expected": false
+  },
+  {
+   "id": "bool-not-not",
+   "expr": "not(not(${t}))",
+   "doc": {
+    "t": "a"
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-and-three",
+   "expr": "${n} > 0 and ${n2} > 0 and ${t} != ''",
+   "doc": {
+    "n": 1,
+    "n2": 1,
+    "t": "a"
+   },
+   "expected": true
+  },
+  {
+   "id": "bool-or-three",
+   "expr": "${n} > 5 or ${n2} > 5 or ${t} = 'z'",
+   "doc": {
+    "n": 1,
+    "n2": 1,
+    "t": "z"
+   },
+   "expected": true
+  }
+ ]
+}

@@ -1,0 +1,242 @@
+{
+ "group": "Server-only rules",
+ "cases": [
+  {
+   "id": "srv-date-gt",
+   "expr": "${dt} > '2026-01-01'",
+   "doc": {
+    "dt": "2026-01-05"
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-date-gt-no",
+   "expr": "${dt} > '2026-01-01'",
+   "doc": {
+    "dt": "2025-12-31"
+   },
+   "server": true,
+   "expected": false
+  },
+  {
+   "id": "srv-date-blank",
+   "expr": "${dt} > '2026-01-01'",
+   "doc": {
+    "dt": null
+   },
+   "server": true,
+   "expected": false
+  },
+  {
+   "id": "srv-date-lt-today",
+   "expr": "${dt} < today()",
+   "doc": {
+    "dt": "2026-01-05"
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-date-future",
+   "expr": "${dt} <= today()",
+   "doc": {
+    "dt": "2026-12-01"
+   },
+   "server": true,
+   "expected": false
+  },
+  {
+   "id": "srv-date-diff",
+   "expr": "today() - ${dt} > 300",
+   "doc": {
+    "dt": "2025-01-01"
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-date-fields",
+   "expr": "${dt} <= ${dt2}",
+   "doc": {
+    "dt": "2026-01-01",
+    "dt2": "2026-01-02"
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-date-eq",
+   "expr": "${dt} = '2026-01-05'",
+   "doc": {
+    "dt": "2026-01-05"
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-age",
+   "expr": "${c_age} >= 18",
+   "doc": {
+    "dt": "2000-01-01"
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-age-minor",
+   "expr": "${c_age} >= 18",
+   "doc": {
+    "dt": "2015-01-01"
+   },
+   "server": true,
+   "expected": false
+  },
+  {
+   "id": "srv-regex",
+   "expr": "regex(${t}, '^[0-9]{10}$')",
+   "doc": {
+    "t": "9876543210"
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-regex-no",
+   "expr": "regex(${t}, '^[0-9]{10}$')",
+   "doc": {
+    "t": "98765"
+   },
+   "server": true,
+   "expected": false
+  },
+  {
+   "id": "srv-regex-blank",
+   "expr": "regex(${t}, '^[0-9]{10}$')",
+   "doc": {
+    "t": null
+   },
+   "server": true,
+   "expected": false
+  },
+  {
+   "id": "srv-sum",
+   "expr": "sum(${age}) = 30",
+   "doc": {
+    "member": [
+     {
+      "age": 10
+     },
+     {
+      "age": 20
+     }
+    ]
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-sum-empty",
+   "expr": "sum(${age}) = 0",
+   "doc": {
+    "member": []
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-round",
+   "expr": "round(${d}) = 3",
+   "doc": {
+    "d": 2.5
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-round-neg",
+   "expr": "round(${d}) = -3",
+   "doc": {
+    "d": -2.5
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-boolean-empty",
+   "expr": "boolean('')",
+   "doc": {},
+   "server": true,
+   "expected": false
+  },
+  {
+   "id": "srv-self",
+   "expr": ". > 0 and . < 40",
+   "doc": {},
+   "server": true,
+   "expected": true,
+   "self_value": 5
+  },
+  {
+   "id": "srv-self-blank",
+   "expr": ". > 0",
+   "doc": {},
+   "server": true,
+   "expected": false,
+   "self_value": null
+  },
+  {
+   "id": "srv-min",
+   "expr": "min(${n}, ${n2}) = 2",
+   "doc": {
+    "n": 2,
+    "n2": 9
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-max-repeat",
+   "expr": "max(${age}) = 40",
+   "doc": {
+    "member": [
+     {
+      "age": 40
+     },
+     {
+      "age": 9
+     }
+    ]
+   },
+   "server": true,
+   "expected": true
+  },
+  {
+   "id": "srv-position",
+   "expr": "position(..) = 2",
+   "doc": {
+    "member": [
+     {
+      "age": 1
+     },
+     {
+      "age": 2
+     }
+    ]
+   },
+   "server": true,
+   "expected": true,
+   "scope": "member",
+   "row": 1
+  },
+  {
+   "id": "srv-format-date",
+   "expr": "format-date(${dt}, '%Y') = '2026'",
+   "doc": {
+    "dt": "2026-03-04"
+   },
+   "server": true,
+   "expected": true
+  }
+ ]
+}

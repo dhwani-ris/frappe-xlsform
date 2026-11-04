@@ -6,10 +6,21 @@ module.exports = {
 			2,
 			"always",
 			[
-				"build", "chore", "ci", "docs", "feat", "fix",
-				"perf", "refactor", "revert", "style", "test",
-				"security", "sync", "report"
-			]
-		]
+				"build",
+				"chore",
+				"ci",
+				"docs",
+				"feat",
+				"fix",
+				"perf",
+				"refactor",
+				"revert",
+				"style",
+				"test",
+				"security",
+				"sync",
+				"report",
+			],
+		],
 	},
 };

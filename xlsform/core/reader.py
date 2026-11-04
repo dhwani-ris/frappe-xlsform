@@ -1,0 +1,260 @@
+"""Stage 1: read an uploaded workbook safely into plain rows (REQUIREMENTS.md sections 7, 10).
+
+Workbooks are untrusted. openpyxl is used with ``data_only=True`` (cached values, never
+formulas), and macros, external links and embedded objects are never touched. Each
+cell keeps its Excel location so every later issue can point at it.
+"""
+
+import datetime
+import io
+import zipfile
+from dataclasses import dataclass, field
+
+from xlsform.core.issues import Issue, column_letter, issue
+
+MAX_ROWS = 30000
+MAX_COLUMNS = 200
+MAX_UNPACKED_MB = 50
+USED_SHEETS = {"survey", "choices", "settings"}
+PEEK_ROWS = 50
+OLE_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+MACRO_CONTENT_TYPE = b"macroEnabled"
+
+
+@dataclass
+class Cell:
+	value: str
+	col: int
+
+
+@dataclass
+class Row:
+	number: int
+	cells: dict[str, Cell]
+
+	def get(self, key: str) -> str:
+		cell = self.cells.get(key)
+		return cell.value if cell else ""
+
+	def col(self, key: str) -> int | None:
+		cell = self.cells.get(key)
+		return cell.col if cell else None
+
+
+@dataclass
+class Sheet:
+	name: str
+	headers: list[tuple[int, str, str]]
+	rows: list[Row] = field(default_factory=list)
+
+	def has_column(self, key: str) -> bool:
+		return any(h[2] == key for h in self.headers)
+
+	def column_index(self, key: str) -> int | None:
+		for col, _raw, norm in self.headers:
+			if norm == key:
+				return col
+		return None
+
+
+@dataclass
+class Workbook:
+	sheets: dict[str, Sheet]
+
+	def sheet(self, name: str) -> Sheet | None:
+		return self.sheets.get(name)
+
+
+def read_workbook(
+	content: bytes, filename: str, max_mb: int | float, max_unpacked_mb: int | float = MAX_UNPACKED_MB
+) -> tuple[Workbook | None, list[Issue]]:
+	"""Return the workbook, or ``None`` with stage 1 issues when it can't be read.
+
+	Bounded work: the unpacked size is checked from the zip directory before any XML is
+	parsed, declared sheet dimensions are ignored, each sheet is read up to ``MAX_ROWS`` x
+	``MAX_COLUMNS``, and sheets the validator doesn't use are only peeked at.
+	"""
+	issues: list[Issue] = []
+	size_mb = len(content) / (1024 * 1024)
+	lower = (filename or "").lower()
+
+	if content.startswith(OLE_MAGIC):
+		if b"E\x00n\x00c\x00r\x00y\x00p\x00t\x00e\x00d\x00P\x00a\x00c\x00k\x00a\x00g\x00e" in content:
+			return None, [issue("E-FILE-PROTECTED")]
+		return None, [issue("E-FILE-TYPE")]
+	if not lower.endswith(".xlsx") or not zipfile.is_zipfile(io.BytesIO(content)):
+		return None, [issue("E-FILE-TYPE")]
+	try:
+		with zipfile.ZipFile(io.BytesIO(content)) as zf:
+			names = set(zf.namelist())
+			unpacked = sum(info.file_size for info in zf.infolist())
+			content_types = zf.read("[Content_Types].xml") if "[Content_Types].xml" in names else b""
+	except zipfile.BadZipFile:
+		return None, [issue("E-FILE-UNREADABLE")]
+	if "xl/vbaProject.bin" in names or MACRO_CONTENT_TYPE in content_types:
+		return None, [issue("E-FILE-TYPE")]
+	if size_mb > max_mb:
+		return None, [issue("E-FILE-SIZE", size_mb=_round_mb(size_mb), limit_mb=max_mb)]
+	if unpacked > max_unpacked_mb * 1024 * 1024:
+		return None, [
+			issue(
+				"E-FILE-UNPACKED",
+				size_mb=_round_mb(unpacked / (1024 * 1024)),
+				limit_mb=max_unpacked_mb,
+			)
+		]
+
+	try:
+		import openpyxl
+
+		wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True, keep_links=False)
+	except Exception:
+		return None, [issue("E-FILE-UNREADABLE")]
+
+	sheets: dict[str, Sheet] = {}
+	try:
+		only_sheet = len(wb.worksheets) == 1
+		for ws in wb.worksheets:
+			key = ws.title.strip().lower()
+			if key in sheets:
+				continue
+			full = only_sheet or key in USED_SHEETS
+			sheet, overflow = _read_sheet(ws, None if full else PEEK_ROWS)
+			if overflow:
+				return None, [overflow]
+			sheets[key] = sheet
+	except Exception:
+		return None, [issue("E-FILE-UNREADABLE")]
+	finally:
+		wb.close()
+	return Workbook(sheets), issues
+
+
+def _round_mb(size_mb: float) -> float | int:
+	rounded = round(size_mb, 1)
+	return int(rounded) if rounded == int(rounded) else rounded
+
+
+def _read_sheet(ws, peek: int | None) -> tuple[Sheet, Issue | None]:
+	"""Rows of one sheet, or the E-FILE-SHEET-SIZE issue for data outside the limits."""
+	headers: list[tuple[int, str, str]] = []
+	sheet = Sheet(name=ws.title, headers=headers)
+	header_seen = False
+	ws.reset_dimensions()
+	rows = ws.iter_rows(max_row=peek, max_col=MAX_COLUMNS + 1, values_only=True)
+	known_empty = None
+	for row_number, values in enumerate(rows, start=1):
+		if values is known_empty:
+			continue
+		if values.count(None) == len(values):
+			known_empty = values
+			continue
+		if row_number > MAX_ROWS or values[MAX_COLUMNS:].count(None) != len(values[MAX_COLUMNS:]):
+			col = MAX_COLUMNS + 1 if row_number <= MAX_ROWS else 1
+			return sheet, issue(
+				"E-FILE-SHEET-SIZE",
+				sheet=ws.title,
+				row=row_number,
+				col_index=col,
+				sheet_name=ws.title,
+				max_rows=MAX_ROWS,
+				max_columns=MAX_COLUMNS,
+				column_name=column_letter(MAX_COLUMNS),
+			)
+		values = values[:MAX_COLUMNS]
+		if not header_seen:
+			if all(_to_text(v) == "" for v in values):
+				continue
+			for col, value in enumerate(values, start=1):
+				raw = _to_text(value)
+				if raw:
+					headers.append((col, raw, normalise_header(raw)))
+			header_seen = True
+			continue
+		cells: dict[str, Cell] = {}
+		for col, _raw, norm in headers:
+			if col - 1 < len(values):
+				text = _to_text(values[col - 1])
+				if text != "" and norm not in cells:
+					cells[norm] = Cell(text, col)
+		if cells:
+			sheet.rows.append(Row(row_number, cells))
+	return sheet, None
+
+
+def _to_text(value) -> str:
+	if value is None:
+		return ""
+	if isinstance(value, bool):
+		return "true" if value else "false"
+	if isinstance(value, float):
+		return str(int(value)) if value.is_integer() else repr(value)
+	if isinstance(value, datetime.datetime):
+		if value.time() == datetime.time():
+			return value.date().isoformat()
+		return value.isoformat()
+	if isinstance(value, datetime.date | datetime.time):
+		return value.isoformat()
+	return str(value).strip()
+
+
+HEADER_ALIASES = {
+	"list name": "list_name",
+	"listname": "list_name",
+	"constraint message": "constraint_message",
+	"required message": "required_message",
+	"choice filter": "choice_filter",
+	"repeat count": "repeat_count",
+	"read only": "read_only",
+	"readonly": "read_only",
+	"mandatory": "required",
+	"caption": "label",
+	"value": "name",
+	"calculate": "calculation",
+	"guidance hint": "guidance_hint",
+	"form title": "form_title",
+	"form id": "form_id",
+	"default language": "default_language",
+	"instance name": "instance_name",
+	"image": "media::image",
+	"audio": "media::audio",
+	"video": "media::video",
+	"big-image": "media::big-image",
+}
+
+
+SINGLE_COLON_BASES = {
+	"label",
+	"hint",
+	"constraint_message",
+	"constraint message",
+	"required_message",
+	"required message",
+	"guidance_hint",
+	"media",
+	"image",
+	"audio",
+	"video",
+	"bind",
+	"body",
+	"instance",
+}
+
+
+def normalise_header(raw: str) -> str:
+	"""Lower-case the column name but keep the language part of ``label::Hindi (hi)``."""
+	text = " ".join(raw.strip().split())
+	if "::" not in text and ":" in text:
+		base, _, rest = text.partition(":")
+		if base.strip().lower() in SINGLE_COLON_BASES:
+			text = f"{base}::{rest}"
+	if "::" in text:
+		base, _, rest = text.partition("::")
+		base = base.strip().lower()
+		base = HEADER_ALIASES.get(base, base)
+		rest = rest.strip()
+		if base in ("media", "bind", "body", "instance"):
+			rest = rest.lower()
+		return f"{base}::{rest}"
+	lowered = text.lower()
+	return HEADER_ALIASES.get(lowered, lowered)

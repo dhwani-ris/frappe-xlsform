@@ -1,0 +1,18 @@
+{
+ "pyxform/bug_example_forms__UCL_Biomass_Plot_Form.xlsx": {
+  "verdict": "both reject",
+  "reason": "survey!H9 uses curly quotes as quote marks: ${leader_name} = ‘other’. ODK Validate rejects this too; pyxform only accepts it because the cross-check runs without ODK Validate."
+ },
+ "pyxform/bug_example_forms__bad_calc.xlsx": {
+  "verdict": "both reject",
+  "reason": "survey!D2 has an unclosed quote; pyxform's own test expects ODK Validate to reject it."
+ },
+ "pyxform/example_forms__bad_calc.xlsx": {
+  "verdict": "both reject",
+  "reason": "Same workbook as bug_example_forms/bad_calc.xlsx."
+ },
+ "pyxform/bug_example_forms__extra_columns.xlsx": {
+  "verdict": "both reject",
+  "reason": "survey!A19999 holds the stray text \"party like it's 19999\" in the type column with no name; ODK can't build a question from it."
+ }
+}

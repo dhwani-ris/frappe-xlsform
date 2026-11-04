@@ -1,0 +1,9 @@
+[
+ {
+  "doctype": "Role",
+  "role_name": "XLSForm Designer",
+  "desk_access": 1,
+  "name": "XLSForm Designer",
+  "description": "Uploads XLSForms, previews, publishes and retires forms, and decides which roles may use each form's data."
+ }
+]

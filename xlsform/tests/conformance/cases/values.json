@@ -1,0 +1,414 @@
+{
+ "group": "Server-calculated values",
+ "cases": [
+  {
+   "id": "val-round-half",
+   "expr": "round(2.5)",
+   "doc": {},
+   "expected_value": "3"
+  },
+  {
+   "id": "val-round-neg-half",
+   "expr": "round(-2.5)",
+   "doc": {},
+   "expected_value": "-3"
+  },
+  {
+   "id": "val-round-digits",
+   "expr": "round(2.345, 2)",
+   "doc": {},
+   "expected_value": "2.35"
+  },
+  {
+   "id": "val-abs",
+   "expr": "abs(-3)",
+   "doc": {},
+   "expected_value": "3"
+  },
+  {
+   "id": "val-pow",
+   "expr": "pow(2, 10)",
+   "doc": {},
+   "expected_value": "1024"
+  },
+  {
+   "id": "val-floor",
+   "expr": "floor(2.7)",
+   "doc": {},
+   "expected_value": "2"
+  },
+  {
+   "id": "val-floor-neg",
+   "expr": "floor(-2.1)",
+   "doc": {},
+   "expected_value": "-3"
+  },
+  {
+   "id": "val-ceiling",
+   "expr": "ceiling(2.1)",
+   "doc": {},
+   "expected_value": "3"
+  },
+  {
+   "id": "val-min",
+   "expr": "min(3, 1, 2)",
+   "doc": {},
+   "expected_value": "1"
+  },
+  {
+   "id": "val-max-field",
+   "expr": "max(${n}, 4)",
+   "doc": {
+    "n": 7
+   },
+   "expected_value": "7"
+  },
+  {
+   "id": "val-max-blank",
+   "expr": "max(${n}, 4)",
+   "doc": {
+    "n": null
+   },
+   "expected_value": "NaN"
+  },
+  {
+   "id": "val-substr",
+   "expr": "substr('hello', 1, 3)",
+   "doc": {},
+   "expected_value": "el"
+  },
+  {
+   "id": "val-substr-open",
+   "expr": "substr('hello', 2)",
+   "doc": {},
+   "expected_value": "llo"
+  },
+  {
+   "id": "val-normalize",
+   "expr": "normalize-space('  a   b ')",
+   "doc": {},
+   "expected_value": "a b"
+  },
+  {
+   "id": "val-strlen",
+   "expr": "string-length('abc')",
+   "doc": {},
+   "expected_value": "3"
+  },
+  {
+   "id": "val-concat-mixed",
+   "expr": "concat('a', 1, true())",
+   "doc": {},
+   "expected_value": "a1true"
+  },
+  {
+   "id": "val-selected-at",
+   "expr": "selected-at('a b c', 1)",
+   "doc": {},
+   "expected_value": "b"
+  },
+  {
+   "id": "val-selected-at-out",
+   "expr": "selected-at('a b c', 5)",
+   "doc": {},
+   "expected_value": ""
+  },
+  {
+   "id": "val-count-selected-spaces",
+   "expr": "count-selected('a  b')",
+   "doc": {},
+   "expected_value": "2"
+  },
+  {
+   "id": "val-int-neg",
+   "expr": "int(-3.7)",
+   "doc": {},
+   "expected_value": "-3"
+  },
+  {
+   "id": "val-number-text",
+   "expr": "number('abc')",
+   "doc": {},
+   "expected_value": "NaN"
+  },
+  {
+   "id": "val-number-blank",
+   "expr": "number('')",
+   "doc": {},
+   "expected_value": "NaN"
+  },
+  {
+   "id": "val-div",
+   "expr": "10 div 4",
+   "doc": {},
+   "expected_value": "2.5"
+  },
+  {
+   "id": "val-mod",
+   "expr": "7 mod 3",
+   "doc": {},
+   "expected_value": "1"
+  },
+  {
+   "id": "val-mod-neg",
+   "expr": "-7 mod 3",
+   "doc": {},
+   "expected_value": "-1"
+  },
+  {
+   "id": "val-div-zero",
+   "expr": "1 div 0",
+   "doc": {},
+   "expected_value": "Infinity"
+  },
+  {
+   "id": "val-div-zero-neg",
+   "expr": "-1 div 0",
+   "doc": {},
+   "expected_value": "-Infinity"
+  },
+  {
+   "id": "val-zero-div-zero",
+   "expr": "0 div 0",
+   "doc": {},
+   "expected_value": "NaN"
+  },
+  {
+   "id": "val-if",
+   "expr": "if(${n} > 1, 'big', 'small')",
+   "doc": {
+    "n": 5
+   },
+   "expected_value": "big"
+  },
+  {
+   "id": "val-if-blank",
+   "expr": "if(${n} > 1, 'big', 'small')",
+   "doc": {
+    "n": null
+   },
+   "expected_value": "small"
+  },
+  {
+   "id": "val-coalesce",
+   "expr": "coalesce('', 'x')",
+   "doc": {},
+   "expected_value": "x"
+  },
+  {
+   "id": "val-format-date",
+   "expr": "format-date('2026-01-05', '%e %b %Y')",
+   "doc": {},
+   "expected_value": "5 Jan 2026"
+  },
+  {
+   "id": "val-format-date-pad",
+   "expr": "format-date('2026-01-05', '%d/%m/%Y')",
+   "doc": {},
+   "expected_value": "05/01/2026"
+  },
+  {
+   "id": "val-format-date-short",
+   "expr": "format-date('2026-01-05', '%y-%n')",
+   "doc": {},
+   "expected_value": "26-1"
+  },
+  {
+   "id": "val-format-weekday",
+   "expr": "format-date(${dt}, '%a')",
+   "doc": {
+    "dt": "2026-11-03"
+   },
+   "expected_value": "Tue"
+  },
+  {
+   "id": "val-format-datetime",
+   "expr": "format-date-time('2026-01-05T14:07:09', '%H:%M:%S')",
+   "doc": {},
+   "expected_value": "14:07:09"
+  },
+  {
+   "id": "val-today",
+   "expr": "today()",
+   "doc": {},
+   "expected_value": "2026-11-03"
+  },
+  {
+   "id": "val-today-minus",
+   "expr": "today() - date('2026-11-01')",
+   "doc": {},
+   "expected_value": "2"
+  },
+  {
+   "id": "val-decimal-date",
+   "expr": "decimal-date-time('1970-01-02')",
+   "doc": {},
+   "expected_value": "1"
+  },
+  {
+   "id": "val-decimal-datetime",
+   "expr": "decimal-date-time('1970-01-01T12:00:00')",
+   "doc": {},
+   "expected_value": "0.5"
+  },
+  {
+   "id": "val-date-number",
+   "expr": "date(1)",
+   "doc": {},
+   "expected_value": "1970-01-02"
+  },
+  {
+   "id": "val-choice-name",
+   "expr": "jr:choice-name(${s}, '${s}')",
+   "doc": {
+    "s": "yes"
+   },
+   "expected_value": "Yes"
+  },
+  {
+   "id": "val-choice-name-2",
+   "expr": "jr:choice-name(${s2}, '${s2}')",
+   "doc": {
+    "s2": "red"
+   },
+   "expected_value": "Red"
+  },
+  {
+   "id": "val-choice-name-blank",
+   "expr": "jr:choice-name(${s2}, '${s2}')",
+   "doc": {
+    "s2": null
+   },
+   "expected_value": ""
+  },
+  {
+   "id": "val-string-true",
+   "expr": "string(true())",
+   "doc": {},
+   "expected_value": "true"
+  },
+  {
+   "id": "val-sum",
+   "expr": "sum(${age})",
+   "doc": {
+    "member": [
+     {
+      "age": 10
+     },
+     {
+      "age": 20
+     }
+    ]
+   },
+   "expected_value": "30"
+  },
+  {
+   "id": "val-sum-empty",
+   "expr": "sum(${age})",
+   "doc": {},
+   "expected_value": "0"
+  },
+  {
+   "id": "val-sum-blank-row",
+   "expr": "sum(${age})",
+   "doc": {
+    "member": [
+     {
+      "age": 10
+     },
+     {
+      "age": null
+     }
+    ]
+   },
+   "expected_value": "NaN"
+  },
+  {
+   "id": "val-count-field",
+   "expr": "count(${age})",
+   "doc": {
+    "member": [
+     {
+      "age": 1
+     },
+     {
+      "age": 2
+     }
+    ]
+   },
+   "expected_value": "2"
+  },
+  {
+   "id": "val-concat-repeat",
+   "expr": "concat(${mname})",
+   "doc": {
+    "member": [
+     {
+      "mname": "a"
+     },
+     {
+      "mname": "b"
+     }
+    ]
+   },
+   "expected_value": "ab"
+  },
+  {
+   "id": "val-total",
+   "expr": "${n} + ${n2}",
+   "doc": {
+    "n": 2,
+    "n2": 3
+   },
+   "expected_value": "5"
+  },
+  {
+   "id": "val-total-blank",
+   "expr": "${n} + ${n2}",
+   "doc": {
+    "n": 2,
+    "n2": null
+   },
+   "expected_value": "NaN"
+  },
+  {
+   "id": "val-decimal",
+   "expr": "${d} * 2",
+   "doc": {
+    "d": 1.25
+   },
+   "expected_value": "2.5"
+  },
+  {
+   "id": "val-concat-select",
+   "expr": "concat(${m})",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     },
+     {
+      "choice": "blue"
+     }
+    ]
+   },
+   "expected_value": "red blue"
+  },
+  {
+   "id": "val-ack",
+   "expr": "concat(${ack})",
+   "doc": {
+    "ack": 1
+   },
+   "expected_value": "OK"
+  },
+  {
+   "id": "val-geo",
+   "expr": "concat(${t})",
+   "doc": {
+    "t": "plain"
+   },
+   "expected_value": "plain"
+  }
+ ]
+}

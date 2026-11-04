@@ -1,0 +1,144 @@
+{
+ "actions": [],
+ "creation": "2026-11-03 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "limits_section",
+  "max_upload_mb",
+  "max_questions",
+  "max_choices_per_list",
+  "column_break_limits",
+  "max_expression_length",
+  "row_budget_bytes",
+  "behaviour_section",
+  "columns_per_section",
+  "doctype_prefix",
+  "default_language",
+  "column_break_behaviour",
+  "designers_can_publish",
+  "allow_data_removal_on_uninstall"
+ ],
+ "fields": [
+  {
+   "fieldname": "limits_section",
+   "fieldtype": "Section Break",
+   "label": "Limits"
+  },
+  {
+   "fieldname": "max_upload_mb",
+   "fieldtype": "Int",
+   "label": "Largest workbook (MB)",
+   "default": "5",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "max_questions",
+   "fieldtype": "Int",
+   "label": "Most questions per form",
+   "default": "400",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "max_choices_per_list",
+   "fieldtype": "Int",
+   "label": "Most choices per list",
+   "default": "20000",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_limits",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "max_expression_length",
+   "fieldtype": "Int",
+   "label": "Longest formula (characters)",
+   "default": "2000",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "row_budget_bytes",
+   "fieldtype": "Int",
+   "label": "Row size budget (bytes)",
+   "default": "60000",
+   "non_negative": 1,
+   "description": "Safety margin under MariaDB's 65,535-byte row limit"
+  },
+  {
+   "fieldname": "behaviour_section",
+   "fieldtype": "Section Break",
+   "label": "Behaviour"
+  },
+  {
+   "default": "3",
+   "description": "Questions of a section are spread over this many columns on Desk and the web form. Tables, multi-selects and notes always use the full width.",
+   "fieldname": "columns_per_section",
+   "fieldtype": "Select",
+   "label": "Columns per section",
+   "options": "1\n2\n3"
+  },
+  {
+   "fieldname": "doctype_prefix",
+   "fieldtype": "Data",
+   "label": "Prefix of generated DocTypes",
+   "default": "XF",
+   "reqd": 1,
+   "length": 8
+  },
+  {
+   "fieldname": "default_language",
+   "fieldtype": "Link",
+   "label": "Default language",
+   "options": "Language",
+   "default": "en"
+  },
+  {
+   "fieldname": "column_break_behaviour",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "designers_can_publish",
+   "fieldtype": "Check",
+   "label": "Designers can publish",
+   "default": "1",
+   "description": "Off: only a System Manager can publish"
+  },
+  {
+   "fieldname": "allow_data_removal_on_uninstall",
+   "fieldtype": "Check",
+   "label": "Allow uninstall to delete form data",
+   "default": "0",
+   "description": "Uninstalling removes every generated DocType and its records. Leave off unless you mean it."
+  }
+ ],
+ "icon": "settings",
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-11-04 09:32:23.282119",
+ "modified_by": "Administrator",
+ "module": "XLSForm",
+ "name": "XLSForm Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "XLSForm Designer",
+   "read": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

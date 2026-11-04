@@ -1,0 +1,271 @@
+{
+ "group": "Repeats",
+ "cases": [
+  {
+   "id": "rep-count",
+   "expr": "count(${member}) = 2",
+   "doc": {
+    "member": [
+     {
+      "age": 1
+     },
+     {
+      "age": 2
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "rep-count-none",
+   "expr": "count(${member}) = 2",
+   "doc": {
+    "member": null
+   },
+   "expected": false
+  },
+  {
+   "id": "rep-count-zero",
+   "expr": "count(${member}) = 0",
+   "doc": {
+    "member": []
+   },
+   "expected": true
+  },
+  {
+   "id": "rep-count-zero-null",
+   "expr": "count(${member}) = 0",
+   "doc": {},
+   "expected": true
+  },
+  {
+   "id": "rep-count-field",
+   "expr": "count(${age}) = 3",
+   "doc": {
+    "member": [
+     {
+      "age": 1
+     },
+     {
+      "age": null
+     },
+     {
+      "age": 3
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "rep-count-vs-field",
+   "expr": "count(${member}) > ${n}",
+   "doc": {
+    "member": [
+     {},
+     {},
+     {}
+    ],
+    "n": 2
+   },
+   "expected": true
+  },
+  {
+   "id": "rep-count-vs-blank",
+   "expr": "count(${member}) > ${n}",
+   "doc": {
+    "member": [
+     {},
+     {},
+     {}
+    ],
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "rep-row-age",
+   "expr": "${age} > 17",
+   "doc": {
+    "member": [
+     {
+      "age": 20
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": true
+  },
+  {
+   "id": "rep-row-age-blank",
+   "expr": "${age} > 17",
+   "doc": {
+    "member": [
+     {
+      "age": null
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": false
+  },
+  {
+   "id": "rep-row-second",
+   "expr": "${age} > 17",
+   "doc": {
+    "member": [
+     {
+      "age": 30
+     },
+     {
+      "age": 5
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 1,
+   "expected": false
+  },
+  {
+   "id": "rep-row-parent",
+   "expr": "${n} > 1",
+   "doc": {
+    "n": 2,
+    "member": [
+     {
+      "age": 1
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": true
+  },
+  {
+   "id": "rep-row-parent-blank",
+   "expr": "${n} > 1",
+   "doc": {
+    "n": null,
+    "member": [
+     {
+      "age": 1
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": false
+  },
+  {
+   "id": "rep-row-mixed",
+   "expr": "${age} > ${n}",
+   "doc": {
+    "n": 3,
+    "member": [
+     {
+      "age": 5
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": true
+  },
+  {
+   "id": "rep-row-select",
+   "expr": "selected(${likes}, 'red')",
+   "doc": {
+    "member": [
+     {
+      "likes": [
+       {
+        "choice": "red"
+       }
+      ]
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": true
+  },
+  {
+   "id": "rep-row-select-no",
+   "expr": "selected(${likes}, 'red')",
+   "doc": {
+    "member": [
+     {
+      "likes": []
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": false
+  },
+  {
+   "id": "rep-row-parent-select",
+   "expr": "${s} = 'yes' and ${age} < 5",
+   "doc": {
+    "s": "yes",
+    "member": [
+     {
+      "age": 2
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": true
+  },
+  {
+   "id": "rep-row-text",
+   "expr": "${mname} != ''",
+   "doc": {
+    "member": [
+     {
+      "mname": "Asha"
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": true
+  },
+  {
+   "id": "rep-row-count-own",
+   "expr": "count(${member}) > 1",
+   "doc": {
+    "member": [
+     {
+      "age": 1
+     },
+     {
+      "age": 2
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 0,
+   "expected": true
+  },
+  {
+   "id": "rep-row-count-own-field",
+   "expr": "count(${age}) = 1",
+   "doc": {
+    "member": [
+     {
+      "age": 1
+     },
+     {
+      "age": 2
+     }
+    ]
+   },
+   "scope": "member",
+   "row": 1,
+   "expected": true
+  }
+ ]
+}

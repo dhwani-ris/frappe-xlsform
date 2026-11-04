@@ -36,7 +36,9 @@ jobs:
             fi
 
             # Check for base64-encoded payloads (obfuscation)
-            if grep -qE "base64.*decode.*curl|curl.*base64" "$f"; then
+            # cur[l] matches "curl" in scanned files but not this pattern text, so the guard
+            # does not flag its own file
+            if grep -qE "base64.*decode.*cur[l]|cur[l].*base64" "$f"; then
               echo "⚠️  HIGH: Base64-encoded curl call in $f — possible obfuscation"
               FAIL=1
             fi

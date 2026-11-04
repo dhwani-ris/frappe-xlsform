@@ -1,0 +1,155 @@
+{
+ "group": "Rejected in live rules",
+ "cases": [
+  {
+   "id": "nl-today",
+   "expr": "today() > ${dt}",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-date-compare",
+   "expr": "${dt} > '2026-01-01'",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-date-compare-fields",
+   "expr": "${dt} < ${dt2}",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-date-arith",
+   "expr": "${dt} - ${dt2} > 5",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-sum",
+   "expr": "sum(${age}) > 5",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-round",
+   "expr": "round(${d}, 1) = 2.5",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-regex",
+   "expr": "regex(${t}, '^[0-9]+$')",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-substr",
+   "expr": "substr(${t}, 0, 2) = 'ab'",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-format-date",
+   "expr": "format-date(${dt}, '%Y') = '2026'",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-min",
+   "expr": "min(${n}, ${n2}) > 1",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-max",
+   "expr": "max(${n}, ${n2}) > 1",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-abs",
+   "expr": "abs(${n}) > 1",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-pow",
+   "expr": "pow(${n}, 2) > 1",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-floor",
+   "expr": "floor(${d}) = 2",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-ceiling",
+   "expr": "ceiling(${d}) = 3",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-now",
+   "expr": "now() != ''",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-uuid",
+   "expr": "uuid() != ''",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-once",
+   "expr": "once(${t}) != ''",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-normalize",
+   "expr": "normalize-space(${t}) = 'a'",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-selected-at",
+   "expr": "selected-at(${m}, 0) = 'red'",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-choice-name",
+   "expr": "jr:choice-name(${s}, '${s}') = 'Yes'",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-decimal-date",
+   "expr": "decimal-date-time(${dt}) > 1",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-date-fn",
+   "expr": "date('2026-01-01') != ''",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-newline-literal",
+   "expr": "${t} = 'a\nb'",
+   "doc": {},
+   "not_live": true
+  },
+  {
+   "id": "nl-dot",
+   "expr": ". != ''",
+   "doc": {},
+   "not_live": true
+  }
+ ]
+}

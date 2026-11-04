@@ -1,0 +1,361 @@
+{
+ "group": "Choices",
+ "cases": [
+  {
+   "id": "sel-one-eq",
+   "expr": "${s} = 'yes'",
+   "doc": {
+    "s": "yes"
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-one-eq-no",
+   "expr": "${s} = 'yes'",
+   "doc": {
+    "s": "no"
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-one-eq-blank",
+   "expr": "${s} = 'yes'",
+   "doc": {
+    "s": null
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-one-num-lit",
+   "expr": "${s2} = 1",
+   "doc": {
+    "s2": "1"
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-one-num-lit-10",
+   "expr": "${s2} = 1",
+   "doc": {
+    "s2": "10"
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-one-num-lit-blank",
+   "expr": "${s2} = 1",
+   "doc": {
+    "s2": null
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-one-str-lit",
+   "expr": "${s2} = '1'",
+   "doc": {
+    "s2": "1"
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-one-selected",
+   "expr": "selected(${s}, 'yes')",
+   "doc": {
+    "s": "yes"
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-one-selected-blank",
+   "expr": "selected(${s}, 'yes')",
+   "doc": {
+    "s": null
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi",
+   "expr": "selected(${m}, 'red')",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     },
+     {
+      "choice": "blue"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-empty",
+   "expr": "selected(${m}, 'red')",
+   "doc": {
+    "m": []
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi-blank",
+   "expr": "selected(${m}, 'red')",
+   "doc": {
+    "m": null
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi-other",
+   "expr": "selected(${m}, 'red')",
+   "doc": {
+    "m": [
+     {
+      "choice": "green"
+     }
+    ]
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi-no-substring",
+   "expr": "selected(${m}, '1')",
+   "doc": {
+    "m": [
+     {
+      "choice": "10"
+     }
+    ]
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi-exact",
+   "expr": "selected(${m}, '1')",
+   "doc": {
+    "m": [
+     {
+      "choice": "10"
+     },
+     {
+      "choice": "1"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-count",
+   "expr": "count-selected(${m}) = 2",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     },
+     {
+      "choice": "blue"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-count-blank",
+   "expr": "count-selected(${m}) > 0",
+   "doc": {
+    "m": null
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi-count-one",
+   "expr": "count-selected(${m}) > 0",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-not",
+   "expr": "not(selected(${m}, 'green'))",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-eq-empty",
+   "expr": "${m} = ''",
+   "doc": {
+    "m": null
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-eq-empty-list",
+   "expr": "${m} = ''",
+   "doc": {
+    "m": []
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-eq-empty-set",
+   "expr": "${m} = ''",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     }
+    ]
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi-eq-joined",
+   "expr": "${m} = 'red blue'",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     },
+     {
+      "choice": "blue"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-bare",
+   "expr": "${m}",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-bare-empty",
+   "expr": "${m}",
+   "doc": {
+    "m": []
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi-by-field",
+   "expr": "selected(${m}, ${s2})",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     }
+    ],
+    "s2": "red"
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-by-field-no",
+   "expr": "selected(${m}, ${s2})",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     }
+    ],
+    "s2": "green"
+   },
+   "expected": false
+  },
+  {
+   "id": "sel-multi-and",
+   "expr": "count-selected(${m}) >= 1 and selected(${m}, '1')",
+   "doc": {
+    "m": [
+     {
+      "choice": "1"
+     },
+     {
+      "choice": "10"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-contains",
+   "expr": "contains(${m}, 'blu')",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     },
+     {
+      "choice": "blue"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-or",
+   "expr": "selected(${m}, 'red') or selected(${m}, 'green')",
+   "doc": {
+    "m": [
+     {
+      "choice": "green"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-multi-ne",
+   "expr": "${m} != ''",
+   "doc": {
+    "m": [
+     {
+      "choice": "red"
+     }
+    ]
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-one-ne-blank",
+   "expr": "${s} != 'yes'",
+   "doc": {
+    "s": null
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-one-in-two",
+   "expr": "${s2} = 'red' or ${s2} = 'blue'",
+   "doc": {
+    "s2": "blue"
+   },
+   "expected": true
+  },
+  {
+   "id": "sel-one-string-len",
+   "expr": "string-length(${s2}) = 4",
+   "doc": {
+    "s2": "blue"
+   },
+   "expected": true
+  }
+ ]
+}

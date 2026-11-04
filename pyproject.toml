@@ -1,0 +1,70 @@
+[project]
+name = "xlsform"
+authors = [
+    { name = "Dhwani RIS", email = "deepak.batra@dhwaniris.com"}
+]
+description = "Build data-collection forms in Excel and collect into Frappe DocTypes"
+requires-python = ">=3.14"
+readme = "README.md"
+dynamic = ["version"]
+license = { file = "LICENSE" }
+dependencies = []
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.frappe-dependencies]
+frappe = ">=16.0.0,<17.0.0"
+
+[tool.bench.dev-dependencies]
+pytest = "~=9.0"
+pytest-cov = "~=7.0"
+
+[deploy.dependencies.apt]
+packages = []
+
+[tool.ruff]
+line-length = 110
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "E",
+    "W",
+    "I",
+    "UP",
+    "B",
+    "RUF",
+]
+ignore = [
+    "B017",
+    "B018",
+    "B023",
+    "B904",
+    "E101",
+    "E402",
+    "E501",
+    "E741",
+    "F401",
+    "F403",
+    "F405",
+    "F722",
+    "W191",
+    "UP030",
+    "UP031",
+    "UP032",
+    "UP037",
+    "UP040",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "RUF012",
+]
+typing-modules = ["frappe.types.DF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "tab"
+docstring-code-format = true

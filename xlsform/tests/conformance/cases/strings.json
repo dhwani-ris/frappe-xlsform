@@ -1,0 +1,412 @@
+{
+ "group": "Text",
+ "cases": [
+  {
+   "id": "str-eq",
+   "expr": "${t} = 'abc'",
+   "doc": {
+    "t": "abc"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-eq-blank",
+   "expr": "${t} = 'abc'",
+   "doc": {
+    "t": null
+   },
+   "expected": false
+  },
+  {
+   "id": "str-eq-empty",
+   "expr": "${t} = 'abc'",
+   "doc": {
+    "t": ""
+   },
+   "expected": false
+  },
+  {
+   "id": "str-eq-empty-lit-null",
+   "expr": "${t} = ''",
+   "doc": {
+    "t": null
+   },
+   "expected": true
+  },
+  {
+   "id": "str-eq-empty-lit-empty",
+   "expr": "${t} = ''",
+   "doc": {
+    "t": ""
+   },
+   "expected": true
+  },
+  {
+   "id": "str-eq-empty-lit-x",
+   "expr": "${t} = ''",
+   "doc": {
+    "t": "x"
+   },
+   "expected": false
+  },
+  {
+   "id": "str-ne-empty-null",
+   "expr": "${t} != ''",
+   "doc": {
+    "t": null
+   },
+   "expected": false
+  },
+  {
+   "id": "str-ne-empty-x",
+   "expr": "${t} != ''",
+   "doc": {
+    "t": "x"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-fields-blank",
+   "expr": "${t} = ${t2}",
+   "doc": {
+    "t": null,
+    "t2": null
+   },
+   "expected": true
+  },
+  {
+   "id": "str-fields-same",
+   "expr": "${t} = ${t2}",
+   "doc": {
+    "t": "a",
+    "t2": "a"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-fields-diff",
+   "expr": "${t} = ${t2}",
+   "doc": {
+    "t": "a",
+    "t2": "b"
+   },
+   "expected": false
+  },
+  {
+   "id": "str-case",
+   "expr": "${t} = 'ABC'",
+   "doc": {
+    "t": "abc"
+   },
+   "expected": false
+  },
+  {
+   "id": "str-double-quotes",
+   "expr": "${t} = \"it's\"",
+   "doc": {
+    "t": "it's"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-embedded-dq",
+   "expr": "${t} = 'say \"hi\"'",
+   "doc": {
+    "t": "say \"hi\""
+   },
+   "expected": true
+  },
+  {
+   "id": "str-backslash",
+   "expr": "${t} = 'back\\slash'",
+   "doc": {
+    "t": "back\\slash"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-backslash-end",
+   "expr": "${t} = 'end\\'",
+   "doc": {
+    "t": "end\\"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-unicode",
+   "expr": "${t} = 'हिंदी'",
+   "doc": {
+    "t": "हिंदी"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-unicode-no",
+   "expr": "${t} = 'हिंदी'",
+   "doc": {
+    "t": "हिन्दी"
+   },
+   "expected": false
+  },
+  {
+   "id": "str-emoji",
+   "expr": "${t} = '✓ ok'",
+   "doc": {
+    "t": "✓ ok"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-length-gt",
+   "expr": "string-length(${t}) > 3",
+   "doc": {
+    "t": "abcd"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-length-blank",
+   "expr": "string-length(${t}) > 3",
+   "doc": {
+    "t": null
+   },
+   "expected": false
+  },
+  {
+   "id": "str-length-zero",
+   "expr": "string-length(${t}) = 0",
+   "doc": {
+    "t": null
+   },
+   "expected": true
+  },
+  {
+   "id": "str-length-unicode",
+   "expr": "string-length(${t}) = 2",
+   "doc": {
+    "t": "ab"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-contains",
+   "expr": "contains(${t}, 'ab')",
+   "doc": {
+    "t": "xaby"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-contains-no",
+   "expr": "contains(${t}, 'ab')",
+   "doc": {
+    "t": "xa-by"
+   },
+   "expected": false
+  },
+  {
+   "id": "str-contains-blank",
+   "expr": "contains(${t}, 'ab')",
+   "doc": {
+    "t": null
+   },
+   "expected": false
+  },
+  {
+   "id": "str-contains-empty-needle",
+   "expr": "contains(${t}, '')",
+   "doc": {
+    "t": "x"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-starts",
+   "expr": "starts-with(${t}, '98')",
+   "doc": {
+    "t": "9876"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-starts-no",
+   "expr": "starts-with(${t}, '98')",
+   "doc": {
+    "t": "8976"
+   },
+   "expected": false
+  },
+  {
+   "id": "str-ends",
+   "expr": "ends-with(${t}, '.org')",
+   "doc": {
+    "t": "a@b.org"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-ends-no",
+   "expr": "ends-with(${t}, '.org')",
+   "doc": {
+    "t": "a@b.com"
+   },
+   "expected": false
+  },
+  {
+   "id": "str-concat",
+   "expr": "concat(${t}, ${t2}) = 'ab'",
+   "doc": {
+    "t": "a",
+    "t2": "b"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-concat-blank",
+   "expr": "concat(${t}, ${t2}) = 'ab'",
+   "doc": {
+    "t": "a",
+    "t2": null
+   },
+   "expected": false
+  },
+  {
+   "id": "str-concat-num",
+   "expr": "concat(${t}, '-', ${n}) = 'a-5'",
+   "doc": {
+    "t": "a",
+    "n": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "str-concat-dec",
+   "expr": "concat(${d}) = '2.5'",
+   "doc": {
+    "d": 2.5
+   },
+   "expected": true
+  },
+  {
+   "id": "str-concat-empty",
+   "expr": "concat(${n}) = ''",
+   "doc": {
+    "n": null
+   },
+   "expected": true
+  },
+  {
+   "id": "str-string-num",
+   "expr": "string(${n}) = '5'",
+   "doc": {
+    "n": 5
+   },
+   "expected": true
+  },
+  {
+   "id": "str-string-dec",
+   "expr": "string(${d}) = '2.5'",
+   "doc": {
+    "d": 2.5
+   },
+   "expected": true
+  },
+  {
+   "id": "str-coalesce-blank",
+   "expr": "coalesce(${t}, 'none') = 'none'",
+   "doc": {
+    "t": null
+   },
+   "expected": true
+  },
+  {
+   "id": "str-coalesce-set",
+   "expr": "coalesce(${t}, 'none') = 'none'",
+   "doc": {
+    "t": "x"
+   },
+   "expected": false
+  },
+  {
+   "id": "str-coalesce-num-blank",
+   "expr": "coalesce(${n}, 0) > 3",
+   "doc": {
+    "n": null
+   },
+   "expected": false
+  },
+  {
+   "id": "str-coalesce-num-set",
+   "expr": "coalesce(${n}, 0) > 3",
+   "doc": {
+    "n": 4
+   },
+   "expected": true
+  },
+  {
+   "id": "str-coalesce-fields",
+   "expr": "coalesce(${t}, ${t2}) = 'b'",
+   "doc": {
+    "t": "",
+    "t2": "b"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-contains-unicode",
+   "expr": "contains(${t}, 'हिं')",
+   "doc": {
+    "t": "हिंदी"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-number-of-text",
+   "expr": "number(${t}) > 3",
+   "doc": {
+    "t": "4"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-number-of-blank",
+   "expr": "number(${t}) > 3",
+   "doc": {
+    "t": null
+   },
+   "expected": false
+  },
+  {
+   "id": "str-int-of-text",
+   "expr": "int(${t}) = 7",
+   "doc": {
+    "t": "7.8"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-number-plus",
+   "expr": "number(${t}) + 1 = 6",
+   "doc": {
+    "t": "5"
+   },
+   "expected": true
+  },
+  {
+   "id": "str-int-dec",
+   "expr": "int(${d}) = 2",
+   "doc": {
+    "d": 2.9
+   },
+   "expected": true
+  },
+  {
+   "id": "str-int-neg",
+   "expr": "int(${d}) = -2",
+   "doc": {
+    "d": -2.9
+   },
+   "expected": true
+  }
+ ]
+}
