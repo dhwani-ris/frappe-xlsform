@@ -10,7 +10,7 @@ REQUIREMENTS.md section 12. Items marked **(people)** can't be done by code and 
 - [x] Every emitted rule checked against the mForm SDK expression subset (`core/expr/profile.py`)
 - [x] CI: `corpus.yml` (pyxform cross-check on the real-world corpus)
 - [x] Settings DocType (XLSForm Settings); role and workspace shipped
-- [x] All user-facing strings translatable; Hindi `xlsform/locale/hi.po` complete (343/343)
+- [x] All user-facing strings translatable; Hindi `xlsform/locale/hi.po` complete (386/386). The 47 strings added on 4 Nov 2026 need a review by a native speaker
 - [x] v16 apps screen entry (`add_to_apps_screen`, lower-case name), workspace, logo
 - [x] No system packages, Java or runtime Node; no Python dependencies beyond Frappe
 - [x] README, compatibility page, issue-code pages (`docs/errors`, `/xlsform-docs/errors`)

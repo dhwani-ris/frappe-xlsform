@@ -77,4 +77,5 @@ CI also runs the Frappe Semgrep rules.
 - JavaScript in DocFields comes only from `core/expr/emit_js.py`. User text appears only as an escaped string literal.
 - Never drop a column or table. Never convert data in place.
 - After you change the issue catalogue, run `python scripts/gen_error_docs.py`.
+- After you add or change a user-facing string, run `bench generate-pot-file --app xlsform` and `bench update-po-files --app xlsform --locale hi`, then translate the new entries in `xlsform/locale/hi.po`.
 - Do not add pyxform as a dependency. It pins `xlrd==2.0.1` and Frappe v16 needs `~=2.0.2`. It runs in CI from its own virtualenv.
