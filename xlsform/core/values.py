@@ -23,7 +23,7 @@ def answer(qtype: str, value):
 			return ""
 		try:
 			return float(value)
-		except TypeError, ValueError:
+		except (TypeError, ValueError):
 			return str(value)
 	if qtype in MULTI:
 		if isinstance(value, list):
@@ -50,7 +50,7 @@ def _odk_geo(value) -> str:
 	"""GeoJSON (Frappe Geolocation) -> ODK ``lat lon alt acc`` (points joined by ``;``)."""
 	try:
 		data = json.loads(value) if isinstance(value, str) else value
-	except TypeError, ValueError:
+	except (TypeError, ValueError):
 		return str(value)
 	coords = []
 	for feature in (data or {}).get("features", []) if isinstance(data, dict) else []:
